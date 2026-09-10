@@ -19,6 +19,8 @@ import time
 import urllib.parse
 import urllib.request
 from hashlib import pbkdf2_hmac
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import threading
 from bs4 import BeautifulSoup
 
 # Logging Setup
@@ -530,10 +532,54 @@ def run_cycle():
     logging.info("Ciclo concluído com sucesso.")
 
 
+class HealthHandler(BaseHTTPRequestHandler):
+    """Simple HTTP healthcheck handler for Render Web Service."""
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/plain; charset=utf-8')
+        self.end_headers()
+        self.wfile.write(b"MaxVia88 Monitor is Active and Monitoring 24/7!\n")
+
+    def log_message(self, format, *args):
+        pass  # suppress noisy HTTP access logs
+
+
+def start_health_server():
+    """Run lightweight HTTP server for Render health checks."""
+    port = int(os.environ.get("PORT", 8080))
+    try:
+        server = HTTPServer(('0.0.0.0', port), HealthHandler)
+        logging.info(f"Health server listening on port {port}")
+        server.serve_forever()
+    except Exception as e:
+        logging.error(f"Health server error: {e}")
+
+
+def keep_alive_ping():
+    """Periodically ping self public URL to keep Render free web service awake."""
+    while True:
+        time.sleep(600)  # Every 10 minutes
+        render_url = os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("KEEP_ALIVE_URL")
+        if render_url:
+            try:
+                urllib.request.urlopen(render_url, timeout=10)
+                logging.info(f"Keep-alive self-ping sent to {render_url}")
+            except Exception as e:
+                logging.debug(f"Keep-alive ping note: {e}")
+
+
 def main():
     if "--once" in sys.argv:
         run_cycle()
         return
+
+    # Start healthcheck server if PORT is provided by cloud platform (Render/Railway)
+    port_env = os.environ.get("PORT")
+    if port_env:
+        t_srv = threading.Thread(target=start_health_server, daemon=True)
+        t_srv.start()
+        t_ping = threading.Thread(target=keep_alive_ping, daemon=True)
+        t_ping.start()
 
     config = load_config()
     interval_sec = int(config.get("check_interval_seconds") or os.environ.get("CHECK_INTERVAL", "60"))
@@ -551,3 +597,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
