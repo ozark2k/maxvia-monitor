@@ -61,10 +61,15 @@ def save_config(config: dict):
 
 
 def get_chrome_cookies() -> str:
-    """Extract maxvia88 session cookies from local Google Chrome profile on macOS."""
+    """Extract maxvia88 session cookies from local Google Chrome profile on macOS or config/env."""
     env_cookie = os.environ.get("MAXVIA_COOKIE")
     if env_cookie:
         return env_cookie
+
+    config = load_config()
+    cfg_cookie = config.get("cookie")
+    if cfg_cookie:
+        return cfg_cookie
 
     try:
         cmd = ["security", "find-generic-password", "-w", "-s", "Chrome Safe Storage"]
