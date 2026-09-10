@@ -447,12 +447,21 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                             f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})"
                         )
                 else:
-                    changes.append(
-                        f"🛒 <b>COMPRA DETECTADA (-{diff})!</b>\n"
-                        f"📦 <b>Produto:</b> {item['title']}\n"
-                        f"💵 <b>Preço:</b> {item['price']}\n"
-                        f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b>"
-                    )
+                    if is_highlight:
+                        changes.append(
+                            f"🛒🔥 <b>[DESTAQUE - COMPRA DETECTADA]</b> 🔥🛒\n"
+                            f"📦 <b>Produto:</b> ⭐ <b>{item['title']}</b> ⭐\n"
+                            f"💵 <b>Preço:</b> {item['price']}\n"
+                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})\n"
+                            f"⚡ <i>O estoque deste perfil está sendo consumido!</i>"
+                        )
+                    else:
+                        changes.append(
+                            f"🛒 <b>COMPRA DETECTADA (-{diff})!</b>\n"
+                            f"📦 <b>Produto:</b> {item['title']}\n"
+                            f"💵 <b>Preço:</b> {item['price']}\n"
+                            f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b>"
+                        )
 
             elif new_stock > old_stock:
                 if not notify_restock:
