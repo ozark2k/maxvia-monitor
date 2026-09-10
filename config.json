@@ -1,0 +1,24 @@
+{
+  "telegram_bot_token": "8692174015:AAFl7TCPswrYFHoMhSbgAtb5V3F8Px1k_HA",
+  "telegram_chat_id": "11579952",
+  "target_products": [
+    "Acc Farmed 2025 (2FA)",
+    "Acc Farmed 2026 (2FA)",
+    "BM3 LIMIT 50$ (3 ADS)",
+    "BM1 Verified",
+    "BM3 Verified"
+  ],
+  "product_rules": {
+    "Acc Farmed 2025 (2FA)": {
+      "min_stock_alert_threshold": 300,
+      "notify_restock": true,
+      "is_highlight": true
+    },
+    "Acc Farmed 2026 (2FA)": {
+      "min_stock_alert_threshold": 300,
+      "notify_restock": true,
+      "is_highlight": true
+    }
+  },
+  "check_interval_seconds": 60
+}

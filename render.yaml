@@ -1,0 +1,11 @@
+services:
+  - type: worker
+    name: maxvia-stock-monitor
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 maxvia_monitor.py
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        value: 8692174015:AAFl7TCPswrYFHoMhSbgAtb5V3F8Px1k_HA
+      - key: TELEGRAM_CHAT_ID
+        value: "11579952"
