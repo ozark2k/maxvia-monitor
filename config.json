@@ -11,12 +11,12 @@
   ],
   "product_rules": {
     "Acc Farmed 2025 (2FA)": {
-      "min_stock_alert_threshold": 300,
+      "min_stock_alert_threshold": 340,
       "notify_restock": true,
       "is_highlight": true
     },
     "Acc Farmed 2026 (2FA)": {
-      "min_stock_alert_threshold": 300,
+      "min_stock_alert_threshold": 340,
       "notify_restock": true,
       "is_highlight": true
     }
