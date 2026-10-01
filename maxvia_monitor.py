@@ -353,16 +353,13 @@ def save_state(state: dict):
 
 
 def should_notify_product(item_title: str, target_keywords: list = None) -> bool:
-    """Check if a product title satisfies notification criteria (all BMs except X3 + profile whitelist)."""
+    """Check if a product title satisfies notification criteria (Verified BMs only + profile whitelist)."""
     title_clean = normalize_title(item_title).lower()
 
-    # Case 1: Product is a BM (Business Manager)
+    # Case 1: Product is a BM (Business Manager) -> Only verified BMs
     is_bm = "bm" in title_clean or "business manager" in title_clean
     if is_bm:
-        # Exclude only the first product: X3 (X3| BM350 Reinstated V2) as requested
-        if "x3" in title_clean:
-            return False
-        return True
+        return any(term in title_clean for term in ["verified", "verificada", "verificado", "verif"])
 
     # Case 2: Product is a Profile (strictly check allowed target profile keywords)
     if target_keywords:
@@ -425,7 +422,7 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                 if new_stock == 0:
                     if is_bm:
                         changes.append(
-                            f"💼🔴 <b>[BM ESGOTOU]</b>\n"
+                            f"💼🔴 <b>[BM VERIFICADA ESGOTOU]</b>\n"
                             f"📦 <b>Produto:</b> {item['title']}\n"
                             f"📉 <b>Estoque:</b> {old_stock} ➔ <b>0 unidades</b> (-{diff})"
                         )
@@ -481,7 +478,7 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                 diff = new_stock - old_stock
                 if is_bm:
                     changes.append(
-                        f"💼🎉 <b>[BM REABASTECIDA!] (+{diff})</b>\n"
+                        f"💼🎉 <b>[BM VERIFICADA REABASTECIDA!] (+{diff})</b>\n"
                         f"📦 <b>Produto:</b> <b>{item['title']}</b>\n"
                         f"💵 <b>Preço:</b> {item['price']}\n"
                         f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b>\n"
