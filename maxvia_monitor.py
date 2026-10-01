@@ -62,15 +62,7 @@ def save_config(config: dict):
 
 def get_chrome_cookies() -> str:
     """Extract maxvia88 session cookies from local Google Chrome profile on macOS or config/env."""
-    env_cookie = os.environ.get("MAXVIA_COOKIE")
-    if env_cookie:
-        return env_cookie
-
-    config = load_config()
-    cfg_cookie = config.get("cookie")
-    if cfg_cookie:
-        return cfg_cookie
-
+    # First: Try live extraction from macOS Google Chrome if available
     try:
         cmd = ["security", "find-generic-password", "-w", "-s", "Chrome Safe Storage"]
         password = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).strip()
@@ -111,12 +103,23 @@ def get_chrome_cookies() -> str:
                             cookies_dict[name] = m.group(1)
             conn.close()
 
-        if cookies_dict:
+        if cookies_dict and "laravel_session" in cookies_dict:
             cookie_str = "; ".join([f"{k}={v}" for k, v in cookies_dict.items()])
-            logging.info(f"Successfully extracted Chrome session cookies ({len(cookies_dict)} keys).")
+            logging.info(f"Successfully extracted live Chrome session cookies ({len(cookies_dict)} keys).")
             return cookie_str
     except Exception as e:
-        logging.debug(f"Chrome cookie extraction note: {e}")
+        logging.debug(f"Live Chrome cookie extraction fallback: {e}")
+
+    # Second: Fall back to environment variable (e.g. on Render)
+    env_cookie = os.environ.get("MAXVIA_COOKIE")
+    if env_cookie:
+        return env_cookie
+
+    # Third: Fall back to config.json
+    config = load_config()
+    cfg_cookie = config.get("cookie")
+    if cfg_cookie:
+        return cfg_cookie
 
     return ""
 
@@ -314,8 +317,8 @@ def fetch_all_products() -> dict:
         if m:
             urls_to_scan.add(f"https://maxvia88.com/categories/{m.group(1)}")
 
-    # Fallback/common categories if discovery missed any
-    for i in [1, 2, 3, 4, 5, 6, 16, 19, 118, 212, 217, 219, 220, 221]:
+    # Active categories on MaxVia88
+    for i in [1, 6, 16, 19, 118, 212, 217, 219, 220, 221]:
         urls_to_scan.add(f"https://maxvia88.com/categories/{i}")
 
     all_products = {}
@@ -350,20 +353,16 @@ def save_state(state: dict):
 
 
 def should_notify_product(item_title: str, target_keywords: list = None) -> bool:
-    """Check if a product title satisfies notification criteria (strict profile whitelist + BM rules)."""
+    """Check if a product title satisfies notification criteria (all BMs except X3 + profile whitelist)."""
     title_clean = normalize_title(item_title).lower()
 
     # Case 1: Product is a BM (Business Manager)
     is_bm = "bm" in title_clean or "business manager" in title_clean
     if is_bm:
-        # Match if explicitly in target keywords
-        if target_keywords:
-            for kw in target_keywords:
-                kw_clean = normalize_title(kw).lower()
-                if kw_clean and ("bm" in kw_clean or "business manager" in kw_clean) and kw_clean in title_clean:
-                    return True
-        # Or match if it's a verified BM
-        return any(term in title_clean for term in ["verified", "verificada", "verificado", "verif"])
+        # Exclude only the first product: X3 (X3| BM350 Reinstated V2) as requested
+        if "x3" in title_clean:
+            return False
+        return True
 
     # Case 2: Product is a Profile (strictly check allowed target profile keywords)
     if target_keywords:
@@ -408,9 +407,15 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
             notify_restock = rule.get("notify_restock", True)
 
             is_highlight = rule.get("is_highlight", False)
+            title_clean = normalize_title(item['title']).lower()
+            is_bm = "bm" in title_clean or "business manager" in title_clean
 
             if new_stock < old_stock:
                 diff = old_stock - new_stock
+
+                # For BMs: only alert when completely sold out (stock = 0), avoiding noise on every individual unit sale
+                if is_bm and new_stock > 0:
+                    continue
 
                 # If a low-stock threshold is configured, ignore stock drops when new_stock is still >= threshold
                 if threshold is not None and new_stock >= threshold:
@@ -418,7 +423,13 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     continue
 
                 if new_stock == 0:
-                    if is_highlight:
+                    if is_bm:
+                        changes.append(
+                            f"💼🔴 <b>[BM ESGOTOU]</b>\n"
+                            f"📦 <b>Produto:</b> {item['title']}\n"
+                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>0 unidades</b> (-{diff})"
+                        )
+                    elif is_highlight:
                         changes.append(
                             f"🔥🔴 <b>[DESTAQUE] ESGOTOU COMPLETAMENTE!</b> 🔴🔥\n"
                             f"📦 <b>Produto:</b> ⭐ <b>{item['title']}</b> ⭐\n"
@@ -468,7 +479,15 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     continue
 
                 diff = new_stock - old_stock
-                if old_stock == 0:
+                if is_bm:
+                    changes.append(
+                        f"💼🎉 <b>[BM REABASTECIDA!] (+{diff})</b>\n"
+                        f"📦 <b>Produto:</b> <b>{item['title']}</b>\n"
+                        f"💵 <b>Preço:</b> {item['price']}\n"
+                        f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b>\n"
+                        f"🔗 <a href='https://maxvia88.com/categories/118'>Acessar BM no MaxVia88</a>"
+                    )
+                elif old_stock == 0:
                     if is_highlight:
                         changes.append(
                             f"🔥🚨 <b>[REPOSIÇÃO VIP - DESTAQUE]</b> 🚨🔥\n"
