@@ -106,6 +106,13 @@ def get_chrome_cookies() -> str:
         if cookies_dict and "laravel_session" in cookies_dict:
             cookie_str = "; ".join([f"{k}={v}" for k, v in cookies_dict.items()])
             logging.info(f"Successfully extracted live Chrome session cookies ({len(cookies_dict)} keys).")
+            try:
+                cfg = load_config()
+                if cfg.get("cookie") != cookie_str:
+                    cfg["cookie"] = cookie_str
+                    save_config(cfg)
+            except Exception:
+                pass
             return cookie_str
     except Exception as e:
         logging.debug(f"Live Chrome cookie extraction fallback: {e}")
@@ -386,9 +393,11 @@ def get_rule_for_product(item_title: str, product_rules: dict) -> dict:
 
 
 def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id: str, is_first_run: bool = False, product_rules: dict = None):
-    """Compare stock states and dispatch Telegram notifications based on custom thresholds and restock rules."""
+    """Compare stock states and dispatch Telegram notifications based on custom thresholds, drop steps, and restock rules."""
     if is_first_run:
         logging.info("Estoque inicial (baseline) registrado. Alertas serão enviados no Telegram APENAS quando houver compras ou reposições.")
+        for p_id, item in new_state.items():
+            item['last_notified_stock'] = item['stock']
         return
 
     changes = []
@@ -396,82 +405,120 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
 
     for p_id, item in new_state.items():
         if p_id in old_state:
-            old_stock = old_state[p_id]['stock']
+            old_item = old_state[p_id]
+            old_stock = old_item['stock']
             new_stock = item['stock']
+            baseline_stock = old_item.get('last_notified_stock', old_stock)
 
             rule = get_rule_for_product(item['title'], product_rules)
             threshold = rule.get("min_stock_alert_threshold")
             notify_restock = rule.get("notify_restock", True)
+            drop_step_alert = rule.get("drop_step_alert")
 
             is_highlight = rule.get("is_highlight", False)
             title_clean = normalize_title(item['title']).lower()
             is_bm = "bm" in title_clean or "business manager" in title_clean
 
             if new_stock < old_stock:
-                diff = old_stock - new_stock
-
                 # For BMs: only alert when completely sold out (stock = 0), avoiding noise on every individual unit sale
                 if is_bm and new_stock > 0:
-                    continue
-
-                # If a low-stock threshold is configured, ignore stock drops when new_stock is still >= threshold
-                if threshold is not None and new_stock >= threshold:
-                    logging.info(f"Queda de estoque para '{item['title']}' ignorada: {old_stock} -> {new_stock} (ainda acima do limite de {threshold}).")
+                    item['last_notified_stock'] = new_stock
                     continue
 
                 if new_stock == 0:
+                    diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
+                    item['last_notified_stock'] = 0
                     if is_bm:
                         changes.append(
                             f"💼🔴 <b>[BM VERIFICADA ESGOTOU]</b>\n"
                             f"📦 <b>Produto:</b> {item['title']}\n"
-                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>0 unidades</b> (-{diff})"
+                            f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})"
                         )
                     elif is_highlight:
                         changes.append(
                             f"🔥🔴 <b>[DESTAQUE] ESGOTOU COMPLETAMENTE!</b> 🔴🔥\n"
                             f"📦 <b>Produto:</b> ⭐ <b>{item['title']}</b> ⭐\n"
-                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>0 unidades</b> (-{diff})\n"
+                            f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})\n"
                             f"🔔 <i>Alerta de reposição VIP ativado para este perfil!</i>"
                         )
                     else:
                         changes.append(
                             f"🔴 <b>ESGOTOU COMPLETAMENTE!</b>\n"
                             f"📦 <b>Produto:</b> {item['title']}\n"
-                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>0 unidades</b> (-{diff})"
+                            f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})"
                         )
-                elif threshold is not None and old_stock >= threshold and new_stock < threshold:
-                    if is_highlight:
-                        changes.append(
-                            f"⚡⚠️ <b>[DESTAQUE VIP] ESTOQUE CRÍTICO (&lt; {threshold} perfis)!</b> ⚠️⚡\n"
-                            f"📦 <b>Produto:</b> ⭐ <b>{item['title']}</b> ⭐\n"
-                            f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})"
-                        )
-                    else:
-                        changes.append(
-                            f"⚠️ <b>ALERTA DE ESTOQUE CRÍTICO (&lt; {threshold} perfis)!</b>\n"
-                            f"📦 <b>Produto:</b> {item['title']}\n"
-                            f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})"
-                        )
-                else:
+                elif drop_step_alert is not None and drop_step_alert > 0:
+                    accumulated_drop = baseline_stock - new_stock
+                    if accumulated_drop < drop_step_alert:
+                        logging.info(f"Queda parcial de estoque para '{item['title']}': {baseline_stock} -> {new_stock} (-{accumulated_drop}). Aguardando atingir lote de {drop_step_alert} para notificar.")
+                        item['last_notified_stock'] = baseline_stock
+                        continue
+
+                    # Accumulated drop reached or exceeded drop_step_alert (e.g. 10, 30, 100...)
+                    diff = accumulated_drop
+                    from_stock = baseline_stock
+                    item['last_notified_stock'] = new_stock
+
                     if is_highlight:
                         changes.append(
                             f"🛒🔥 <b>[DESTAQUE - COMPRA DETECTADA]</b> 🔥🛒\n"
                             f"📦 <b>Produto:</b> ⭐ <b>{item['title']}</b> ⭐\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})\n"
-                            f"⚡ <i>O estoque deste perfil está sendo consumido!</i>"
+                            f"📉 <b>Estoque:</b> {from_stock} ➔ <b>{new_stock} unidades</b> (-{diff})\n"
+                            f"⚡ <i>{diff} perfis comprados! Restam {new_stock} em estoque.</i>"
                         )
                     else:
                         changes.append(
                             f"🛒 <b>COMPRA DETECTADA (-{diff})!</b>\n"
                             f"📦 <b>Produto:</b> {item['title']}\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b>"
+                            f"📉 <b>Estoque Restante:</b> {from_stock} ➔ <b>{new_stock} unidades</b> (-{diff})"
                         )
+                else:
+                    # If a low-stock threshold is configured, ignore stock drops when new_stock is still >= threshold
+                    if threshold is not None and new_stock >= threshold:
+                        logging.info(f"Queda de estoque para '{item['title']}' ignorada: {old_stock} -> {new_stock} (ainda acima do limite de {threshold}).")
+                        item['last_notified_stock'] = new_stock
+                        continue
+
+                    diff = old_stock - new_stock
+                    item['last_notified_stock'] = new_stock
+
+                    if threshold is not None and old_stock >= threshold and new_stock < threshold:
+                        if is_highlight:
+                            changes.append(
+                                f"⚡⚠️ <b>[DESTAQUE VIP] ESTOQUE CRÍTICO (&lt; {threshold} perfis)!</b> ⚠️⚡\n"
+                                f"📦 <b>Produto:</b> ⭐ <b>{item['title']}</b> ⭐\n"
+                                f"💵 <b>Preço:</b> {item['price']}\n"
+                                f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})"
+                            )
+                        else:
+                            changes.append(
+                                f"⚠️ <b>ALERTA DE ESTOQUE CRÍTICO (&lt; {threshold} perfis)!</b>\n"
+                                f"📦 <b>Produto:</b> {item['title']}\n"
+                                f"💵 <b>Preço:</b> {item['price']}\n"
+                                f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})"
+                            )
+                    else:
+                        if is_highlight:
+                            changes.append(
+                                f"🛒🔥 <b>[DESTAQUE - COMPRA DETECTADA]</b> 🔥🛒\n"
+                                f"📦 <b>Produto:</b> ⭐ <b>{item['title']}</b> ⭐\n"
+                                f"💵 <b>Preço:</b> {item['price']}\n"
+                                f"📉 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})\n"
+                                f"⚡ <i>O estoque deste perfil está sendo consumido!</i>"
+                            )
+                        else:
+                            changes.append(
+                                f"🛒 <b>COMPRA DETECTADA (-{diff})!</b>\n"
+                                f"📦 <b>Produto:</b> {item['title']}\n"
+                                f"💵 <b>Preço:</b> {item['price']}\n"
+                                f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b>"
+                            )
 
             elif new_stock > old_stock:
+                item['last_notified_stock'] = new_stock
+
                 if not notify_restock:
                     continue
 
@@ -516,6 +563,9 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                             f"💵 <b>Preço:</b> {item['price']}\n"
                             f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b>"
                         )
+            else:
+                # new_stock == old_stock
+                item['last_notified_stock'] = baseline_stock
 
     if changes:
         logging.info(f"Detectadas {len(changes)} alterações de estoque. Enviando alerta Telegram...")
@@ -540,6 +590,13 @@ def run_cycle():
 
     old_state = load_state()
     is_first_run = len(old_state) == 0
+
+    # Ensure baseline last_notified_stock is carried over from old_state for all products
+    for p_id, item in all_products.items():
+        if p_id in old_state and 'last_notified_stock' in old_state[p_id]:
+            item['last_notified_stock'] = old_state[p_id]['last_notified_stock']
+        else:
+            item['last_notified_stock'] = item['stock']
 
     target_keywords = config.get("target_keywords") or config.get("target_products") or []
     if isinstance(target_keywords, str):
