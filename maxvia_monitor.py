@@ -455,8 +455,19 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
 
             site_source = item.get('site', 'maxvia88')
             url = item.get('url', '')
-            site_name = "TheFBStores.com" if site_source == 'thefbstores' else "MaxVia88"
+            is_new_supplier = (site_source == 'thefbstores')
+
+            if is_new_supplier:
+                tag_header = "[NOVO FORNECEDOR - THE FB STORE]"
+                site_line = "🏪 <b>Fornecedor:</b> 🆕 Novo Fornecedor (TheFBStores.com)\n"
+                url_line = f"\n🔗 <a href='{url}'>Acessar no TheFBStores.com</a>" if url else ""
+            else:
+                tag_header = "[MAXVIA88]"
+                site_line = "🏪 <b>Fornecedor:</b> MaxVia88\n"
+                url_line = ""
+
             display_title = item.get('raw_title') or item['title']
+            clean_display_title = display_title.replace('⭐', '').replace('✅', '').strip()
 
             if new_stock < old_stock:
                 # For BMs: only alert when completely sold out (stock = 0), avoiding noise on every individual unit sale
@@ -467,30 +478,34 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                 if new_stock == 0:
                     diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
                     item['last_notified_stock'] = 0
-                    if site_source == 'thefbstores':
+                    if is_new_supplier:
                         changes.append(
-                            f"🔴 <b>[{site_name.upper()}] ESGOTOU COMPLETAMENTE!</b>\n"
-                            f"📦 <b>Produto:</b> ⭐ <b>{display_title}</b> ⭐\n"
-                            f"🌐 <b>Site:</b> {site_name}\n"
+                            f"🔴 <b>{tag_header} ESGOTOU COMPLETAMENTE!</b> 🔴\n"
+                            f"{site_line}"
+                            f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
                             f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})"
+                            f"{url_line}"
                         )
                     elif is_bm:
                         changes.append(
-                            f"💼🔴 <b>[BM VERIFICADA ESGOTOU]</b>\n"
-                            f"📦 <b>Produto:</b> {item['title']}\n"
+                            f"💼🔴 <b>[MAXVIA88 - BM VERIFICADA ESGOTOU]</b>\n"
+                            f"{site_line}"
+                            f"📦 <b>Produto:</b> {clean_display_title}\n"
                             f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})"
                         )
                     elif is_highlight:
                         changes.append(
-                            f"🔥🔴 <b>[DESTAQUE] ESGOTOU COMPLETAMENTE!</b> 🔴🔥\n"
-                            f"📦 <b>Produto:</b> ⭐ <b>{item['title']}</b> ⭐\n"
+                            f"🔥🔴 <b>{tag_header} ESGOTOU COMPLETAMENTE!</b> 🔴🔥\n"
+                            f"{site_line}"
+                            f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
                             f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})\n"
-                            f"🔔 <i>Alerta de reposição VIP ativado para este perfil!</i>"
+                            f"🔔 <i>Alerta de reposição ativado para este perfil!</i>"
                         )
                     else:
                         changes.append(
-                            f"🔴 <b>ESGOTOU COMPLETAMENTE!</b>\n"
-                            f"📦 <b>Produto:</b> {item['title']}\n"
+                            f"🔴 <b>{tag_header} ESGOTOU COMPLETAMENTE!</b>\n"
+                            f"{site_line}"
+                            f"📦 <b>Produto:</b> {clean_display_title}\n"
                             f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})"
                         )
                 elif drop_step_alert is not None and drop_step_alert > 0:
@@ -505,15 +520,11 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     from_stock = baseline_stock
                     item['last_notified_stock'] = new_stock
 
-                    site_line = f"🌐 <b>Site:</b> {site_name}\n" if site_source == 'thefbstores' else ""
-                    url_line = f"\n🔗 <a href='{url}'>Acessar produto no {site_name}</a>" if url else ""
-                    header_name = f"[{site_name.upper()} - COMPRA DETECTADA]" if site_source == 'thefbstores' else "[DESTAQUE - COMPRA DETECTADA]"
-
                     if is_highlight:
                         changes.append(
-                            f"🛒🔥 <b>{header_name}</b> 🔥🛒\n"
-                            f"📦 <b>Produto:</b> ⭐ <b>{display_title}</b> ⭐\n"
+                            f"🛒🔥 <b>{tag_header} COMPRA DETECTADA!</b> 🔥🛒\n"
                             f"{site_line}"
+                            f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
                             f"📉 <b>Estoque:</b> {from_stock} ➔ <b>{new_stock} unidades</b> (-{diff})\n"
                             f"⚡ <i>{diff} perfis comprados! Restam {new_stock} em estoque.</i>"
@@ -521,11 +532,12 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                         )
                     else:
                         changes.append(
-                            f"🛒 <b>COMPRA DETECTADA (-{diff})!</b>\n"
-                            f"📦 <b>Produto:</b> {display_title}\n"
+                            f"🛒 <b>{tag_header} COMPRA DETECTADA (-{diff})!</b>\n"
                             f"{site_line}"
+                            f"📦 <b>Produto:</b> {clean_display_title}\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
                             f"📉 <b>Estoque Restante:</b> {from_stock} ➔ <b>{new_stock} unidades</b> (-{diff})"
+                            f"{url_line}"
                         )
                 else:
                     # If a low-stock threshold is configured, ignore stock drops when new_stock is still >= threshold
@@ -540,33 +552,41 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     if threshold is not None and old_stock >= threshold and new_stock < threshold:
                         if is_highlight:
                             changes.append(
-                                f"⚡⚠️ <b>[DESTAQUE VIP] ESTOQUE CRÍTICO (&lt; {threshold} perfis)!</b> ⚠️⚡\n"
-                                f"📦 <b>Produto:</b> ⭐ <b>{item['title']}</b> ⭐\n"
+                                f"⚡⚠️ <b>{tag_header} ESTOQUE CRÍTICO (&lt; {threshold} perfis)!</b> ⚠️⚡\n"
+                                f"{site_line}"
+                                f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
                                 f"💵 <b>Preço:</b> {item['price']}\n"
                                 f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})"
+                                f"{url_line}"
                             )
                         else:
                             changes.append(
-                                f"⚠️ <b>ALERTA DE ESTOQUE CRÍTICO (&lt; {threshold} perfis)!</b>\n"
-                                f"📦 <b>Produto:</b> {item['title']}\n"
+                                f"⚠️ <b>{tag_header} ALERTA DE ESTOQUE CRÍTICO (&lt; {threshold} perfis)!</b>\n"
+                                f"{site_line}"
+                                f"📦 <b>Produto:</b> {clean_display_title}\n"
                                 f"💵 <b>Preço:</b> {item['price']}\n"
                                 f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})"
+                                f"{url_line}"
                             )
                     else:
                         if is_highlight:
                             changes.append(
-                                f"🛒🔥 <b>[DESTAQUE - COMPRA DETECTADA]</b> 🔥🛒\n"
-                                f"📦 <b>Produto:</b> ⭐ <b>{item['title']}</b> ⭐\n"
+                                f"🛒🔥 <b>{tag_header} COMPRA DETECTADA!</b> 🔥🛒\n"
+                                f"{site_line}"
+                                f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
                                 f"💵 <b>Preço:</b> {item['price']}\n"
                                 f"📉 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})\n"
                                 f"⚡ <i>O estoque deste perfil está sendo consumido!</i>"
+                                f"{url_line}"
                             )
                         else:
                             changes.append(
-                                f"🛒 <b>COMPRA DETECTADA (-{diff})!</b>\n"
-                                f"📦 <b>Produto:</b> {item['title']}\n"
+                                f"🛒 <b>{tag_header} COMPRA DETECTADA (-{diff})!</b>\n"
+                                f"{site_line}"
+                                f"📦 <b>Produto:</b> {clean_display_title}\n"
                                 f"💵 <b>Preço:</b> {item['price']}\n"
                                 f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b>"
+                                f"{url_line}"
                             )
 
             elif new_stock > old_stock:
@@ -576,19 +596,21 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     continue
 
                 diff = new_stock - old_stock
-                if site_source == 'thefbstores':
+                if is_new_supplier:
                     changes.append(
-                        f"🟢🔥 <b>[{site_name.upper()} - REABASTECIMENTO]</b> 🔥🟢\n"
-                        f"📦 <b>Produto:</b> ⭐ <b>{display_title}</b> ⭐\n"
-                        f"🌐 <b>Site:</b> {site_name}\n"
+                        f"🟢🔥 <b>{tag_header} REABASTECIMENTO!</b> 🔥🟢\n"
+                        f"{site_line}"
+                        f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
                         f"💵 <b>Preço:</b> {item['price']}\n"
                         f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (+{diff})\n"
-                        f"🔗 <a href='{url}'>Acessar produto no {site_name}</a>"
+                        f"⚡ <i>Novo estoque disponível no fornecedor!</i>"
+                        f"{url_line}"
                     )
                 elif is_bm:
                     changes.append(
-                        f"💼🎉 <b>[BM VERIFICADA REABASTECIDA!] (+{diff})</b>\n"
-                        f"📦 <b>Produto:</b> <b>{item['title']}</b>\n"
+                        f"💼🎉 <b>[MAXVIA88 - BM VERIFICADA REABASTECIDA!] (+{diff})</b>\n"
+                        f"{site_line}"
+                        f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
                         f"💵 <b>Preço:</b> {item['price']}\n"
                         f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b>\n"
                         f"🔗 <a href='https://maxvia88.com/categories/118'>Acessar BM no MaxVia88</a>"
@@ -596,34 +618,42 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                 elif old_stock == 0:
                     if is_highlight:
                         changes.append(
-                            f"🔥🚨 <b>[REPOSIÇÃO VIP - DESTAQUE]</b> 🚨🔥\n"
+                            f"🔥🚨 <b>{tag_header} REPOSIÇÃO VIP!</b> 🚨🔥\n"
+                            f"{site_line}"
                             f"⭐ <b>PRODUTO FAVORITO REABASTECIDO!</b> ⭐\n"
-                            f"📦 <b>Produto:</b> <b>{item['title']}</b>\n"
+                            f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
                             f"📈 <b>Estoque:</b> 0 ➔ <b>{new_stock} unidades</b> (+{diff})\n"
                             f"⚡ <i>Os perfis foram reabastecidos! Garanta o seu rápido!</i>"
+                            f"{url_line}"
                         )
                     else:
                         changes.append(
-                            f"🎉 <b>REPOSIÇÃO DE ESTOQUE (+{diff})!</b>\n"
-                            f"📦 <b>Produto:</b> {item['title']}\n"
+                            f"🎉 <b>{tag_header} REPOSIÇÃO DE ESTOQUE (+{diff})!</b>\n"
+                            f"{site_line}"
+                            f"📦 <b>Produto:</b> {clean_display_title}\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
                             f"📈 <b>Estoque:</b> 0 ➔ <b>{new_stock} unidades</b>"
+                            f"{url_line}"
                         )
                 else:
                     if is_highlight:
                         changes.append(
-                            f"🟢🔥 <b>[REABASTECIMENTO VIP - DESTAQUE]</b> 🔥🟢\n"
-                            f"📦 <b>Produto:</b> ⭐ <b>{item['title']}</b> ⭐\n"
+                            f"🟢🔥 <b>{tag_header} REABASTECIMENTO!</b> 🔥🟢\n"
+                            f"{site_line}"
+                            f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
                             f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (+{diff})"
+                            f"{url_line}"
                         )
                     else:
                         changes.append(
-                            f"🟢 <b>REABASTECIDO (+{diff})!</b>\n"
-                            f"📦 <b>Produto:</b> {item['title']}\n"
+                            f"🟢 <b>{tag_header} REABASTECIDO (+{diff})!</b>\n"
+                            f"{site_line}"
+                            f"📦 <b>Produto:</b> {clean_display_title}\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
                             f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b>"
+                            f"{url_line}"
                         )
             else:
                 # new_stock == old_stock
