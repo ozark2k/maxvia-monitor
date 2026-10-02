@@ -339,6 +339,40 @@ def fetch_all_products() -> dict:
     return all_products
 
 
+def fetch_thefbstores_products() -> dict:
+    """Fetch products from TheFBStores.com via Base44 API."""
+    url = "https://base44.app/api/apps/6ab5c66253ae39f6f40f80f7/entities/Product"
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+    products = {}
+    try:
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            data = json.loads(resp.read().decode('utf-8'))
+            for p in data:
+                slug = p.get('slug', '')
+                if not slug:
+                    continue
+                p_id = f"thefbstores_{slug}"
+                name = p.get('name', '')
+                price = p.get('price', 0)
+                qty = p.get('supplier_quantity') if p.get('product_source') == 'maxvia88' else p.get('stock_available')
+                stock = int(qty or 0)
+                products[p_id] = {
+                    'id': p_id,
+                    'title': f"[TheFBStore] {name}",
+                    'raw_title': name,
+                    'site': 'thefbstores',
+                    'slug': slug,
+                    'stock': stock,
+                    'price': f"${price:.2f}",
+                    'desc': p.get('short_description', ''),
+                    'url': f"https://thefbstores.com/product/{slug}"
+                }
+            logging.info(f"[TheFBStores] Coletados {len(products)} produtos com sucesso via Base44.")
+    except Exception as e:
+        logging.error(f"Erro ao buscar produtos TheFBStores: {e}")
+    return products
+
+
 def load_state() -> dict:
     """Load stock state from JSON file."""
     if os.path.exists(STATE_FILE):
@@ -385,7 +419,7 @@ def get_rule_for_product(item_title: str, product_rules: dict) -> dict:
     if not product_rules:
         return {}
     title_clean = normalize_title(item_title).lower()
-    for kw, rule in product_rules.items():
+    for kw, rule in sorted(product_rules.items(), key=lambda x: len(x[0]), reverse=True):
         kw_clean = normalize_title(kw).lower()
         if kw_clean and kw_clean in title_clean:
             return rule
@@ -419,6 +453,11 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
             title_clean = normalize_title(item['title']).lower()
             is_bm = "bm" in title_clean or "business manager" in title_clean
 
+            site_source = item.get('site', 'maxvia88')
+            url = item.get('url', '')
+            site_name = "TheFBStores.com" if site_source == 'thefbstores' else "MaxVia88"
+            display_title = item.get('raw_title') or item['title']
+
             if new_stock < old_stock:
                 # For BMs: only alert when completely sold out (stock = 0), avoiding noise on every individual unit sale
                 if is_bm and new_stock > 0:
@@ -428,7 +467,14 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                 if new_stock == 0:
                     diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
                     item['last_notified_stock'] = 0
-                    if is_bm:
+                    if site_source == 'thefbstores':
+                        changes.append(
+                            f"🔴 <b>[{site_name.upper()}] ESGOTOU COMPLETAMENTE!</b>\n"
+                            f"📦 <b>Produto:</b> ⭐ <b>{display_title}</b> ⭐\n"
+                            f"🌐 <b>Site:</b> {site_name}\n"
+                            f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})"
+                        )
+                    elif is_bm:
                         changes.append(
                             f"💼🔴 <b>[BM VERIFICADA ESGOTOU]</b>\n"
                             f"📦 <b>Produto:</b> {item['title']}\n"
@@ -459,18 +505,25 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     from_stock = baseline_stock
                     item['last_notified_stock'] = new_stock
 
+                    site_line = f"🌐 <b>Site:</b> {site_name}\n" if site_source == 'thefbstores' else ""
+                    url_line = f"\n🔗 <a href='{url}'>Acessar produto no {site_name}</a>" if url else ""
+                    header_name = f"[{site_name.upper()} - COMPRA DETECTADA]" if site_source == 'thefbstores' else "[DESTAQUE - COMPRA DETECTADA]"
+
                     if is_highlight:
                         changes.append(
-                            f"🛒🔥 <b>[DESTAQUE - COMPRA DETECTADA]</b> 🔥🛒\n"
-                            f"📦 <b>Produto:</b> ⭐ <b>{item['title']}</b> ⭐\n"
+                            f"🛒🔥 <b>{header_name}</b> 🔥🛒\n"
+                            f"📦 <b>Produto:</b> ⭐ <b>{display_title}</b> ⭐\n"
+                            f"{site_line}"
                             f"💵 <b>Preço:</b> {item['price']}\n"
                             f"📉 <b>Estoque:</b> {from_stock} ➔ <b>{new_stock} unidades</b> (-{diff})\n"
                             f"⚡ <i>{diff} perfis comprados! Restam {new_stock} em estoque.</i>"
+                            f"{url_line}"
                         )
                     else:
                         changes.append(
                             f"🛒 <b>COMPRA DETECTADA (-{diff})!</b>\n"
-                            f"📦 <b>Produto:</b> {item['title']}\n"
+                            f"📦 <b>Produto:</b> {display_title}\n"
+                            f"{site_line}"
                             f"💵 <b>Preço:</b> {item['price']}\n"
                             f"📉 <b>Estoque Restante:</b> {from_stock} ➔ <b>{new_stock} unidades</b> (-{diff})"
                         )
@@ -523,7 +576,16 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     continue
 
                 diff = new_stock - old_stock
-                if is_bm:
+                if site_source == 'thefbstores':
+                    changes.append(
+                        f"🟢🔥 <b>[{site_name.upper()} - REABASTECIMENTO]</b> 🔥🟢\n"
+                        f"📦 <b>Produto:</b> ⭐ <b>{display_title}</b> ⭐\n"
+                        f"🌐 <b>Site:</b> {site_name}\n"
+                        f"💵 <b>Preço:</b> {item['price']}\n"
+                        f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (+{diff})\n"
+                        f"🔗 <a href='{url}'>Acessar produto no {site_name}</a>"
+                    )
+                elif is_bm:
                     changes.append(
                         f"💼🎉 <b>[BM VERIFICADA REABASTECIDA!] (+{diff})</b>\n"
                         f"📦 <b>Produto:</b> <b>{item['title']}</b>\n"
@@ -583,6 +645,10 @@ def run_cycle():
 
     logging.info("Iniciando verificação de estoque MaxVia88...")
     all_products = fetch_all_products()
+
+    # Also fetch external stores (TheFBStores.com via Base44 API)
+    thefb_products = fetch_thefbstores_products()
+    all_products.update(thefb_products)
 
     if not all_products:
         logging.warning("Nenhum produto retornado na varredura.")
