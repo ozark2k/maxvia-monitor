@@ -23,18 +23,20 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import threading
 from bs4 import BeautifulSoup
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+STATE_FILE = os.path.join(SCRIPT_DIR, "stock_state.json")
+CONFIG_FILE = os.path.join(SCRIPT_DIR, "config.json")
+LOG_FILE = os.path.join(SCRIPT_DIR, "monitor.log")
+
 # Logging Setup
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler("monitor.log", encoding="utf-8")
+        logging.FileHandler(LOG_FILE, encoding="utf-8")
     ]
 )
-
-STATE_FILE = "stock_state.json"
-CONFIG_FILE = "config.json"
 
 
 def load_config() -> dict:
