@@ -508,6 +508,34 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                             f"📦 <b>Produto:</b> {clean_display_title}\n"
                             f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})"
                         )
+                # If a low-stock threshold is configured, ignore stock drops when new_stock is still >= threshold
+                elif threshold is not None and new_stock >= threshold:
+                    logging.info(f"Queda de estoque para '{item['title']}' ignorada: {old_stock} -> {new_stock} (ainda acima do limite de {threshold}).")
+                    item['last_notified_stock'] = new_stock
+                    continue
+                # Stock just crossed below threshold
+                elif threshold is not None and old_stock >= threshold and new_stock < threshold:
+                    diff = old_stock - new_stock
+                    item['last_notified_stock'] = new_stock
+                    if is_highlight:
+                        changes.append(
+                            f"⚡⚠️ <b>{tag_header} ESTOQUE CRÍTICO (&lt; {threshold} perfis)!</b> ⚠️⚡\n"
+                            f"{site_line}"
+                            f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
+                            f"💵 <b>Preço:</b> {item['price']}\n"
+                            f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})\n"
+                            f"⚡ <i>Atenção: O estoque caiu abaixo de {threshold} unidades!</i>"
+                            f"{url_line}"
+                        )
+                    else:
+                        changes.append(
+                            f"⚠️ <b>{tag_header} ALERTA DE ESTOQUE CRÍTICO (&lt; {threshold} perfis)!</b>\n"
+                            f"{site_line}"
+                            f"📦 <b>Produto:</b> {clean_display_title}\n"
+                            f"💵 <b>Preço:</b> {item['price']}\n"
+                            f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})"
+                            f"{url_line}"
+                        )
                 elif drop_step_alert is not None and drop_step_alert > 0:
                     accumulated_drop = baseline_stock - new_stock
                     if accumulated_drop < drop_step_alert:
@@ -540,54 +568,27 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                             f"{url_line}"
                         )
                 else:
-                    # If a low-stock threshold is configured, ignore stock drops when new_stock is still >= threshold
-                    if threshold is not None and new_stock >= threshold:
-                        logging.info(f"Queda de estoque para '{item['title']}' ignorada: {old_stock} -> {new_stock} (ainda acima do limite de {threshold}).")
-                        item['last_notified_stock'] = new_stock
-                        continue
-
                     diff = old_stock - new_stock
                     item['last_notified_stock'] = new_stock
-
-                    if threshold is not None and old_stock >= threshold and new_stock < threshold:
-                        if is_highlight:
-                            changes.append(
-                                f"⚡⚠️ <b>{tag_header} ESTOQUE CRÍTICO (&lt; {threshold} perfis)!</b> ⚠️⚡\n"
-                                f"{site_line}"
-                                f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
-                                f"💵 <b>Preço:</b> {item['price']}\n"
-                                f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})"
-                                f"{url_line}"
-                            )
-                        else:
-                            changes.append(
-                                f"⚠️ <b>{tag_header} ALERTA DE ESTOQUE CRÍTICO (&lt; {threshold} perfis)!</b>\n"
-                                f"{site_line}"
-                                f"📦 <b>Produto:</b> {clean_display_title}\n"
-                                f"💵 <b>Preço:</b> {item['price']}\n"
-                                f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})"
-                                f"{url_line}"
-                            )
+                    if is_highlight:
+                        changes.append(
+                            f"🛒🔥 <b>{tag_header} COMPRA DETECTADA!</b> 🔥🛒\n"
+                            f"{site_line}"
+                            f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
+                            f"💵 <b>Preço:</b> {item['price']}\n"
+                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})\n"
+                            f"⚡ <i>O estoque deste perfil está sendo consumido!</i>"
+                            f"{url_line}"
+                        )
                     else:
-                        if is_highlight:
-                            changes.append(
-                                f"🛒🔥 <b>{tag_header} COMPRA DETECTADA!</b> 🔥🛒\n"
-                                f"{site_line}"
-                                f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
-                                f"💵 <b>Preço:</b> {item['price']}\n"
-                                f"📉 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})\n"
-                                f"⚡ <i>O estoque deste perfil está sendo consumido!</i>"
-                                f"{url_line}"
-                            )
-                        else:
-                            changes.append(
-                                f"🛒 <b>{tag_header} COMPRA DETECTADA (-{diff})!</b>\n"
-                                f"{site_line}"
-                                f"📦 <b>Produto:</b> {clean_display_title}\n"
-                                f"💵 <b>Preço:</b> {item['price']}\n"
-                                f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b>"
-                                f"{url_line}"
-                            )
+                        changes.append(
+                            f"🛒 <b>{tag_header} COMPRA DETECTADA (-{diff})!</b>\n"
+                            f"{site_line}"
+                            f"📦 <b>Produto:</b> {clean_display_title}\n"
+                            f"💵 <b>Preço:</b> {item['price']}\n"
+                            f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b>"
+                            f"{url_line}"
+                        )
 
             elif new_stock > old_stock:
                 item['last_notified_stock'] = new_stock
