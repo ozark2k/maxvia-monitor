@@ -1,7 +1,7 @@
 {
   "telegram_bot_token": "8692174015:AAFl7TCPswrYFHoMhSbgAtb5V3F8Px1k_HA",
   "telegram_chat_id": "11579952",
-  "cookie": "XSRF-TOKEN=eyJpdiI6IjA1aWFPaXNBUjJYTXc4NTNxR0hMd0E9PSIsInZhbHVlIjoiR0o4MC9xSG8vbDdCVW1aSkttbWhaZm1oVDNFV1VJdjhGTi8xNUZMWEFUSVBQS0hsc2Vyd2RFRWg4WnRMSVhabmE3UThGeFpIQVVrSHZwOCtMSDA1dVA1NUxvZTBCUWw0QjgvNzA3SC9uU3NBZG5id0xJK0lURkEydGtKMVdlRXUiLCJtYWMiOiI5NzdmYWM4ZjYxYTJmYTQ3OGQ5NzEzYzdmMGVhMmMyNTFlMmY1NDcyOTBhZWIyYmFkOTA2N2FkOTNhZDQyYmY3In0%3D; laravel_session=eyJpdiI6IlYvQUxwWGkwTTlkbStQbHlUMUJoTFE9PSIsInZhbHVlIjoiMVBhTTF4WkMrU0ZiNEpRd2xHalpOZGtJWEhGMDc2UW51aHp1Z1ZrM0tEektXZ0NJbVNaMDFIZXlpYTdEYUJPMHpkWkhSNDhyUzRpbWtJNS92SnpsUFZFRDRlQTNqSTF6NTZjQmVEVzFoN3BZY3JYcEl0ODluL1N2TXl3RDZkOWoiLCJtYWMiOiI1YmQ4ZGIzM2YzYjJmMmFmOTVlMWQ5ODA1MTFmYzY0NmE5ZTAzYzhiYWM5ZjRjOWVmMDA2ZDhhYzdmZDAxMTM0In0%3D",
+  "cookie": "XSRF-TOKEN=eyJpdiI6InJrTUJ1MEtlaTI4TzNtUEdSN21CTkE9PSIsInZhbHVlIjoiY2RyRTdMc0NuOWFWQTNKT2krUXhUeDFHdHkzV1Vyc3gwaHhBak9XWFdsdWt3VXI4b0RiekFFWDlBekduQ2ZXWEVQUUNtTkZiR1VWUzlaQWpTV0k1eko1eHdzK3VpcE1BVmtBQVhGVVdJbzBSdkdnbTJRZlpQV1VvTlR6a0pPMVMiLCJtYWMiOiI3NzU0Mjg5MzczNzg2ZWU5ZTExYmY5MDg1MGIyZDhmMThjZTE0MjQ4MWUzMDE3OWFkZDAwMTQ1MTYwYmFhY2RkIn0%3D; laravel_session=eyJpdiI6InhZVHJrT1lOOXY4bkJhR0NaU3FueGc9PSIsInZhbHVlIjoiUlpVNGE5OHpGQUN0OTB1ZUltRk10bG8yTkpla0RjU3VVaWw0eE5mdGVKN1JLcU1KdldzQ2NRcWYxWmtCTlRqanp5MlE5R245ZkNYa0QyZWxKVXEwSWVTQkhoN0xkNE9pZDZEZlI1ZWtHck5VM0dqYmJjSCtWNGJjdjJLWEg3eDMiLCJtYWMiOiJhYzY1OWYzZDE1NDA1OGI0ODllZjJmZDMwOTBhZTkzM2I5ZmJhZmU3NWFkZTgwYTM4ODA0OTRlNzkwMWJjOGYyIn0%3D",
   "target_products": [
     "Acc Farmed 2026 (2FA)",
     "BM3 LIMIT 50$ (3 ADS)",
@@ -10,14 +10,12 @@
   ],
   "product_rules": {
     "Acc Farmed 2026 (2FA)": {
-      "min_stock_alert_threshold": 2000,
-      "drop_step_alert": 20,
+      "drop_step_alert": 30,
       "notify_restock": true,
       "is_highlight": true
     },
     "[TheFBStore] ⭐Acc Farmed 2026 (2FA)": {
-      "min_stock_alert_threshold": 2000,
-      "drop_step_alert": 20,
+      "drop_step_alert": 30,
       "notify_restock": true,
       "is_highlight": true
     }
