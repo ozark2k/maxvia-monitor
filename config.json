@@ -1,23 +1,53 @@
 {
   "telegram_bot_token": "8692174015:AAFl7TCPswrYFHoMhSbgAtb5V3F8Px1k_HA",
   "telegram_chat_id": "11579952",
-  "cookie": "XSRF-TOKEN=eyJpdiI6InJrTUJ1MEtlaTI4TzNtUEdSN21CTkE9PSIsInZhbHVlIjoiY2RyRTdMc0NuOWFWQTNKT2krUXhUeDFHdHkzV1Vyc3gwaHhBak9XWFdsdWt3VXI4b0RiekFFWDlBekduQ2ZXWEVQUUNtTkZiR1VWUzlaQWpTV0k1eko1eHdzK3VpcE1BVmtBQVhGVVdJbzBSdkdnbTJRZlpQV1VvTlR6a0pPMVMiLCJtYWMiOiI3NzU0Mjg5MzczNzg2ZWU5ZTExYmY5MDg1MGIyZDhmMThjZTE0MjQ4MWUzMDE3OWFkZDAwMTQ1MTYwYmFhY2RkIn0%3D; laravel_session=eyJpdiI6InhZVHJrT1lOOXY4bkJhR0NaU3FueGc9PSIsInZhbHVlIjoiUlpVNGE5OHpGQUN0OTB1ZUltRk10bG8yTkpla0RjU3VVaWw0eE5mdGVKN1JLcU1KdldzQ2NRcWYxWmtCTlRqanp5MlE5R245ZkNYa0QyZWxKVXEwSWVTQkhoN0xkNE9pZDZEZlI1ZWtHck5VM0dqYmJjSCtWNGJjdjJLWEg3eDMiLCJtYWMiOiJhYzY1OWYzZDE1NDA1OGI0ODllZjJmZDMwOTBhZTkzM2I5ZmJhZmU3NWFkZTgwYTM4ODA0OTRlNzkwMWJjOGYyIn0%3D",
+  "cookie": "XSRF-TOKEN=eyJpdiI6ImtZUVdKUDVkUmJXQ0M5eTBSbFdzbWc9PSIsInZhbHVlIjoiMDFHdFhmUVpKMmo2bzZPZGpuQXNVSGNyRGR6Z1VmRE95ZnYzL0tYVjMweEZHZFFSa2pnTlBLQ0p6NEpydjlUK3pXZi9EOHlaY3kwS3FMeWk0cktJQXNPaWtKRFFEMGZpOXMraUxQT3lCYk45NS9NTzQ1RC96dTloTTdoOTNMUmMiLCJtYWMiOiJiOTRiMjdhYmI1MWExOTg2MTgyZjBmM2E4NWJjY2JhYTE2OGZjMmVlODllZjczZTFjNmYzMzk4NTE5NTI2NTJlIn0%3D; laravel_session=eyJpdiI6IkJTaEd0T016VTY0alF6clh3cVVoSUE9PSIsInZhbHVlIjoiN1pTV3krTVBiR2pWby9RQWVXb3lsS1BmSzlvWWZzdGtIQm1aMU1TMnFWL0RIaWlnVHVCYW55RFZEQ09PK3V2OGlub2xmbnBnQzJTM2pmSjNqTlRyQVdVTjVGVjdUZjJQRkpkSGtlemc0YzZZTFA4TFVCQklId3lTZUx0T2FzTjgiLCJtYWMiOiJkNWExOTZkMzQzNDdjOTk3MTc3YzBhMmEzOGViNTg0MWY0ZTgyZDE2MjNiNWY5MmI5NjRiNjQzZGM2Nzc2YmIyIn0%3D",
   "target_products": [
-    "Acc Farmed 2026 (2FA)",
+    "Acc Farmed 2026",
+    "Acc Farmed 2025",
+    "Acc Farmed 902",
+    "Acc Farmed XMDT",
+    "Combo 1 Account",
+    "Personal Ads",
+    "Set 5-9 Ads",
+    "Acc 902 OLD Loss Greentick",
     "BM3 LIMIT 50$ (3 ADS)",
     "BM1 Verified",
     "BM3 Verified"
   ],
   "product_rules": {
-    "Acc Farmed 2026 (2FA)": {
+    "Acc Farmed 2026": {
       "drop_step_alert": 30,
       "notify_restock": true,
       "is_highlight": true
     },
-    "[TheFBStore] ⭐Acc Farmed 2026 (2FA)": {
-      "drop_step_alert": 30,
+    "Acc Farmed 2025": {
       "notify_restock": true,
       "is_highlight": true
+    },
+    "Acc Farmed 902": {
+      "notify_restock": true,
+      "is_highlight": true
+    },
+    "Acc Farmed XMDT": {
+      "notify_restock": true,
+      "is_highlight": true
+    },
+    "Combo 1 Account": {
+      "notify_restock": true,
+      "is_highlight": false
+    },
+    "Personal Ads": {
+      "notify_restock": true,
+      "is_highlight": false
+    },
+    "Set 5-9 Ads": {
+      "notify_restock": true,
+      "is_highlight": false
+    },
+    "Acc 902 OLD Loss Greentick": {
+      "notify_restock": true,
+      "is_highlight": false
     }
   },
   "check_interval_seconds": 60

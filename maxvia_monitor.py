@@ -219,6 +219,20 @@ def normalize_price(price_str: str) -> str:
     return price_str.strip()
 
 
+def parse_price_val(price_str: str) -> float:
+    """Parse numeric price float from price string like '$0.84' or 'R$ 5,16'."""
+    if not price_str:
+        return 0.0
+    cleaned = str(price_str).replace('$', '').replace('R$', '').replace('»', '').strip()
+    m = re.search(r'[\d]+(?:[.,]\d+)?', cleaned)
+    if m:
+        try:
+            return float(m.group(0).replace(',', '.'))
+        except ValueError:
+            return 0.0
+    return 0.0
+
+
 def make_product_id(title: str, price: str) -> str:
     """Generate deterministic product ID."""
     clean_t = normalize_title(title).lower()
@@ -439,37 +453,70 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
     changes = []
     product_rules = product_rules or {}
 
+    old_by_title = {
+        (normalize_title(v.get('title', '')).lower(), v.get('site', 'maxvia88')): v
+        for v in old_state.values()
+    }
+
     for p_id, item in new_state.items():
-        if p_id in old_state:
-            old_item = old_state[p_id]
+        title_clean = normalize_title(item['title']).lower()
+        site_source = item.get('site', 'maxvia88')
+        old_item = old_state.get(p_id) or old_by_title.get((title_clean, site_source))
+
+        rule = get_rule_for_product(item['title'], product_rules)
+        threshold = rule.get("min_stock_alert_threshold")
+        notify_restock = rule.get("notify_restock", True)
+        drop_step_alert = rule.get("drop_step_alert")
+
+        is_highlight = rule.get("is_highlight", False)
+        is_bm = "bm" in title_clean or "business manager" in title_clean
+
+        url = item.get('url', '')
+        is_new_supplier = (site_source == 'thefbstores')
+
+        if is_new_supplier:
+            tag_header = "[NOVO FORNECEDOR - THE FB STORE]"
+            site_line = "🏪 <b>Fornecedor:</b> 🆕 Novo Fornecedor (TheFBStores.com)\n"
+            url_line = f"\n🔗 <a href='{url}'>Acessar no TheFBStores.com</a>" if url else ""
+        else:
+            tag_header = "[MAXVIA88]"
+            site_line = "🏪 <b>Fornecedor:</b> MaxVia88\n"
+            url_line = ""
+
+        display_title = item.get('raw_title') or item['title']
+        clean_display_title = display_title.replace('⭐', '').replace('✅', '').strip()
+
+        if old_item:
+            # Checagem de Alteração de Preço (Aumento ou Redução)
+            old_p_val = parse_price_val(old_item.get('price', ''))
+            new_p_val = parse_price_val(item.get('price', ''))
+
+            if old_p_val > 0 and new_p_val > 0 and abs(new_p_val - old_p_val) >= 0.01:
+                p_diff = new_p_val - old_p_val
+                if new_p_val > old_p_val:
+                    changes.append(
+                        f"📈🚨 <b>{tag_header} AUMENTO DE PREÇO DETECTADO!</b> 🚨📈\n"
+                        f"{site_line}"
+                        f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
+                        f"💵 <b>Preço Anterior:</b> ${old_p_val:.2f}\n"
+                        f"💰 <b>Novo Preço:</b> <b>${new_p_val:.2f}</b> (+${p_diff:.2f})\n"
+                        f"⚡ <i>Atenção: O fornecedor aumentou o valor deste perfil!</i>"
+                        f"{url_line}"
+                    )
+                else:
+                    changes.append(
+                        f"📉🏷️ <b>{tag_header} REDUÇÃO DE PREÇO!</b> 🏷️📉\n"
+                        f"{site_line}"
+                        f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
+                        f"💵 <b>Preço Anterior:</b> ${old_p_val:.2f}\n"
+                        f"💰 <b>Novo Preço:</b> <b>${new_p_val:.2f}</b> (-${abs(p_diff):.2f})\n"
+                        f"⚡ <i>O fornecedor reduziu o valor deste perfil!</i>"
+                        f"{url_line}"
+                    )
+
             old_stock = old_item['stock']
             new_stock = item['stock']
             baseline_stock = old_item.get('last_notified_stock', old_stock)
-
-            rule = get_rule_for_product(item['title'], product_rules)
-            threshold = rule.get("min_stock_alert_threshold")
-            notify_restock = rule.get("notify_restock", True)
-            drop_step_alert = rule.get("drop_step_alert")
-
-            is_highlight = rule.get("is_highlight", False)
-            title_clean = normalize_title(item['title']).lower()
-            is_bm = "bm" in title_clean or "business manager" in title_clean
-
-            site_source = item.get('site', 'maxvia88')
-            url = item.get('url', '')
-            is_new_supplier = (site_source == 'thefbstores')
-
-            if is_new_supplier:
-                tag_header = "[NOVO FORNECEDOR - THE FB STORE]"
-                site_line = "🏪 <b>Fornecedor:</b> 🆕 Novo Fornecedor (TheFBStores.com)\n"
-                url_line = f"\n🔗 <a href='{url}'>Acessar no TheFBStores.com</a>" if url else ""
-            else:
-                tag_header = "[MAXVIA88]"
-                site_line = "🏪 <b>Fornecedor:</b> MaxVia88\n"
-                url_line = ""
-
-            display_title = item.get('raw_title') or item['title']
-            clean_display_title = display_title.replace('⭐', '').replace('✅', '').strip()
 
             if new_stock < old_stock:
                 # For BMs: only alert when completely sold out (stock = 0), avoiding noise on every individual unit sale
@@ -661,6 +708,20 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
             else:
                 # new_stock == old_stock
                 item['last_notified_stock'] = baseline_stock
+        else:
+            # Produto novo adicionado ou recém-surgido no monitor com estoque
+            new_stock = item['stock']
+            item['last_notified_stock'] = new_stock
+            if new_stock > 0 and notify_restock:
+                changes.append(
+                    f"🎉🆕 <b>{tag_header} REPOSIÇÃO DE ESTOQUE!</b>\n"
+                    f"{site_line}"
+                    f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
+                    f"💵 <b>Preço:</b> {item['price']}\n"
+                    f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades</b>\n"
+                    f"⚡ <i>Este produto acabou de entrar em estoque!</i>"
+                    f"{url_line}"
+                )
 
     if changes:
         logging.info(f"Detectadas {len(changes)} alterações de estoque. Enviando alerta Telegram...")
@@ -691,9 +752,16 @@ def run_cycle():
     is_first_run = len(old_state) == 0
 
     # Ensure baseline last_notified_stock is carried over from old_state for all products
+    old_by_title = {
+        (normalize_title(v.get('title', '')).lower(), v.get('site', 'maxvia88')): v
+        for v in old_state.values()
+    }
+
     for p_id, item in all_products.items():
-        if p_id in old_state and 'last_notified_stock' in old_state[p_id]:
-            item['last_notified_stock'] = old_state[p_id]['last_notified_stock']
+        title_key = (normalize_title(item.get('title', '')).lower(), item.get('site', 'maxvia88'))
+        matching_old = old_state.get(p_id) or old_by_title.get(title_key)
+        if matching_old and 'last_notified_stock' in matching_old:
+            item['last_notified_stock'] = matching_old['last_notified_stock']
         else:
             item['last_notified_stock'] = item['stock']
 
