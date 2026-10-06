@@ -1,7 +1,7 @@
 {
   "telegram_bot_token": "8692174015:AAFl7TCPswrYFHoMhSbgAtb5V3F8Px1k_HA",
   "telegram_chat_id": "11579952",
-  "cookie": "XSRF-TOKEN=eyJpdiI6ImtZUVdKUDVkUmJXQ0M5eTBSbFdzbWc9PSIsInZhbHVlIjoiMDFHdFhmUVpKMmo2bzZPZGpuQXNVSGNyRGR6Z1VmRE95ZnYzL0tYVjMweEZHZFFSa2pnTlBLQ0p6NEpydjlUK3pXZi9EOHlaY3kwS3FMeWk0cktJQXNPaWtKRFFEMGZpOXMraUxQT3lCYk45NS9NTzQ1RC96dTloTTdoOTNMUmMiLCJtYWMiOiJiOTRiMjdhYmI1MWExOTg2MTgyZjBmM2E4NWJjY2JhYTE2OGZjMmVlODllZjczZTFjNmYzMzk4NTE5NTI2NTJlIn0%3D; laravel_session=eyJpdiI6IkJTaEd0T016VTY0alF6clh3cVVoSUE9PSIsInZhbHVlIjoiN1pTV3krTVBiR2pWby9RQWVXb3lsS1BmSzlvWWZzdGtIQm1aMU1TMnFWL0RIaWlnVHVCYW55RFZEQ09PK3V2OGlub2xmbnBnQzJTM2pmSjNqTlRyQVdVTjVGVjdUZjJQRkpkSGtlemc0YzZZTFA4TFVCQklId3lTZUx0T2FzTjgiLCJtYWMiOiJkNWExOTZkMzQzNDdjOTk3MTc3YzBhMmEzOGViNTg0MWY0ZTgyZDE2MjNiNWY5MmI5NjRiNjQzZGM2Nzc2YmIyIn0%3D",
+  "cookie": "XSRF-TOKEN=eyJpdiI6Inl5YURlN3BrRDcxTDVaSXBJTlVkcnc9PSIsInZhbHVlIjoiRmYwQjBvcm51SDR6bnhzTTJZdzgvT1JXdnVuT2dsRXhMV1dmKzBUeWIyd0Y2Ykc1V255ano0UFUyUkVpeUZxbEdxN3VFVXh2MVdleklqbTlLQkJpUkllbnRLZFhsajBFbWtiMFpEby9QWmk0eHhRaTlMZ2luOGxKOWUzWDZqdUQiLCJtYWMiOiIwZWIwMTEzNWQyMDE4MDA2M2U2ZDE5NDhiYzc1ZDMwNjllYTZlMDA1ZTFjMGZkYmQ3NjA0NTcyM2RhNzExOTJiIn0%3D; laravel_session=eyJpdiI6InJ4N3NFTktkOHpvZEZvek9HMWZvalE9PSIsInZhbHVlIjoiT0hQLzcyenROVC9PVDlad0JIWklERm90Q2tHVHE1M2VDQnN6UHQvVmlRdWEzVE9uK2xkT3RwVEhzM3VhMmwyVk9OUmhReFlKRGZ4V2UxL3VHWXFFNmMrd2p2bjZmaG5sdEI3NW9qSjhzZlJCRzJ0bHFvVU1IWFZmRlBTWUFUbnQiLCJtYWMiOiI2ZDQ1MjljYzZjMjg2MjdlNGYyZjVkMmZiYjgwMTE2MTAyMmRiOTRkZWRlMmQyZDBkYjVmZmZkOWY0MWFkNzIwIn0%3D",
   "target_products": [
     "Acc Farmed 2026",
     "Acc Farmed 2025",
@@ -47,6 +47,18 @@
     "Acc 902 OLD Loss Greentick": {
       "notify_restock": true,
       "is_highlight": false
+    },
+    "BM Verified": {
+      "notify_restock": true,
+      "is_highlight": true
+    },
+    "BM3 Verified": {
+      "notify_restock": true,
+      "is_highlight": true
+    },
+    "BM1 Verified": {
+      "notify_restock": true,
+      "is_highlight": true
     }
   },
   "check_interval_seconds": 60

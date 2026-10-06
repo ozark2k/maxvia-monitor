@@ -409,13 +409,16 @@ def save_state(state: dict):
         logging.error(f"Failed to save state file: {e}")
 
 
-def should_notify_product(item_title: str, target_keywords: list = None) -> bool:
-    """Check if a product title satisfies notification criteria (Verified BMs only + profile whitelist)."""
+def should_notify_product(item_title: str, target_keywords: list = None, site: str = "maxvia88") -> bool:
+    """Check if a product title satisfies notification criteria (Verified BMs only from MaxVia88 + profile whitelist)."""
     title_clean = normalize_title(item_title).lower()
 
-    # Case 1: Product is a BM (Business Manager) -> Only verified BMs
+    # Case 1: Product is a BM (Business Manager) -> Only verified BMs from MaxVia88
     is_bm = "bm" in title_clean or "business manager" in title_clean
     if is_bm:
+        # Usuário solicitou retirar TheFBStore e outros sites de BMs - manter exclusivamente MaxVia88
+        if site != "maxvia88":
+            return False
         return any(term in title_clean for term in ["verified", "verificada", "verificado", "verif"])
 
     # Case 2: Product is a Profile (strictly check allowed target profile keywords)
@@ -491,7 +494,7 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
             old_p_val = parse_price_val(old_item.get('price', ''))
             new_p_val = parse_price_val(item.get('price', ''))
 
-            if old_p_val > 0 and new_p_val > 0 and abs(new_p_val - old_p_val) >= 0.01:
+            if not is_bm and old_p_val > 0 and new_p_val > 0 and abs(new_p_val - old_p_val) >= 0.01:
                 p_diff = new_p_val - old_p_val
                 if new_p_val > old_p_val:
                     changes.append(
@@ -519,8 +522,8 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
             baseline_stock = old_item.get('last_notified_stock', old_stock)
 
             if new_stock < old_stock:
-                # For BMs: only alert when completely sold out (stock = 0), avoiding noise on every individual unit sale
-                if is_bm and new_stock > 0:
+                # Para BMs verificadas: o usuário solicitou avisar APENAS na reposição (quando houver estoque)
+                if is_bm:
                     item['last_notified_stock'] = new_stock
                     continue
 
@@ -713,15 +716,25 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
             new_stock = item['stock']
             item['last_notified_stock'] = new_stock
             if new_stock > 0 and notify_restock:
-                changes.append(
-                    f"🎉🆕 <b>{tag_header} REPOSIÇÃO DE ESTOQUE!</b>\n"
-                    f"{site_line}"
-                    f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
-                    f"💵 <b>Preço:</b> {item['price']}\n"
-                    f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades</b>\n"
-                    f"⚡ <i>Este produto acabou de entrar em estoque!</i>"
-                    f"{url_line}"
-                )
+                if is_bm:
+                    changes.append(
+                        f"💼🎉 <b>[MAXVIA88 - BM VERIFICADA DISPONÍVEL!]</b>\n"
+                        f"{site_line}"
+                        f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
+                        f"💵 <b>Preço:</b> {item['price']}\n"
+                        f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades</b>\n"
+                        f"🔗 <a href='https://maxvia88.com/categories/118'>Acessar BM no MaxVia88</a>"
+                    )
+                else:
+                    changes.append(
+                        f"🎉🆕 <b>{tag_header} REPOSIÇÃO DE ESTOQUE!</b>\n"
+                        f"{site_line}"
+                        f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
+                        f"💵 <b>Preço:</b> {item['price']}\n"
+                        f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades</b>\n"
+                        f"⚡ <i>Este produto acabou de entrar em estoque!</i>"
+                        f"{url_line}"
+                    )
 
     if changes:
         logging.info(f"Detectadas {len(changes)} alterações de estoque. Enviando alerta Telegram...")
@@ -771,12 +784,12 @@ def run_cycle():
 
     new_notify_state = {}
     for p_id, item in all_products.items():
-        if should_notify_product(item['title'], target_keywords):
+        if should_notify_product(item['title'], target_keywords, site=item.get('site', 'maxvia88')):
             new_notify_state[p_id] = item
 
     old_notify_state = {}
     for p_id, item in old_state.items():
-        if should_notify_product(item.get('title', ''), target_keywords):
+        if should_notify_product(item.get('title', ''), target_keywords, site=item.get('site', 'maxvia88')):
             old_notify_state[p_id] = item
 
     logging.info(f"Filtrados {len(new_notify_state)} produtos elegíveis para notificação (Regra BM Verificada e palavras-chave ativas).")
