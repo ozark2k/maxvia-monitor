@@ -534,9 +534,31 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
             baseline_stock = old_item.get('last_notified_stock', old_stock)
 
             if new_stock < old_stock:
-                # Para BMs verificadas: o usuário solicitou avisar APENAS na reposição (quando houver estoque)
+                # Para BMs verificadas: alertar a cada compra (de 1 em 1) e quando zerar o estoque
                 if is_bm:
+                    diff = old_stock - new_stock
                     item['last_notified_stock'] = new_stock
+                    bm_url = item.get('url') or "https://maxvia88.com/categories/118"
+                    if new_stock == 0:
+                        changes.append(
+                            f"💼🔴 <b>[MAXVIA88 - BM VERIFICADA ESGOTOU!]</b>\n"
+                            f"{site_line}"
+                            f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
+                            f"💵 <b>Preço:</b> {item['price']}\n"
+                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>0 unidades</b> (-{diff})\n"
+                            f"⚠️ <i>Todas as unidades disponíveis foram compradas!</i>\n"
+                            f"🔗 <a href='{bm_url}'>Ver BMs no MaxVia88</a>"
+                        )
+                    else:
+                        changes.append(
+                            f"💼🛒 <b>[MAXVIA88 - BM VERIFICADA COMPRADA!] (-{diff})</b>\n"
+                            f"{site_line}"
+                            f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
+                            f"💵 <b>Preço:</b> {item['price']}\n"
+                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades restantes</b> (-{diff})\n"
+                            f"⚡ <i>Estoque baixando! Restam apenas {new_stock} unidades!</i>\n"
+                            f"🔗 <a href='{bm_url}'>Acessar BM no MaxVia88</a>"
+                        )
                     continue
 
                 if new_stock == 0:
