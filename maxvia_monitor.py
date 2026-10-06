@@ -349,8 +349,20 @@ def fetch_all_products() -> dict:
         html = fetch_page_html(url, cookie_header)
         prods = parse_products_from_html(html)
         for p_id, item in prods.items():
-            if p_id not in all_products or item['stock'] > all_products[p_id]['stock']:
+            item['site'] = 'maxvia88'
+            if url != "https://maxvia88.com/":
+                item['url'] = url
+            elif 'url' not in item:
+                item['url'] = "https://maxvia88.com/"
+
+            if p_id not in all_products:
                 all_products[p_id] = item
+            else:
+                if url != "https://maxvia88.com/":
+                    all_products[p_id]['url'] = url
+                if item['stock'] > all_products[p_id]['stock']:
+                    all_products[p_id]['stock'] = item['stock']
+                    all_products[p_id]['price'] = item['price']
 
     return all_products
 
@@ -660,13 +672,14 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                         f"{url_line}"
                     )
                 elif is_bm:
+                    bm_url = item.get('url') or "https://maxvia88.com/categories/118"
                     changes.append(
                         f"💼🎉 <b>[MAXVIA88 - BM VERIFICADA REABASTECIDA!] (+{diff})</b>\n"
                         f"{site_line}"
                         f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
                         f"💵 <b>Preço:</b> {item['price']}\n"
                         f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b>\n"
-                        f"🔗 <a href='https://maxvia88.com/categories/118'>Acessar BM no MaxVia88</a>"
+                        f"🔗 <a href='{bm_url}'>Acessar BM no MaxVia88</a>"
                     )
                 elif old_stock == 0:
                     if is_highlight:
@@ -717,13 +730,14 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
             item['last_notified_stock'] = new_stock
             if new_stock > 0 and notify_restock:
                 if is_bm:
+                    bm_url = item.get('url') or "https://maxvia88.com/categories/118"
                     changes.append(
                         f"💼🎉 <b>[MAXVIA88 - BM VERIFICADA DISPONÍVEL!]</b>\n"
                         f"{site_line}"
                         f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
                         f"💵 <b>Preço:</b> {item['price']}\n"
                         f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades</b>\n"
-                        f"🔗 <a href='https://maxvia88.com/categories/118'>Acessar BM no MaxVia88</a>"
+                        f"🔗 <a href='{bm_url}'>Acessar BM no MaxVia88</a>"
                     )
                 else:
                     changes.append(
