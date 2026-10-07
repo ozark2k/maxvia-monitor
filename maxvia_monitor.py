@@ -625,6 +625,13 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                         item['last_notified_stock'] = baseline_stock
                         continue
 
+                    # Proteção contra salto anômalo (> 500 unidades em um único ciclo)
+                    # Caso de reinicialização com state antigo ou reload brusco de catálogo
+                    if accumulated_drop > 500:
+                        logging.warning(f"Salto anômalo de estoque (-{accumulated_drop}) para '{item['title']}'. Baseline sincronizado sem alerta para evitar falso disparo de reinicialização.")
+                        item['last_notified_stock'] = new_stock
+                        continue
+
                     # Bateu o lote de 30 ou mais unidades compradas!
                     diff = accumulated_drop
                     from_stock = baseline_stock
@@ -743,7 +750,7 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
         logging.info("Nenhuma alteração de estoque nesta rodada. Nenhuma notificação enviada.")
 
 
-def run_cycle():
+def run_cycle(is_startup: bool = False):
     """Run a single check cycle."""
     config = load_config()
     bot_token = config.get("telegram_bot_token") or os.environ.get("TELEGRAM_BOT_TOKEN", "")
@@ -762,7 +769,7 @@ def run_cycle():
         return
 
     old_state = load_state()
-    is_first_run = len(old_state) == 0
+    is_first_run = (len(old_state) == 0) or is_startup
 
     # Ensure baseline last_notified_stock is carried over from old_state for all products
     old_by_title = {
@@ -806,6 +813,11 @@ class HealthHandler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/plain; charset=utf-8')
         self.end_headers()
         self.wfile.write(b"MaxVia88 Monitor is Active and Monitoring 24/7!\n")
+
+    def do_HEAD(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/plain; charset=utf-8')
+        self.end_headers()
 
     def log_message(self, format, *args):
         pass  # suppress noisy HTTP access logs
@@ -852,9 +864,11 @@ def main():
     interval_sec = int(config.get("check_interval_seconds") or os.environ.get("CHECK_INTERVAL", "60"))
 
     logging.info(f"MaxVia88 Monitor Daemon starting (Interval: {interval_sec}s)...")
+    first_cycle = True
     while True:
         try:
-            run_cycle()
+            run_cycle(is_startup=first_cycle)
+            first_cycle = False
         except Exception as e:
             logging.error(f"Error in cycle loop: {e}", exc_info=True)
 
