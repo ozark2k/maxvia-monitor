@@ -1,69 +1,33 @@
 {
   "telegram_bot_token": "8692174015:AAFl7TCPswrYFHoMhSbgAtb5V3F8Px1k_HA",
   "telegram_chat_id": "11579952",
-  "cookie": "XSRF-TOKEN=eyJpdiI6IkRFbGN1UlZlRkNwelBjYXFlS1U0c1E9PSIsInZhbHVlIjoiTk5ldUZWQmM4QnFMVzZoanlsSWloVjY1WXVOWnh1bVJiYng5MHpvZWxxdjJKeGQ0T3JOcWhTWjczQ2lzY20zSWJySWQxUkxCekpDcE1QRzVJeVUxbHZXb09MN0lyblJPMHhJWW12ZmY5WGJneGdCTFFneVdoU25GWFdTSTVGVVYiLCJtYWMiOiJlYWJjYjI4ZTI1ZjI0MTI3NWY0OTg3NzM4NjNlMWU3ODViZmIzZTA1NGFjM2QyYTVkMWNhYmU3NGVmNzUwYTE2In0%3D; laravel_session=eyJpdiI6IkYxazg4endzSHpPblI5aTQrbytubWc9PSIsInZhbHVlIjoiQmZZckI0ZW5Sb1lCcXBuQU9WZnNBYk9kVkExZ0J5Z1RVVzYwNjNuMStxRU9ZYmljZ2lRbDY1QlYrQ1hneW1jQXRJVUI3TXlIUlJxVmdBTXFET3Y0ZnpjOTYrbXljTXZoWHdIdW1zTGtobHljdzh6Qmk4bFo3em1BY2VMbVBpenciLCJtYWMiOiIxOTFlYWFkZjY1NmY4MjIyNzk3OTA3MDE2NzAzYTQ0ODE1NjMxODg4NDY4OGRlMmFkYTZiZTE3ZDA1N2VkYmU0In0%3D",
+  "cookie": "XSRF-TOKEN=eyJpdiI6IkFuRTFRYXE5ZCtiSWErT2UyQm9xUkE9PSIsInZhbHVlIjoiUTdOVFpwS0dBN2FBMWdWbXF2dUM2alNlaEtvV3QxQ3NSWHViRnV1ZGM0SUVXemJ2T00rQUIxd2dibWtLYUFtc0FWdHdNUVdyd0xIRDE3TXcvQlFlT2dpVmFOQ3RQT3RtK1ZiTWt5NkpTQzBmZWE0dzkrSFUyQ2lpcktSajE4L3AiLCJtYWMiOiIxMmJkNDA1MjhmODAyMTgzNGY4OWM4MjY1NjllMTUxNzcwODc3NGYxY2Y5OTZmZDY5ZTk5ZDY2ZWIxM2M0OWUwIn0%3D; laravel_session=eyJpdiI6IlluOFNTcVJyQlowWjk1VEVpMXpkS2c9PSIsInZhbHVlIjoiaUdOUlppS3luVXZTaGZlU0FRa3ZLTGRHVU5QeWgwa1VUNW9IMHBJOU5JR1IwWkVFcHJaVVB5Y3hHZ1dGcnhjUjA5amlFRy8wb1hkdkVBQVdRSUx1cmo1RHhpTDA5bGRnbisrTFdHQ283V05iUjUvZ0svS0NOWUVIcUtnVzdaYjIiLCJtYWMiOiJiM2UxYTVmZjM5YjhkYTVlYjIxNWY0ZDBkMzE4MWViMjc2ZGEyMjI1NTc4NDU1ODQxNGIwNzRjYjEzMTE4YmNjIn0%3D",
   "target_products": [
     "Acc Farmed 2026",
-    "Acc Farmed 2025",
-    "Acc Farmed 902",
-    "Acc Farmed XMDT",
-    "Combo 1 Account",
-    "Personal Ads",
-    "Set 5-9 Ads",
-    "Acc 902 OLD Loss Greentick",
+    "BM Verified",
     "BM1 Verified",
-    "BM3 Verified",
-    "Acc Scan 1 Year+"
+    "BM3 Verified"
   ],
   "product_rules": {
-    "Acc Scan 1 Year+": {
-      "drop_step_alert": 200,
-      "notify_restock": true,
-      "is_highlight": true
-    },
     "Acc Farmed 2026": {
       "drop_step_alert": 30,
       "notify_restock": true,
+      "notify_drop": true,
       "is_highlight": true
-    },
-    "Acc Farmed 2025": {
-      "notify_restock": true,
-      "is_highlight": true
-    },
-    "Acc Farmed 902": {
-      "notify_restock": true,
-      "is_highlight": true
-    },
-    "Acc Farmed XMDT": {
-      "notify_restock": true,
-      "is_highlight": true
-    },
-    "Combo 1 Account": {
-      "notify_restock": true,
-      "is_highlight": false
-    },
-    "Personal Ads": {
-      "notify_restock": true,
-      "is_highlight": false
-    },
-    "Set 5-9 Ads": {
-      "notify_restock": true,
-      "is_highlight": false
-    },
-    "Acc 902 OLD Loss Greentick": {
-      "notify_restock": true,
-      "is_highlight": false
     },
     "BM Verified": {
       "notify_restock": true,
+      "notify_drop": true,
       "is_highlight": true
     },
     "BM3 Verified": {
       "notify_restock": true,
+      "notify_drop": true,
       "is_highlight": true
     },
     "BM1 Verified": {
       "notify_restock": true,
+      "notify_drop": true,
       "is_highlight": true
     }
   },

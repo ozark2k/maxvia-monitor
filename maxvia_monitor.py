@@ -151,6 +151,7 @@ def send_telegram_message(bot_token: str, chat_id: str, message: str) -> bool:
         'disable_web_page_preview': 'true'
     }).encode('utf-8')
 
+    logging.info(f"Enviando mensagem para o Telegram:\n{message}")
     req = urllib.request.Request(
         url,
         data=payload,
@@ -238,6 +239,35 @@ def make_product_id(title: str, price: str) -> str:
     clean_t = normalize_title(title).lower()
     clean_p = normalize_price(price)
     return f"{clean_t}_{clean_p}"
+
+
+def is_primary_084_profile(item: dict) -> bool:
+    """
+    Retorna True EXCLUSIVAMENTE para o perfil principal ⭐Acc Farmed 2026 (2FA) ($0.84) da MaxVia88.
+    Nenhum outro produto/perfil (nem 902, nem XMDT, nem Scan, nem TheFBStore) pode retornar True.
+    """
+    if not item or not isinstance(item, dict):
+        return False
+    if item.get('site', 'maxvia88') != 'maxvia88':
+        return False
+
+    title = normalize_title(item.get('title', '')).lower()
+    price_val = parse_price_val(item.get('price', ''))
+
+    # Descarta explicitamente qualquer outro perfil
+    for forbidden in ['902', 'xmdt', 'scan', '2025', 'combo', 'personal', 'set 5']:
+        if forbidden in title:
+            return False
+
+    # Deve conter 2026 e farmed
+    if '2026' not in title or 'farmed' not in title:
+        return False
+
+    # Preço do perfil principal é $0.84 (margem segura de 0.75 a 0.90)
+    if price_val > 0 and not (0.75 <= price_val <= 0.90):
+        return False
+
+    return True
 
 
 def parse_products_from_html(html: str) -> dict:
@@ -421,28 +451,33 @@ def save_state(state: dict):
         logging.error(f"Failed to save state file: {e}")
 
 
-def should_notify_product(item_title: str, target_keywords: list = None, site: str = "maxvia88") -> bool:
-    """Check if a product title satisfies notification criteria (Verified BMs only from MaxVia88 + profile whitelist)."""
-    title_clean = normalize_title(item_title).lower()
+def should_notify_product(item_or_title, target_keywords: list = None, site: str = "maxvia88") -> bool:
+    """
+    Filtra rigorosamente os produtos monitorados:
+    1. BMs Verificadas exclusivamente da MaxVia88.
+    2. Perfil principal ⭐Acc Farmed 2026 (2FA) ($0.84) exclusivamente da MaxVia88.
+    Todos os outros perfis/produtos (902, XMDT, Scan, 2025, TheFBStore, etc.) são 100% desativados.
+    """
+    if isinstance(item_or_title, dict):
+        item = item_or_title
+        site = item.get('site', 'maxvia88')
+        title = item.get('title', '')
+    else:
+        title = str(item_or_title)
+        item = {'title': title, 'site': site}
 
-    # Case 1: Product is a BM (Business Manager) -> Only verified BMs from MaxVia88
+    if site != 'maxvia88':
+        return False
+
+    title_clean = normalize_title(title).lower()
+
+    # Caso 1: BM Verificada exclusivamente da MaxVia88
     is_bm = "bm" in title_clean or "business manager" in title_clean
     if is_bm:
-        # Usuário solicitou retirar TheFBStore e outros sites de BMs - manter exclusivamente MaxVia88
-        if site != "maxvia88":
-            return False
         return any(term in title_clean for term in ["verified", "verificada", "verificado", "verif"])
 
-    # Case 2: Product is a Profile (strictly check allowed target profile keywords)
-    if target_keywords:
-        for kw in target_keywords:
-            kw_clean = normalize_title(kw).lower()
-            if not kw_clean or "bm" in kw_clean or "business manager" in kw_clean:
-                continue
-            if kw_clean in title_clean:
-                return True
-
-    return False
+    # Caso 2: Exclusivamente o perfil principal ⭐Acc Farmed 2026 (2FA) ($0.84) da MaxVia88!
+    return is_primary_084_profile(item)
 
 
 def get_rule_for_product(item_title: str, product_rules: dict) -> dict:
@@ -502,11 +537,11 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
         clean_display_title = display_title.replace('⭐', '').replace('✅', '').strip()
 
         if old_item:
-            # Checagem de Alteração de Preço (Aumento ou Redução)
             old_p_val = parse_price_val(old_item.get('price', ''))
             new_p_val = parse_price_val(item.get('price', ''))
 
-            if not is_bm and old_p_val > 0 and new_p_val > 0 and abs(new_p_val - old_p_val) >= 0.01:
+            # Checagem de Alteração de Preço (Aumento ou Redução) - apenas para o perfil principal de $0.84
+            if is_primary_084_profile(item) and old_p_val > 0 and new_p_val > 0 and abs(new_p_val - old_p_val) >= 0.01:
                 p_diff = new_p_val - old_p_val
                 if new_p_val > old_p_val:
                     changes.append(
@@ -534,7 +569,7 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
             baseline_stock = old_item.get('last_notified_stock', old_stock)
 
             if new_stock < old_stock:
-                # Para BMs verificadas: alertar a cada compra (de 1 em 1) e quando zerar o estoque
+                # Caso 1: BMs verificadas (alertar a cada compra e quando zerar)
                 if is_bm:
                     diff = old_stock - new_stock
                     item['last_notified_stock'] = new_stock
@@ -561,120 +596,49 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                         )
                     continue
 
+                # Caso 2: Perfis
+                # REGRA CRÍTICA DO USUÁRIO:
+                # SE NÃO FOR O PERFIL PRINCIPAL DE $0.84 (Acc Farmed 2026 da MaxVia88), NUNCA NOTIFICAR COMPRAS/QUEDAS!
+                if not is_primary_084_profile(item):
+                    logging.info(f"Queda/compra de estoque para '{item['title']}' ({old_stock} -> {new_stock}) IGNORADA. (Apenas o perfil de $0.84 notifica compras).")
+                    item['last_notified_stock'] = new_stock
+                    continue
+
+                # Caso 3: AQUI CHEGA EXCLUSIVAMENTE O Acc Farmed 2026 de $0.84 da MaxVia88!
+                # Regra: notificar a cada 30 comprados (drop_step_alert = 30) ou se zerar completamente!
+                drop_step_alert = 30
                 if new_stock == 0:
                     diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
                     item['last_notified_stock'] = 0
-                    if is_new_supplier:
-                        changes.append(
-                            f"🔴 <b>{tag_header} ESGOTOU COMPLETAMENTE!</b> 🔴\n"
-                            f"{site_line}"
-                            f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
-                            f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})"
-                            f"{url_line}"
-                        )
-                    elif is_bm:
-                        changes.append(
-                            f"💼🔴 <b>[MAXVIA88 - BM VERIFICADA ESGOTOU]</b>\n"
-                            f"{site_line}"
-                            f"📦 <b>Produto:</b> {clean_display_title}\n"
-                            f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})"
-                        )
-                    elif is_highlight:
-                        changes.append(
-                            f"🔥🔴 <b>{tag_header} ESGOTOU COMPLETAMENTE!</b> 🔴🔥\n"
-                            f"{site_line}"
-                            f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
-                            f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})\n"
-                            f"🔔 <i>Alerta de reposição ativado para este perfil!</i>"
-                        )
-                    else:
-                        changes.append(
-                            f"🔴 <b>{tag_header} ESGOTOU COMPLETAMENTE!</b>\n"
-                            f"{site_line}"
-                            f"📦 <b>Produto:</b> {clean_display_title}\n"
-                            f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})"
-                        )
-                # If a low-stock threshold is configured, ignore stock drops when new_stock is still >= threshold
-                elif threshold is not None and new_stock >= threshold:
-                    logging.info(f"Queda de estoque para '{item['title']}' ignorada: {old_stock} -> {new_stock} (ainda acima do limite de {threshold}).")
-                    item['last_notified_stock'] = new_stock
-                    continue
-                # Stock just crossed below threshold
-                elif threshold is not None and old_stock >= threshold and new_stock < threshold:
-                    diff = old_stock - new_stock
-                    item['last_notified_stock'] = new_stock
-                    if is_highlight:
-                        changes.append(
-                            f"⚡⚠️ <b>{tag_header} ESTOQUE CRÍTICO (&lt; {threshold} perfis)!</b> ⚠️⚡\n"
-                            f"{site_line}"
-                            f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
-                            f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})\n"
-                            f"⚡ <i>Atenção: O estoque caiu abaixo de {threshold} unidades!</i>"
-                            f"{url_line}"
-                        )
-                    else:
-                        changes.append(
-                            f"⚠️ <b>{tag_header} ALERTA DE ESTOQUE CRÍTICO (&lt; {threshold} perfis)!</b>\n"
-                            f"{site_line}"
-                            f"📦 <b>Produto:</b> {clean_display_title}\n"
-                            f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})"
-                            f"{url_line}"
-                        )
-                elif drop_step_alert is not None and drop_step_alert > 0:
+                    changes.append(
+                        f"🔥🔴 <b>[MAXVIA88] PERFIL PRINCIPAL ($0.84) ESGOTOU!</b> 🔴🔥\n"
+                        f"{site_line}"
+                        f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title} ($0.84)</b> ⭐\n"
+                        f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})\n"
+                        f"🔔 <i>Todas as unidades do perfil de $0.84 foram vendidas!</i>\n"
+                        f"🔗 <a href='https://maxvia88.com/categories/1'>Acessar MaxVia88</a>"
+                    )
+                else:
                     accumulated_drop = baseline_stock - new_stock
                     if accumulated_drop < drop_step_alert:
-                        logging.info(f"Queda parcial de estoque para '{item['title']}': {baseline_stock} -> {new_stock} (-{accumulated_drop}). Aguardando atingir lote de {drop_step_alert} para notificar.")
+                        logging.info(f"Queda parcial de estoque para perfil $0.84 '{item['title']}': {baseline_stock} -> {new_stock} (-{accumulated_drop}). Aguardando lote de {drop_step_alert} para notificar.")
                         item['last_notified_stock'] = baseline_stock
                         continue
 
-                    # Accumulated drop reached or exceeded drop_step_alert (e.g. 10, 30, 100...)
+                    # Bateu o lote de 30 ou mais unidades compradas!
                     diff = accumulated_drop
                     from_stock = baseline_stock
                     item['last_notified_stock'] = new_stock
-
-                    if is_highlight:
-                        changes.append(
-                            f"🛒🔥 <b>{tag_header} COMPRA DETECTADA!</b> 🔥🛒\n"
-                            f"{site_line}"
-                            f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
-                            f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📉 <b>Estoque:</b> {from_stock} ➔ <b>{new_stock} unidades</b> (-{diff})\n"
-                            f"⚡ <i>{diff} perfis comprados! Restam {new_stock} em estoque.</i>"
-                            f"{url_line}"
-                        )
-                    else:
-                        changes.append(
-                            f"🛒 <b>{tag_header} COMPRA DETECTADA (-{diff})!</b>\n"
-                            f"{site_line}"
-                            f"📦 <b>Produto:</b> {clean_display_title}\n"
-                            f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📉 <b>Estoque Restante:</b> {from_stock} ➔ <b>{new_stock} unidades</b> (-{diff})"
-                            f"{url_line}"
-                        )
-                else:
-                    diff = old_stock - new_stock
-                    item['last_notified_stock'] = new_stock
-                    if is_highlight:
-                        changes.append(
-                            f"🛒🔥 <b>{tag_header} COMPRA DETECTADA!</b> 🔥🛒\n"
-                            f"{site_line}"
-                            f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
-                            f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (-{diff})\n"
-                            f"⚡ <i>O estoque deste perfil está sendo consumido!</i>"
-                            f"{url_line}"
-                        )
-                    else:
-                        changes.append(
-                            f"🛒 <b>{tag_header} COMPRA DETECTADA (-{diff})!</b>\n"
-                            f"{site_line}"
-                            f"📦 <b>Produto:</b> {clean_display_title}\n"
-                            f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📉 <b>Estoque Restante:</b> {old_stock} ➔ <b>{new_stock} unidades</b>"
-                            f"{url_line}"
-                        )
+                    changes.append(
+                        f"🛒🔥 <b>[MAXVIA88] COMPRA DETECTADA! (-{diff})</b> 🔥🛒\n"
+                        f"{site_line}"
+                        f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title} ($0.84)</b> ⭐\n"
+                        f"💵 <b>Preço:</b> {item['price']}\n"
+                        f"📉 <b>Estoque:</b> {from_stock} ➔ <b>{new_stock} unidades restantes</b> (-{diff})\n"
+                        f"⚡ <i>{diff} perfis comprados! Restam {new_stock} em estoque.</i>\n"
+                        f"🔗 <a href='https://maxvia88.com/categories/1'>Acessar MaxVia88</a>"
+                    )
+                continue
 
             elif new_stock > old_stock:
                 item['last_notified_stock'] = new_stock
@@ -820,12 +784,12 @@ def run_cycle():
 
     new_notify_state = {}
     for p_id, item in all_products.items():
-        if should_notify_product(item['title'], target_keywords, site=item.get('site', 'maxvia88')):
+        if should_notify_product(item):
             new_notify_state[p_id] = item
 
     old_notify_state = {}
     for p_id, item in old_state.items():
-        if should_notify_product(item.get('title', ''), target_keywords, site=item.get('site', 'maxvia88')):
+        if should_notify_product(item):
             old_notify_state[p_id] = item
 
     logging.info(f"Filtrados {len(new_notify_state)} produtos elegíveis para notificação (Regra BM Verificada e palavras-chave ativas).")
