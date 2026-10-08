@@ -263,8 +263,8 @@ def is_primary_084_profile(item: dict) -> bool:
     if '2026' not in title or 'farmed' not in title:
         return False
 
-    # Preço do perfil principal é $0.84 (margem segura de 0.75 a 0.90)
-    if price_val > 0 and not (0.75 <= price_val <= 0.90):
+    # Preço do perfil principal é em torno de $0.84 - $0.88 (margem flexível de 0.70 a 1.20)
+    if price_val > 0 and not (0.70 <= price_val <= 1.20):
         return False
 
     return True
@@ -611,17 +611,17 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
                     item['last_notified_stock'] = 0
                     changes.append(
-                        f"🔥🔴 <b>[MAXVIA88] PERFIL PRINCIPAL ($0.84) ESGOTOU!</b> 🔴🔥\n"
+                        f"🔥🔴 <b>[MAXVIA88] PERFIL PRINCIPAL ESGOTOU!</b> 🔴🔥\n"
                         f"{site_line}"
-                        f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title} ($0.84)</b> ⭐\n"
+                        f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ({item['price']}) ⭐\n"
                         f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})\n"
-                        f"🔔 <i>Todas as unidades do perfil de $0.84 foram vendidas!</i>\n"
+                        f"🔔 <i>Todas as unidades do perfil foram vendidas!</i>\n"
                         f"🔗 <a href='https://maxvia88.com/categories/1'>Acessar MaxVia88</a>"
                     )
                 else:
                     accumulated_drop = baseline_stock - new_stock
                     if accumulated_drop < drop_step_alert:
-                        logging.info(f"Queda parcial de estoque para perfil $0.84 '{item['title']}': {baseline_stock} -> {new_stock} (-{accumulated_drop}). Aguardando lote de {drop_step_alert} para notificar.")
+                        logging.info(f"Queda parcial de estoque para perfil '{item['title']}': {baseline_stock} -> {new_stock} (-{accumulated_drop}). Aguardando lote de {drop_step_alert} para notificar.")
                         item['last_notified_stock'] = baseline_stock
                         continue
 
@@ -639,7 +639,7 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     changes.append(
                         f"🛒🔥 <b>[MAXVIA88] COMPRA DETECTADA! (-{diff})</b> 🔥🛒\n"
                         f"{site_line}"
-                        f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title} ($0.84)</b> ⭐\n"
+                        f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ({item['price']}) ⭐\n"
                         f"💵 <b>Preço:</b> {item['price']}\n"
                         f"📉 <b>Estoque:</b> {from_stock} ➔ <b>{new_stock} unidades restantes</b> (-{diff})\n"
                         f"⚡ <i>{diff} perfis comprados! Restam {new_stock} em estoque.</i>\n"
