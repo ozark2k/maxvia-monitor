@@ -270,6 +270,33 @@ def is_primary_084_profile(item: dict) -> bool:
     return True
 
 
+def is_brazil_profile(item: dict) -> bool:
+    """
+    Perfis do Brasil desativados a pedido do usuário.
+    """
+    return False
+
+
+def is_budget_farmed_profile(item: dict) -> bool:
+    """
+    Retorna True para os perfis acessíveis/populares da MaxVia88:
+    - ⭐Acc Farmed 2025 (2FA) ($1.11)
+    - ⭐Acc Farmed 2026 (2FA) ($0.88)
+    """
+    if not item or not isinstance(item, dict):
+        return False
+    if item.get('site', 'maxvia88') != 'maxvia88':
+        return False
+    title = normalize_title(item.get('title', '')).lower()
+    if 'farmed' in title:
+        if '2025' in title or '2026' in title:
+            if not any(x in title for x in ['combo', 'set', '902', 'xmdt', 'scan']):
+                return True
+    return False
+
+
+
+
 def parse_products_from_html(html: str) -> dict:
     """Parse products and stock numbers from maxvia88 HTML."""
     if not html:
@@ -454,8 +481,8 @@ def save_state(state: dict):
 def should_notify_product(item_or_title, target_keywords: list = None, site: str = "maxvia88") -> bool:
     """
     Filtra rigorosamente os produtos monitorados:
-    1. BMs Verificadas exclusivamente da MaxVia88.
-    2. Perfil principal ⭐Acc Farmed 2026 (2FA) ($0.84) exclusivamente da MaxVia88.
+    1. Perfis do Brasil (Via Brazil Old e Via Brazil New) - COMPRAS E REPOSIÇÕES.
+    2. BMs Verificadas exclusivamente da MaxVia88.
     Todos os outros perfis/produtos (902, XMDT, Scan, 2025, TheFBStore, etc.) são 100% desativados.
     """
     if isinstance(item_or_title, dict):
@@ -471,13 +498,20 @@ def should_notify_product(item_or_title, target_keywords: list = None, site: str
 
     title_clean = normalize_title(title).lower()
 
-    # Caso 1: BM Verificada exclusivamente da MaxVia88
+    # Caso 1: Perfis do Brasil (Prioridade Máxima solicitada pelo usuário)
+    if is_brazil_profile(item):
+        return True
+
+    # Caso 2: Perfis acessíveis Farmed 2025 ($1.11) e Farmed 2026 ($0.88)
+    if is_budget_farmed_profile(item):
+        return True
+
+    # Caso 3: BM Verificada exclusivamente da MaxVia88
     is_bm = "bm" in title_clean or "business manager" in title_clean
     if is_bm:
         return any(term in title_clean for term in ["verified", "verificada", "verificado", "verif"])
 
-    # Caso 2: Exclusivamente o perfil principal ⭐Acc Farmed 2026 (2FA) ($0.84) da MaxVia88!
-    return is_primary_084_profile(item)
+    return False
 
 
 def get_rule_for_product(item_title: str, product_rules: dict) -> dict:
@@ -596,55 +630,47 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                         )
                     continue
 
-                # Caso 2: Perfis
-                # REGRA CRÍTICA DO USUÁRIO:
-                # SE NÃO FOR O PERFIL PRINCIPAL DE $0.84 (Acc Farmed 2026 da MaxVia88), NUNCA NOTIFICAR COMPRAS/QUEDAS!
-                if not is_primary_084_profile(item):
-                    logging.info(f"Queda/compra de estoque para '{item['title']}' ({old_stock} -> {new_stock}) IGNORADA. (Apenas o perfil de $0.84 notifica compras).")
-                    item['last_notified_stock'] = new_stock
+                # Caso 2: Perfis do Brasil (NOVA REGRA: Compras SOMENTE do Brasil!)
+                if is_brazil_profile(item):
+                    cat_url = item.get('url') or "https://maxvia88.com/categories/220"
+                    drop_step_alert = rule.get("drop_step_alert") or 5  # Notifica a cada 5 compras ou se zerar
+
+                    if new_stock == 0:
+                        diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
+                        item['last_notified_stock'] = 0
+                        changes.append(
+                            f"🔥🔴 <b>[MAXVIA88] PERFIL DO BRASIL ESGOTOU!</b> 🔴🔥\n"
+                            f"{site_line}"
+                            f"📦 <b>Produto:</b> 🇧🇷 <b>{clean_display_title}</b> ({item['price']}) 🇧🇷\n"
+                            f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})\n"
+                            f"⚠️ <i>Todos os perfis do Brasil foram vendidos!</i>\n"
+                            f"🔗 <a href='{cat_url}'>Acessar no MaxVia88</a>"
+                        )
+                    else:
+                        accumulated_drop = baseline_stock - new_stock
+                        if accumulated_drop < drop_step_alert:
+                            logging.info(f"Queda parcial de estoque Brasil para '{item['title']}': {baseline_stock} -> {new_stock} (-{accumulated_drop}). Aguardando lote de {drop_step_alert} para notificar.")
+                            item['last_notified_stock'] = baseline_stock
+                            continue
+
+                        # Bateu o lote de compras do Brasil!
+                        diff = accumulated_drop
+                        from_stock = baseline_stock
+                        item['last_notified_stock'] = new_stock
+                        changes.append(
+                            f"🛒🇧🇷 <b>[MAXVIA88] COMPRA DETECTADA NO BRASIL! (-{diff})</b> 🇧🇷🛒\n"
+                            f"{site_line}"
+                            f"📦 <b>Produto:</b> 🇧🇷 <b>{clean_display_title}</b> ({item['price']}) 🇧🇷\n"
+                            f"💵 <b>Preço:</b> {item['price']}\n"
+                            f"📉 <b>Estoque:</b> {from_stock} ➔ <b>{new_stock} unidades restantes</b> (-{diff})\n"
+                            f"⚡ <i>Estão comprando perfis do Brasil! Restam {new_stock} em estoque.</i>\n"
+                            f"🔗 <a href='{cat_url}'>Acessar no MaxVia88</a>"
+                        )
                     continue
 
-                # Caso 3: AQUI CHEGA EXCLUSIVAMENTE O Acc Farmed 2026 de $0.84 da MaxVia88!
-                # Regra: notificar a cada 30 comprados (drop_step_alert = 30) ou se zerar completamente!
-                drop_step_alert = 30
-                if new_stock == 0:
-                    diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
-                    item['last_notified_stock'] = 0
-                    changes.append(
-                        f"🔥🔴 <b>[MAXVIA88] PERFIL PRINCIPAL ESGOTOU!</b> 🔴🔥\n"
-                        f"{site_line}"
-                        f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ({item['price']}) ⭐\n"
-                        f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})\n"
-                        f"🔔 <i>Todas as unidades do perfil foram vendidas!</i>\n"
-                        f"🔗 <a href='https://maxvia88.com/categories/1'>Acessar MaxVia88</a>"
-                    )
-                else:
-                    accumulated_drop = baseline_stock - new_stock
-                    if accumulated_drop < drop_step_alert:
-                        logging.info(f"Queda parcial de estoque para perfil '{item['title']}': {baseline_stock} -> {new_stock} (-{accumulated_drop}). Aguardando lote de {drop_step_alert} para notificar.")
-                        item['last_notified_stock'] = baseline_stock
-                        continue
-
-                    # Proteção contra salto anômalo (> 500 unidades em um único ciclo)
-                    # Caso de reinicialização com state antigo ou reload brusco de catálogo
-                    if accumulated_drop > 500:
-                        logging.warning(f"Salto anômalo de estoque (-{accumulated_drop}) para '{item['title']}'. Baseline sincronizado sem alerta para evitar falso disparo de reinicialização.")
-                        item['last_notified_stock'] = new_stock
-                        continue
-
-                    # Bateu o lote de 30 ou mais unidades compradas!
-                    diff = accumulated_drop
-                    from_stock = baseline_stock
-                    item['last_notified_stock'] = new_stock
-                    changes.append(
-                        f"🛒🔥 <b>[MAXVIA88] COMPRA DETECTADA! (-{diff})</b> 🔥🛒\n"
-                        f"{site_line}"
-                        f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ({item['price']}) ⭐\n"
-                        f"💵 <b>Preço:</b> {item['price']}\n"
-                        f"📉 <b>Estoque:</b> {from_stock} ➔ <b>{new_stock} unidades restantes</b> (-{diff})\n"
-                        f"⚡ <i>{diff} perfis comprados! Restam {new_stock} em estoque.</i>\n"
-                        f"🔗 <a href='https://maxvia88.com/categories/1'>Acessar MaxVia88</a>"
-                    )
+                # REGRA CRÍTICA DO USUÁRIO: Apenas perfis do Brasil notificam compras!
+                logging.info(f"Queda/compra de estoque para '{item['title']}' ({old_stock} -> {new_stock}) IGNORADA. (Apenas perfis do Brasil notificam compras).")
+                item['last_notified_stock'] = new_stock
                 continue
 
             elif new_stock > old_stock:
@@ -654,7 +680,42 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     continue
 
                 diff = new_stock - old_stock
-                if is_new_supplier:
+                if is_brazil_profile(item):
+                    cat_url = item.get('url') or "https://maxvia88.com/categories/220"
+                    if old_stock == 0:
+                        changes.append(
+                            f"🎉🚨 <b>[MAXVIA88] REPOSIÇÃO DO BRASIL NO AR! (+{diff})</b> 🚨🎉\n"
+                            f"{site_line}"
+                            f"⭐ <b>PERFIL DO BRASIL REABASTECIDO!</b> ⭐\n"
+                            f"📦 <b>Produto:</b> 🇧🇷 <b>{clean_display_title}</b> 🇧🇷\n"
+                            f"💵 <b>Preço:</b> {item['price']}\n"
+                            f"📈 <b>Estoque:</b> 0 ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})\n"
+                            f"⚡ <i>Perfis do Brasil acabaram de ser reabastecidos! Garanta o seu rápido!</i>\n"
+                            f"🔗 <a href='{cat_url}'>Acessar Categoria 220 no MaxVia88</a>"
+                        )
+                    else:
+                        changes.append(
+                            f"🟢🇧🇷 <b>[MAXVIA88] REABASTECIMENTO DO BRASIL! (+{diff})</b> 🇧🇷🟢\n"
+                            f"{site_line}"
+                            f"📦 <b>Produto:</b> 🇧🇷 <b>{clean_display_title}</b> 🇧🇷\n"
+                            f"💵 <b>Preço:</b> {item['price']}\n"
+                            f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (+{diff})\n"
+                            f"⚡ <i>Novo lote de contas do Brasil adicionado!</i>\n"
+                            f"🔗 <a href='{cat_url}'>Acessar Categoria 220 no MaxVia88</a>"
+                        )
+                elif is_budget_farmed_profile(item):
+                    cat_url = item.get('url') or "https://maxvia88.com/categories/1"
+                    changes.append(
+                        f"🎉⚡ <b>[MAXVIA88] PERFIL ACESSÍVEL REABASTECIDO! (+{diff})</b> ⚡🎉\n"
+                        f"{site_line}"
+                        f"⭐ <b>PERFIL POPULAR DE BAIXO CUSTO DISPONÍVEL!</b> ⭐\n"
+                        f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
+                        f"💵 <b>Preço:</b> {item['price']}\n"
+                        f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})\n"
+                        f"⚡ <i>Reposição dos perfis acessíveis ({clean_display_title})! Garanta o seu rápido!</i>\n"
+                        f"🔗 <a href='{cat_url}'>Acessar no MaxVia88</a>"
+                    )
+                elif is_new_supplier:
                     changes.append(
                         f"🟢🔥 <b>{tag_header} REABASTECIMENTO!</b> 🔥🟢\n"
                         f"{site_line}"
