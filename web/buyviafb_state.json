@@ -1,0 +1,13 @@
+{
+  "updated_at": "2026-10-25 16:17:39",
+  "username": "itooh",
+  "user_id": 2128931,
+  "api_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MjEyODkzMSwidXNlcm5hbWUiOiJpdG9vaCIsImNyZWF0ZWRfdGltZSI6bnVsbCwia2V5IjoiMTJkNjc5M2E4NWM1MzhjMGY1M2I3MThmMmExZmEwYzMiLCJkb21haW4iOiJidXl2aWFmYi5jb20iLCJtc2ciOiJjXHUwMGYzIGxcdTAwZTBtIHRoXHUwMGVjIG1cdTFlZGJpIGNcdTAwZjMgXHUwMTAzbiwga2hcdTAwZjRuZyBsXHUwMGUwbSBcdTAxMDNuIGNcdTFlZTl0LCBcdTAxMDNuIFx1MDExMVx1MWVhN3UgYnVcdTFlZDNpIG5oXHUwMGU5ID0pKSJ9.2xkCnkneO3rmr7mnBzohv9IkpG6d0sj5tDjnk1JM154",
+  "balance_coins": 21500,
+  "balance_str": "21.500 Coins",
+  "balance_usdt": 0.86,
+  "balance_brl": 4.34,
+  "deposit": 39575000,
+  "spending": 39553500,
+  "last_purchase": "Sincronizado da API BuyViaFB"
+}

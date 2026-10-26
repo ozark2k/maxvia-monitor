@@ -19,7 +19,7 @@ import time
 import urllib.parse
 import urllib.request
 from hashlib import pbkdf2_hmac
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import HTTPServer, SimpleHTTPRequestHandler
 import threading
 from bs4 import BeautifulSoup
 
@@ -27,6 +27,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 STATE_FILE = os.path.join(SCRIPT_DIR, "stock_state.json")
 CONFIG_FILE = os.path.join(SCRIPT_DIR, "config.json")
 LOG_FILE = os.path.join(SCRIPT_DIR, "monitor.log")
+WEB_DIR = os.path.join(SCRIPT_DIR, "web")
 MAXVIA_STATE_WEB_PATH = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "limpador_contas", "maxvia_state.json"))
 CURRENT_MAXVIA_USER_INFO = {"username": "Itooh - ID: 4271", "balance_str": "$211.08", "balance_usd": 211.08}
 LATEST_WEB_STATE = {}
@@ -832,10 +833,18 @@ def export_maxvia_web_state(all_products: dict):
         global LATEST_WEB_STATE
         LATEST_WEB_STATE = web_state
 
-        os.makedirs(os.path.dirname(MAXVIA_STATE_WEB_PATH), exist_ok=True)
-        with open(MAXVIA_STATE_WEB_PATH, 'w', encoding='utf-8') as f:
-            json.dump(web_state, f, ensure_ascii=False, indent=2)
-        logging.info(f"Exported MaxVia web state to {MAXVIA_STATE_WEB_PATH} (Balance: {web_state['balance_str']})")
+        paths_to_save = [
+            MAXVIA_STATE_WEB_PATH,
+            os.path.join(WEB_DIR, "maxvia_state.json")
+        ]
+        for p in paths_to_save:
+            try:
+                os.makedirs(os.path.dirname(p), exist_ok=True)
+                with open(p, 'w', encoding='utf-8') as f:
+                    json.dump(web_state, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
+        logging.info(f"Exported MaxVia web state (Balance: {web_state['balance_str']})")
     except Exception as e:
         logging.error(f"Failed to export MaxVia web state: {e}")
 
@@ -1423,8 +1432,16 @@ def run_cycle(is_startup: bool = False):
     logging.info("Ciclo concluído com sucesso.")
 
 
-class HealthHandler(BaseHTTPRequestHandler):
-    """Simple HTTP healthcheck and state endpoint for Render Web Service."""
+class WebAndHealthHandler(SimpleHTTPRequestHandler):
+    """Full HTTP server for Render: serves Limpador de Contas web app, static assets, and live MaxVia state API."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=WEB_DIR, **kwargs)
+
+    def end_headers(self):
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        super().end_headers()
+
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -1437,36 +1454,35 @@ class HealthHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-type', 'application/json; charset=utf-8')
             self.send_header('Access-Control-Allow-Origin', '*')
-            self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS, HEAD')
-            self.send_header('Access-Control-Allow-Headers', '*')
+            self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
             self.end_headers()
             data_str = json.dumps(LATEST_WEB_STATE, ensure_ascii=False) if LATEST_WEB_STATE else "{}"
             self.wfile.write(data_str.encode('utf-8'))
             return
 
-        self.send_response(200)
-        self.send_header('Content-type', 'text/plain; charset=utf-8')
-        self.end_headers()
-        self.wfile.write(b"MaxVia88 Monitor is Active and Monitoring 24/7!\n")
+        if self.path == '/healthz' or self.path == '/ping':
+            self.send_response(200)
+            self.send_header('Content-type', 'text/plain; charset=utf-8')
+            self.end_headers()
+            self.wfile.write(b"OK\n")
+            return
 
-    def do_HEAD(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/plain; charset=utf-8')
-        self.end_headers()
+        # Serve static web app (index.html, JS, banners, etc.)
+        return super().do_GET()
 
     def log_message(self, format, *args):
         pass  # suppress noisy HTTP access logs
 
 
 def start_health_server():
-    """Run lightweight HTTP server for Render health checks."""
+    """Run web server on cloud platform (serving Limpador de Contas / Calculadora AND healthcheck/state API)."""
     port = int(os.environ.get("PORT", 8080))
     try:
-        server = HTTPServer(('0.0.0.0', port), HealthHandler)
-        logging.info(f"Health server listening on port {port}")
+        server = HTTPServer(('0.0.0.0', port), WebAndHealthHandler)
+        logging.info(f"Web server listening on port {port} (serving Limpador de Contas SPA & MaxVia API)...")
         server.serve_forever()
     except Exception as e:
-        logging.error(f"Health server error: {e}")
+        logging.error(f"Web server error: {e}")
 
 
 def keep_alive_ping():

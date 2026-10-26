@@ -1,0 +1,18 @@
+{
+  "cookie": "",
+  "username": "",
+  "password": "",
+  "check_interval_minutes": 15,
+  "rules": {
+    "acc_farmed_072": {
+      "name": "⭐Acc Farmed 2026 (2FA)",
+      "target_price": 0.72,
+      "alert_if_below": 500
+    },
+    "acc_farmed_098": {
+      "name": "⭐Acc Farmed 902 New 2026 (2FA)",
+      "target_price": 0.98,
+      "alert_if_above": 0
+    }
+  }
+}
