@@ -30,6 +30,37 @@ LOG_FILE = os.path.join(SCRIPT_DIR, "monitor.log")
 MAXVIA_STATE_WEB_PATH = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "limpador_contas", "maxvia_state.json"))
 CURRENT_MAXVIA_USER_INFO = {"username": "Itooh - ID: 4271", "balance_str": "$211.08", "balance_usd": 211.08}
 LATEST_WEB_STATE = {}
+IS_CLOUD_SERVER = bool(os.environ.get("RENDER") or os.environ.get("PORT"))
+
+
+def check_and_sync_cookie_to_git(fresh_cookie: str):
+    """If running on local Mac and fresh cookie differs from render.yaml, push to GitHub so Render auto-redeploys."""
+    if IS_CLOUD_SERVER or not fresh_cookie or "laravel_session=" not in fresh_cookie:
+        return
+    render_yaml_path = os.path.join(SCRIPT_DIR, "render.yaml")
+    if not os.path.exists(render_yaml_path):
+        return
+    try:
+        with open(render_yaml_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        m = re.search(r'(- key: MAXVIA_COOKIE\s*\n\s*value:\s*)"([^"]*)"', content)
+        if m and m.group(2) != fresh_cookie:
+            logging.info("Sessão nova do MaxVia88 detectada no Chrome! Atualizando render.yaml e enviando para o GitHub...")
+            new_content = content[:m.start(2)] + fresh_cookie + content[m.end(2):]
+            with open(render_yaml_path, "w", encoding="utf-8") as f:
+                f.write(new_content)
+            def do_push():
+                try:
+                    subprocess.run(["git", "add", "render.yaml", "config.json"], cwd=SCRIPT_DIR, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    subprocess.run(["git", "commit", "-m", "Auto-sync fresh Chrome session cookie to Render"], cwd=SCRIPT_DIR, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    subprocess.run(["git", "push", "origin", "main"], cwd=SCRIPT_DIR, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    logging.info("Sessão nova enviada para o GitHub com sucesso! O Render reiniciará com os cookies atualizados.")
+                except Exception as ex:
+                    logging.warning(f"Git push cookie sync note: {ex}")
+            threading.Thread(target=do_push, daemon=True).start()
+    except Exception as e:
+        logging.debug(f"Error checking cookie sync: {e}")
+
 
 # Logging Setup
 logging.basicConfig(
@@ -130,6 +161,7 @@ def get_chrome_cookies() -> str:
                 if cfg.get("cookie") != cookie_str:
                     cfg["cookie"] = cookie_str
                     save_config(cfg)
+                check_and_sync_cookie_to_git(cookie_str)
             except Exception:
                 pass
             return cookie_str
@@ -1319,8 +1351,10 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     )
 
     if changes:
-        if "--no-telegram" in sys.argv or os.environ.get("NO_TELEGRAM") == "1":
-            logging.info(f"[NO-TELEGRAM] {len(changes)} alterações detectadas, mas o envio ao Telegram está desativado nesta instância local.")
+        # Trava permanente de duplicidade: apenas a nuvem (Render) ou flag explícita podem enviar alertas
+        is_allowed_to_notify = IS_CLOUD_SERVER or ("--enable-local-telegram" in sys.argv)
+        if not is_allowed_to_notify or "--no-telegram" in sys.argv or os.environ.get("NO_TELEGRAM") == "1":
+            logging.info(f"[LOCAL SYNC] {len(changes)} alterações detectadas, mas alertas no Telegram são exclusivos da nuvem (Render 24/7).")
         else:
             logging.info(f"Detectadas {len(changes)} alterações de estoque. Enviando alerta Telegram...")
             send_telegram_message(bot_token, chat_id, "\n\n".join(changes))
