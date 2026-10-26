@@ -5827,13 +5827,25 @@
       const remainingUsd = Math.max(0, userBalanceUsd - totalCostUsd);
       const remainingBrl = remainingUsd * dolar;
       const missingUsd = Math.max(0, totalCostUsd - userBalanceUsd);
+
+      // Regras de Depósito e Saque da Binance:
+      const BINANCE_MIN_USDT = 5.0;
+      const BINANCE_FEE_USDT = 0.20;
+      const binanceMinPix = Math.max(26, Math.ceil((BINANCE_MIN_USDT + BINANCE_FEE_USDT) * dolar));
+
+      const isMissingBelowBinanceMin = missingUsd > 0 && missingUsd < BINANCE_MIN_USDT;
+
       const polygonFeeUsd = missingUsd > 0 ? 0.03 : 0.0; // Taxa de rede Polygon (POL) da Binance
       const missingWithFeeUsd = missingUsd > 0 ? (missingUsd + polygonFeeUsd) : 0;
       const missingPixBrl = missingWithFeeUsd * dolar;
+
       // Margem de segurança inteligente e arredondamento natural para Pix na Binance:
       let suggestedMissingPix;
       let safetyMarginBrl;
-      if (missingPixBrl > 1000) {
+      if (isMissingBelowBinanceMin) {
+        suggestedMissingPix = binanceMinPix;
+        safetyMarginBrl = suggestedMissingPix - missingPixBrl;
+      } else if (missingPixBrl > 1000) {
         suggestedMissingPix = Math.ceil((missingPixBrl + 10) / 10) * 10;
         safetyMarginBrl = suggestedMissingPix - missingPixBrl;
       } else if (missingPixBrl > 200) {
@@ -5843,6 +5855,10 @@
         suggestedMissingPix = Math.ceil(missingPixBrl + 3.0);
         safetyMarginBrl = suggestedMissingPix - missingPixBrl;
       }
+
+      // Se o usuário depositar o mínimo da Binance (5 USDT), quanto sobra no MaxVia?
+      const surplusUsdAfterMinDeposit = (userBalanceUsd + BINANCE_MIN_USDT) - totalCostUsd;
+      const surplusBrlAfterMinDeposit = surplusUsdAfterMinDeposit * dolar;
 
       // Atualiza Cotação do Dólar no Banner
       const balRateEl = document.getElementById('maxvia-dolar-rate-display');
@@ -5869,7 +5885,11 @@
           statusBadge.style.borderColor = '#ff453a';
           statusTitle.innerHTML = '<span>⚠️</span> Sem Saldo no Site';
           statusTitle.style.color = '#ff453a';
-          statusDesc.textContent = `Deposite R$ ${formatVbrBRL(totalCostBrl)} no Pix`;
+          if (totalCostUsd < BINANCE_MIN_USDT) {
+            statusDesc.textContent = `Deposite R$ ${formatVbrBRL(binanceMinPix)} no Pix (mínimo 5 USDT Binance)`;
+          } else {
+            statusDesc.textContent = `Deposite R$ ${formatVbrBRL(totalCostBrl)} no Pix`;
+          }
           statusDesc.style.color = 'rgba(255,255,255,0.8)';
         } else if (isFullyCovered) {
           statusBadge.style.background = 'rgba(48, 209, 88, 0.22)';
@@ -5883,7 +5903,11 @@
           statusBadge.style.borderColor = '#ffd60a';
           statusTitle.innerHTML = `<span>⚠️</span> Faltam $${missingUsd.toFixed(2)} USD`;
           statusTitle.style.color = '#ffd60a';
-          statusDesc.textContent = `Deposite R$ ${formatVbrBRL(suggestedMissingPix)} no Pix`;
+          if (isMissingBelowBinanceMin) {
+            statusDesc.textContent = `Deposite R$ ${formatVbrBRL(binanceMinPix)} no Pix (mínimo 5 USDT Binance)`;
+          } else {
+            statusDesc.textContent = `Deposite R$ ${formatVbrBRL(suggestedMissingPix)} no Pix`;
+          }
           statusDesc.style.color = '#ffffff';
         }
       }
@@ -5924,29 +5948,58 @@
       const depositLine2 = document.getElementById('maxvia-deposit-line2');
 
       if (userBalanceUsd === 0) {
-        if (cardDeposit) {
-          cardDeposit.style.borderColor = '#60a5fa';
-          cardDeposit.style.background = 'linear-gradient(135deg, rgba(96, 165, 250, 0.16) 0%, rgba(20, 30, 48, 0.95) 100%)';
-        }
-        if (depositCardLabel) {
-          depositCardLabel.innerHTML = '<span>🏦</span> DEPOSITAR NO PIX (MAXVIA):';
-          depositCardLabel.style.color = '#60a5fa';
-        }
-        if (depositUsdtBadge) {
-          depositUsdtBadge.style.borderColor = '#60a5fa';
-          depositUsdtBadge.style.background = 'rgba(96, 165, 250, 0.25)';
-          depositUsdtBadge.style.color = '#ffffff';
-          depositUsdtBadge.textContent = `$${totalCostUsd.toFixed(2)} USDT`;
-        }
-        if (depositBrlMain) {
-          depositBrlMain.style.color = '#60a5fa';
-          depositBrlMain.textContent = `R$ ${formatVbrBRL(totalCostBrl)}`;
-        }
-        if (depositLine1) {
-          depositLine1.innerHTML = `💵 Custo exato: <span style="color: #60a5fa;">$${totalCostUsd.toFixed(2)} USDT</span> (${accountsCount.toLocaleString('pt-BR')} ${accountsCount === 1 ? 'perfil' : 'perfis'})`;
-        }
-        if (depositLine2) {
-          depositLine2.innerHTML = `💡 Dica: Deposite <b style="color: #ffd60a;">R$ ${formatVbrBRL(suggestedMissingPix)}</b> (+R$ 1 margem)`;
+        if (totalCostUsd < BINANCE_MIN_USDT) {
+          if (cardDeposit) {
+            cardDeposit.style.borderColor = '#ffd60a';
+            cardDeposit.style.background = 'linear-gradient(135deg, rgba(255, 214, 10, 0.16) 0%, rgba(35, 28, 15, 0.96) 100%)';
+          }
+          if (depositCardLabel) {
+            depositCardLabel.innerHTML = '<span>⚠️</span> DEPOSITAR NO PIX (MÍNIMO BINANCE):';
+            depositCardLabel.style.color = '#ffd60a';
+          }
+          if (depositUsdtBadge) {
+            depositUsdtBadge.style.borderColor = '#ffd60a';
+            depositUsdtBadge.style.background = 'rgba(255, 214, 10, 0.25)';
+            depositUsdtBadge.style.color = '#ffd60a';
+            depositUsdtBadge.textContent = 'Mínimo Binance: 5.00 USDT';
+          }
+          if (depositBrlMain) {
+            depositBrlMain.style.color = '#ffd60a';
+            depositBrlMain.textContent = `R$ ${formatVbrBRL(binanceMinPix)}`;
+          }
+          const surplusZeroUsd = BINANCE_MIN_USDT - totalCostUsd;
+          const surplusZeroBrl = surplusZeroUsd * dolar;
+          if (depositLine1) {
+            depositLine1.innerHTML = `⚠️ Pedido precisa de <b>$${totalCostUsd.toFixed(2)} USD (R$ ${formatVbrBRL(totalCostBrl)})</b>, mas a Binance exige saque mínimo de <b>5.00 USDT</b>.`;
+          }
+          if (depositLine2) {
+            depositLine2.innerHTML = `💡 Deposite <b style="color: #ffd60a;">R$ ${formatVbrBRL(binanceMinPix)} no Pix</b> ➔ Saca <b>5.00 USDT</b>. Paga os perfis e <b style="color: #30d158;">SOBRAM +$${surplusZeroUsd.toFixed(2)} USD (~R$ ${formatVbrBRL(surplusZeroBrl)})</b> de saldo no MaxVia!`;
+          }
+        } else {
+          if (cardDeposit) {
+            cardDeposit.style.borderColor = '#60a5fa';
+            cardDeposit.style.background = 'linear-gradient(135deg, rgba(96, 165, 250, 0.16) 0%, rgba(20, 30, 48, 0.95) 100%)';
+          }
+          if (depositCardLabel) {
+            depositCardLabel.innerHTML = '<span>🏦</span> DEPOSITAR NO PIX (MAXVIA):';
+            depositCardLabel.style.color = '#60a5fa';
+          }
+          if (depositUsdtBadge) {
+            depositUsdtBadge.style.borderColor = '#60a5fa';
+            depositUsdtBadge.style.background = 'rgba(96, 165, 250, 0.25)';
+            depositUsdtBadge.style.color = '#ffffff';
+            depositUsdtBadge.textContent = `$${totalCostUsd.toFixed(2)} USDT`;
+          }
+          if (depositBrlMain) {
+            depositBrlMain.style.color = '#60a5fa';
+            depositBrlMain.textContent = `R$ ${formatVbrBRL(totalCostBrl)}`;
+          }
+          if (depositLine1) {
+            depositLine1.innerHTML = `💵 Custo exato: <span style="color: #60a5fa;">$${totalCostUsd.toFixed(2)} USDT</span> (${accountsCount.toLocaleString('pt-BR')} ${accountsCount === 1 ? 'perfil' : 'perfis'})`;
+          }
+          if (depositLine2) {
+            depositLine2.innerHTML = `💡 Dica: Deposite <b style="color: #ffd60a;">R$ ${formatVbrBRL(suggestedMissingPix)}</b> (+R$ 1 margem)`;
+          }
         }
       } else if (isFullyCovered) {
         // 100% PAGO PELO SALDO!
@@ -5980,29 +6033,42 @@
           cardDeposit.style.borderColor = '#ffd60a';
           cardDeposit.style.background = 'linear-gradient(135deg, rgba(255, 214, 10, 0.16) 0%, rgba(35, 28, 15, 0.96) 100%)';
         }
-        if (depositCardLabel) {
-          depositCardLabel.innerHTML = '<span>⚠️</span> DEPOSITAR NO PIX (COMPLETAR):';
-          depositCardLabel.style.color = '#ffd60a';
-        }
-        if (depositUsdtBadge) {
-          depositUsdtBadge.style.borderColor = '#ffd60a';
-          depositUsdtBadge.style.background = 'rgba(255, 214, 10, 0.25)';
-          depositUsdtBadge.style.color = '#ffd60a';
-          depositUsdtBadge.textContent = `Faltam $${missingUsd.toFixed(2)} USDT`;
-        }
-        if (depositBrlMain) {
-          depositBrlMain.style.color = '#ffd60a';
-          depositBrlMain.textContent = `R$ ${formatVbrBRL(suggestedMissingPix)}`;
-        }
-        const isBelowBinanceMin = missingWithFeeUsd > 0 && missingWithFeeUsd < 5.0;
-        if (isBelowBinanceMin) {
+        if (isMissingBelowBinanceMin) {
+          if (depositCardLabel) {
+            depositCardLabel.innerHTML = '<span>⚠️</span> DEPOSITAR NO PIX (MÍNIMO BINANCE):';
+            depositCardLabel.style.color = '#ffd60a';
+          }
+          if (depositUsdtBadge) {
+            depositUsdtBadge.style.borderColor = '#ffd60a';
+            depositUsdtBadge.style.background = 'rgba(255, 214, 10, 0.25)';
+            depositUsdtBadge.style.color = '#ffd60a';
+            depositUsdtBadge.textContent = 'Mínimo Binance: 5.00 USDT';
+          }
+          if (depositBrlMain) {
+            depositBrlMain.style.color = '#ffd60a';
+            depositBrlMain.textContent = `R$ ${formatVbrBRL(binanceMinPix)}`;
+          }
           if (depositLine1) {
-            depositLine1.innerHTML = `⚠️ <b style="color: #ffffff;">Faltam só $${missingUsd.toFixed(2)} USD</b> no MaxVia (para comprar ${accountsCount} perfis).`;
+            depositLine1.innerHTML = `⚠️ Faltam só <b style="color: #ffffff;">$${missingUsd.toFixed(2)} USD (R$ ${formatVbrBRL(missingUsd * dolar)})</b>, mas a Binance exige saque mínimo de <b style="color: #ffffff;">5.00 USDT</b>.`;
           }
           if (depositLine2) {
-            depositLine2.innerHTML = `💡 <b>Dica Imediata:</b> Compre <b style="color: #30d158;">${accountsCount - 1} perfis</b> agora (seu saldo cobre 100%)! A Binance exige saque mínimo de <b style="color: #ffd60a;">5 USDT (~R$ 26,00)</b>.`;
+            depositLine2.innerHTML = `💡 Deposite <b style="color: #ffd60a;">R$ ${formatVbrBRL(binanceMinPix)} no Pix</b> ➔ Saca <b>5.00 USDT</b>. Paga este pedido e <b style="color: #30d158;">SOBRAM +$${surplusUsdAfterMinDeposit.toFixed(2)} USD (~R$ ${formatVbrBRL(surplusBrlAfterMinDeposit)})</b> de saldo no MaxVia!`;
           }
         } else {
+          if (depositCardLabel) {
+            depositCardLabel.innerHTML = '<span>⚠️</span> DEPOSITAR NO PIX (COMPLETAR):';
+            depositCardLabel.style.color = '#ffd60a';
+          }
+          if (depositUsdtBadge) {
+            depositUsdtBadge.style.borderColor = '#ffd60a';
+            depositUsdtBadge.style.background = 'rgba(255, 214, 10, 0.25)';
+            depositUsdtBadge.style.color = '#ffd60a';
+            depositUsdtBadge.textContent = `Faltam $${missingUsd.toFixed(2)} USDT`;
+          }
+          if (depositBrlMain) {
+            depositBrlMain.style.color = '#ffd60a';
+            depositBrlMain.textContent = `R$ ${formatVbrBRL(suggestedMissingPix)}`;
+          }
           if (depositLine1) {
             depositLine1.innerHTML = `⚠️ <b style="color: #ffffff;">Faltam $${missingUsd.toFixed(2)} USD</b> (+0,03 taxa Polygon = <b>$${missingWithFeeUsd.toFixed(2)} USDT</b> na Binance)`;
           }
@@ -6047,8 +6113,12 @@
         if (userBalanceUsd > 0 && isFullyCovered) {
           profitCashflowSubtext.innerHTML = `💵 <b style="color: #30d158;">Como seu saldo já cobre, entra R$ ${formatVbrBRL(receivedBrl)} limpo no bolso hoje!</b>`;
         } else if (userBalanceUsd > 0 && !isFullyCovered) {
-          const cashInPocket = receivedBrl - missingPixBrl;
-          profitCashflowSubtext.innerHTML = `💵 <b style="color: #a7f3d0;">Entra R$ ${formatVbrBRL(receivedBrl)} do cliente - R$ ${formatVbrBRL(missingPixBrl)} Pix = R$ ${formatVbrBRL(cashInPocket)} no bolso hoje!</b>`;
+          if (isMissingBelowBinanceMin) {
+            profitCashflowSubtext.innerHTML = `💵 <b style="color: #a7f3d0;">Entra R$ ${formatVbrBRL(receivedBrl)} do cliente! O pedido consome só R$ ${formatVbrBRL(missingPixBrl)} do Pix (o restante dos R$ ${formatVbrBRL(binanceMinPix)} vira +$${surplusUsdAfterMinDeposit.toFixed(2)} USD de saldo guardado no MaxVia para as próximas compras).</b>`;
+          } else {
+            const cashInPocket = receivedBrl - missingPixBrl;
+            profitCashflowSubtext.innerHTML = `💵 <b style="color: #a7f3d0;">Entra R$ ${formatVbrBRL(receivedBrl)} do cliente - R$ ${formatVbrBRL(missingPixBrl)} Pix = R$ ${formatVbrBRL(cashInPocket)} no bolso hoje!</b>`;
+          }
         } else {
           profitCashflowSubtext.innerHTML = `💵 Margem de retorno limpa de ${marginPct.toFixed(1)}% direto no seu bolso`;
         }
@@ -8121,6 +8191,14 @@
         balanceSubtext.textContent = `= $${formatVbrBRL(balanceUsdt)} USDT (~R$ ${formatVbrBRL(balanceBrl)})`;
       }
 
+      // Regras de Depósito e Saque da Binance:
+      // A Binance exige saque MÍNIMO de 5.00 USDT (na rede BSC BEP20 ou Polygon).
+      // Taxa de rede da Binance: ~0.20 USDT.
+      const BINANCE_MIN_USDT = 5.0;
+      const BINANCE_FEE_USDT = 0.20;
+      // Valor mínimo em reais para garantir 5.00 USDT líquidos na Binance:
+      const binanceMinPix = Math.max(26, Math.ceil((BINANCE_MIN_USDT + BINANCE_FEE_USDT) * rate));
+
       // Verificação: O saldo cobre o pedido?
       const isFullyCovered = userBalance >= totalCoins;
       const missingCoins = Math.max(0, totalCoins - userBalance);
@@ -8130,7 +8208,25 @@
 
       const missingUsdt = missingCoins / 25000;
       const missingPixBrl = missingUsdt * rate;
-      const suggestedMissingPix = Math.ceil(missingPixBrl + 5.0);
+      const isMissingBelowBinanceMin = missingUsdt > 0 && missingUsdt < BINANCE_MIN_USDT;
+
+      // Margem de segurança inteligente para Pix na Binance quando missingUsdt >= 5.0:
+      let suggestedMissingPix;
+      if (isMissingBelowBinanceMin) {
+        suggestedMissingPix = binanceMinPix;
+      } else if (missingPixBrl > 500) {
+        suggestedMissingPix = Math.ceil((missingPixBrl + 10) / 10) * 10;
+      } else if (missingPixBrl > 100) {
+        suggestedMissingPix = Math.ceil((missingPixBrl + 5) / 5) * 5;
+      } else {
+        suggestedMissingPix = Math.ceil(missingPixBrl + 4.0);
+      }
+
+      // Se o usuário depositar o mínimo da Binance (5 USDT = 125.000 Coins), quanto sobra no site?
+      const coinsAddedFromMinBinance = BINANCE_MIN_USDT * 25000; // 125.000 Coins
+      const surplusCoinsAfterMinDeposit = (userBalance + coinsAddedFromMinBinance) - totalCoins;
+      const surplusUsdtAfterMinDeposit = surplusCoinsAfterMinDeposit / 25000;
+      const surplusBrlAfterMinDeposit = surplusUsdtAfterMinDeposit * rate;
 
       // Status Badge no Banner de Saldo
       const statusBadge = document.getElementById('vbr-balance-status-badge');
@@ -8143,7 +8239,11 @@
           statusBadge.style.borderColor = '#ff453a';
           statusTitle.innerHTML = '<span>⚠️</span> Sem Saldo no Site';
           statusTitle.style.color = '#ff453a';
-          statusDesc.textContent = `Deposite R$ ${formatVbrBRL(totalDepositBrl)} no Pix`;
+          if (totalDepositUsdt < BINANCE_MIN_USDT) {
+            statusDesc.textContent = `Deposite R$ ${formatVbrBRL(binanceMinPix)} no Pix (mínimo 5 USDT Binance)`;
+          } else {
+            statusDesc.textContent = `Deposite R$ ${formatVbrBRL(suggestedPixDeposit)} no Pix`;
+          }
           statusDesc.style.color = 'rgba(255,255,255,0.8)';
         } else if (isFullyCovered) {
           statusBadge.style.background = 'rgba(48, 209, 88, 0.22)';
@@ -8155,9 +8255,13 @@
         } else {
           statusBadge.style.background = 'rgba(255, 214, 10, 0.2)';
           statusBadge.style.borderColor = '#ffd60a';
-          statusTitle.innerHTML = `<span>⚠️</span> Faltam ${missingCoins.toLocaleString('pt-BR')} Coins`;
+          statusTitle.innerHTML = `<span>⚠️</span> Faltam ${missingCoins.toLocaleString('pt-BR')} Coins ($${formatVbrBRL(missingUsdt)} USDT)`;
           statusTitle.style.color = '#ffd60a';
-          statusDesc.textContent = `Deposite R$ ${formatVbrBRL(missingPixBrl)} no Pix`;
+          if (isMissingBelowBinanceMin) {
+            statusDesc.textContent = `Deposite R$ ${formatVbrBRL(binanceMinPix)} no Pix (mínimo 5 USDT Binance)`;
+          } else {
+            statusDesc.textContent = `Deposite R$ ${formatVbrBRL(suggestedMissingPix)} no Pix`;
+          }
           statusDesc.style.color = '#ffffff';
         }
       }
@@ -8192,29 +8296,59 @@
 
       if (userBalance === 0) {
         // Comportamento sem saldo (0 coins)
-        if (cardDeposit) {
-          cardDeposit.style.borderColor = '#60a5fa';
-          cardDeposit.style.background = 'linear-gradient(135deg, rgba(96, 165, 250, 0.16) 0%, rgba(20, 30, 48, 0.95) 100%)';
-        }
-        if (depositCardLabel) {
-          depositCardLabel.innerHTML = '<span>🏦</span> DEPOSITAR NO PIX (BINANCE):';
-          depositCardLabel.style.color = '#60a5fa';
-        }
-        if (depositUsdtBadge) {
-          depositUsdtBadge.style.borderColor = '#60a5fa';
-          depositUsdtBadge.style.background = 'rgba(96, 165, 250, 0.25)';
-          depositUsdtBadge.style.color = '#ffffff';
-          depositUsdtBadge.textContent = `$${formatVbrBRL(totalDepositUsdt)} USDT`;
-        }
-        if (depositBrlMain) {
-          depositBrlMain.style.color = '#60a5fa';
-          depositBrlMain.textContent = `R$ ${formatVbrBRL(totalDepositBrl)}`;
-        }
-        if (depositLine1) {
-          depositLine1.innerHTML = `💵 Custo exato: <span style="color: #60a5fa;">$${formatVbrBRL(totalDepositUsdt)} USDT</span> (${totalCoins.toLocaleString('pt-BR')} Coins)`;
-        }
-        if (depositLine2) {
-          depositLine2.innerHTML = `💡 Dica: Deposite <b style="color: #ffd60a;">R$ ${formatVbrBRL(suggestedPixDeposit)}</b> (+R$ 5 taxa de rede)`;
+        if (totalDepositUsdt < BINANCE_MIN_USDT) {
+          if (cardDeposit) {
+            cardDeposit.style.borderColor = '#ffd60a';
+            cardDeposit.style.background = 'linear-gradient(135deg, rgba(255, 214, 10, 0.16) 0%, rgba(35, 28, 15, 0.96) 100%)';
+          }
+          if (depositCardLabel) {
+            depositCardLabel.innerHTML = '<span>⚠️</span> DEPOSITAR NO PIX (MÍNIMO BINANCE):';
+            depositCardLabel.style.color = '#ffd60a';
+          }
+          if (depositUsdtBadge) {
+            depositUsdtBadge.style.borderColor = '#ffd60a';
+            depositUsdtBadge.style.background = 'rgba(255, 214, 10, 0.25)';
+            depositUsdtBadge.style.color = '#ffd60a';
+            depositUsdtBadge.textContent = 'Mínimo Binance: 5.00 USDT';
+          }
+          if (depositBrlMain) {
+            depositBrlMain.style.color = '#ffd60a';
+            depositBrlMain.textContent = `R$ ${formatVbrBRL(binanceMinPix)}`;
+          }
+          const surplusZeroCoins = (BINANCE_MIN_USDT * 25000) - totalCoins;
+          const surplusZeroUsdt = surplusZeroCoins / 25000;
+          const surplusZeroBrl = surplusZeroUsdt * rate;
+          if (depositLine1) {
+            depositLine1.innerHTML = `⚠️ Pedido precisa de <b>${totalCoins.toLocaleString('pt-BR')} Coins ($${formatVbrBRL(totalDepositUsdt)} USDT • R$ ${formatVbrBRL(totalDepositBrl)})</b>, mas a Binance exige saque mínimo de <b>5.00 USDT</b>.`;
+          }
+          if (depositLine2) {
+            depositLine2.innerHTML = `💡 Deposite <b style="color: #ffd60a;">R$ ${formatVbrBRL(binanceMinPix)} no Pix</b> ➔ Saca <b>5.00 USDT</b> (125.000 Coins). Compra o pedido e <b style="color: #30d158;">SOBRAM +${surplusZeroCoins.toLocaleString('pt-BR')} Coins ($${formatVbrBRL(surplusZeroUsdt)} USDT • ~R$ ${formatVbrBRL(surplusZeroBrl)})</b> de saldo no site!`;
+          }
+        } else {
+          if (cardDeposit) {
+            cardDeposit.style.borderColor = '#60a5fa';
+            cardDeposit.style.background = 'linear-gradient(135deg, rgba(96, 165, 250, 0.16) 0%, rgba(20, 30, 48, 0.95) 100%)';
+          }
+          if (depositCardLabel) {
+            depositCardLabel.innerHTML = '<span>🏦</span> DEPOSITAR NO PIX (BINANCE):';
+            depositCardLabel.style.color = '#60a5fa';
+          }
+          if (depositUsdtBadge) {
+            depositUsdtBadge.style.borderColor = '#60a5fa';
+            depositUsdtBadge.style.background = 'rgba(96, 165, 250, 0.25)';
+            depositUsdtBadge.style.color = '#ffffff';
+            depositUsdtBadge.textContent = `$${formatVbrBRL(totalDepositUsdt)} USDT`;
+          }
+          if (depositBrlMain) {
+            depositBrlMain.style.color = '#60a5fa';
+            depositBrlMain.textContent = `R$ ${formatVbrBRL(suggestedPixDeposit)}`;
+          }
+          if (depositLine1) {
+            depositLine1.innerHTML = `💵 Custo exato: <span style="color: #60a5fa;">$${formatVbrBRL(totalDepositUsdt)} USDT</span> (${totalCoins.toLocaleString('pt-BR')} Coins • R$ ${formatVbrBRL(totalDepositBrl)})`;
+          }
+          if (depositLine2) {
+            depositLine2.innerHTML = `💡 Dica: Deposite <b style="color: #ffd60a;">R$ ${formatVbrBRL(suggestedPixDeposit)}</b> (+R$ 5 taxa de rede/Pix Binance)`;
+          }
         }
       } else if (isFullyCovered) {
         // 100% COBERTO PELO SALDO EXISTENTE!
@@ -8248,25 +8382,48 @@
           cardDeposit.style.borderColor = '#ffd60a';
           cardDeposit.style.background = 'linear-gradient(135deg, rgba(255, 214, 10, 0.16) 0%, rgba(35, 28, 15, 0.96) 100%)';
         }
-        if (depositCardLabel) {
-          depositCardLabel.innerHTML = '<span>⚠️</span> DEPOSITAR NO PIX (COMPLETAR):';
-          depositCardLabel.style.color = '#ffd60a';
-        }
-        if (depositUsdtBadge) {
-          depositUsdtBadge.style.borderColor = '#ffd60a';
-          depositUsdtBadge.style.background = 'rgba(255, 214, 10, 0.25)';
-          depositUsdtBadge.style.color = '#ffd60a';
-          depositUsdtBadge.textContent = `Faltam $${formatVbrBRL(missingUsdt)} USDT`;
-        }
-        if (depositBrlMain) {
-          depositBrlMain.style.color = '#ffd60a';
-          depositBrlMain.textContent = `R$ ${formatVbrBRL(suggestedMissingPix)}`;
-        }
-        if (depositLine1) {
-          depositLine1.innerHTML = `⚠️ <b style="color: #ffffff;">Faltam ${missingCoins.toLocaleString('pt-BR')} Coins ($${formatVbrBRL(missingUsdt)} USDT)</b> • Aproveita seus <b style="color: #30d158;">${userBalance.toLocaleString('pt-BR')} Coins</b>`;
-        }
-        if (depositLine2) {
-          depositLine2.innerHTML = `💡 <b>Valor Seguro Pix:</b> R$ ${formatVbrBRL(suggestedMissingPix)} (Custo seco: R$ ${formatVbrBRL(missingPixBrl)} + margem para taxa de saque Binance)`;
+        if (isMissingBelowBinanceMin) {
+          if (depositCardLabel) {
+            depositCardLabel.innerHTML = '<span>⚠️</span> DEPOSITAR NO PIX (MÍNIMO BINANCE):';
+            depositCardLabel.style.color = '#ffd60a';
+          }
+          if (depositUsdtBadge) {
+            depositUsdtBadge.style.borderColor = '#ffd60a';
+            depositUsdtBadge.style.background = 'rgba(255, 214, 10, 0.25)';
+            depositUsdtBadge.style.color = '#ffd60a';
+            depositUsdtBadge.textContent = 'Mínimo Binance: 5.00 USDT';
+          }
+          if (depositBrlMain) {
+            depositBrlMain.style.color = '#ffd60a';
+            depositBrlMain.textContent = `R$ ${formatVbrBRL(binanceMinPix)}`;
+          }
+          if (depositLine1) {
+            depositLine1.innerHTML = `⚠️ Faltam só <b style="color: #ffffff;">${missingCoins.toLocaleString('pt-BR')} Coins ($${formatVbrBRL(missingUsdt)} USDT • R$ ${formatVbrBRL(missingPixBrl)})</b>, mas a Binance exige saque mínimo de <b style="color: #ffffff;">5.00 USDT</b>.`;
+          }
+          if (depositLine2) {
+            depositLine2.innerHTML = `💡 Deposite <b style="color: #ffd60a;">R$ ${formatVbrBRL(binanceMinPix)} no Pix</b> ➔ Saca <b>5.00 USDT</b> (125.000 Coins). Paga este pedido e <b style="color: #30d158;">SOBRAM +${surplusCoinsAfterMinDeposit.toLocaleString('pt-BR')} Coins ($${formatVbrBRL(surplusUsdtAfterMinDeposit)} USDT • ~R$ ${formatVbrBRL(surplusBrlAfterMinDeposit)})</b> de saldo no site!`;
+          }
+        } else {
+          if (depositCardLabel) {
+            depositCardLabel.innerHTML = '<span>⚠️</span> DEPOSITAR NO PIX (COMPLETAR):';
+            depositCardLabel.style.color = '#ffd60a';
+          }
+          if (depositUsdtBadge) {
+            depositUsdtBadge.style.borderColor = '#ffd60a';
+            depositUsdtBadge.style.background = 'rgba(255, 214, 10, 0.25)';
+            depositUsdtBadge.style.color = '#ffd60a';
+            depositUsdtBadge.textContent = `Faltam $${formatVbrBRL(missingUsdt)} USDT`;
+          }
+          if (depositBrlMain) {
+            depositBrlMain.style.color = '#ffd60a';
+            depositBrlMain.textContent = `R$ ${formatVbrBRL(suggestedMissingPix)}`;
+          }
+          if (depositLine1) {
+            depositLine1.innerHTML = `⚠️ <b style="color: #ffffff;">Faltam ${missingCoins.toLocaleString('pt-BR')} Coins ($${formatVbrBRL(missingUsdt)} USDT)</b> • Aproveita seus <b style="color: #30d158;">${userBalance.toLocaleString('pt-BR')} Coins</b>`;
+          }
+          if (depositLine2) {
+            depositLine2.innerHTML = `💡 <b>Valor Seguro Pix:</b> R$ ${formatVbrBRL(suggestedMissingPix)} (Custo seco: R$ ${formatVbrBRL(missingPixBrl)} + margem para taxa de saque Binance)`;
+          }
         }
       }
 
@@ -8295,8 +8452,12 @@
         if (userBalance > 0 && isFullyCovered) {
           profitCashflowSubtext.innerHTML = `💵 <b style="color: #30d158;">Como já está pago no saldo, entra R$ ${formatVbrBRL(totalRevenueBrl)} limpo no bolso hoje!</b>`;
         } else if (userBalance > 0 && !isFullyCovered) {
-          const cashInPocket = totalRevenueBrl - missingPixBrl;
-          profitCashflowSubtext.innerHTML = `💵 <b style="color: #a7f3d0;">Entra R$ ${formatVbrBRL(totalRevenueBrl)} do cliente - R$ ${formatVbrBRL(missingPixBrl)} Pix = R$ ${formatVbrBRL(cashInPocket)} no bolso hoje!</b>`;
+          if (isMissingBelowBinanceMin) {
+            profitCashflowSubtext.innerHTML = `💵 <b style="color: #a7f3d0;">Entra R$ ${formatVbrBRL(totalRevenueBrl)} do cliente! O perfil consome só R$ ${formatVbrBRL(missingPixBrl)} do Pix (o restante dos R$ ${formatVbrBRL(binanceMinPix)} vira +${surplusCoinsAfterMinDeposit.toLocaleString('pt-BR')} Coins de saldo livre no site para as próximas vendas).</b>`;
+          } else {
+            const cashInPocket = totalRevenueBrl - missingPixBrl;
+            profitCashflowSubtext.innerHTML = `💵 <b style="color: #a7f3d0;">Entra R$ ${formatVbrBRL(totalRevenueBrl)} do cliente - R$ ${formatVbrBRL(missingPixBrl)} Pix = R$ ${formatVbrBRL(cashInPocket)} no bolso hoje!</b>`;
+          }
         } else {
           profitCashflowSubtext.innerHTML = `💵 Margem de retorno limpa de ${marginPct.toFixed(1)}% direto no seu bolso`;
         }
