@@ -27,6 +27,8 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 STATE_FILE = os.path.join(SCRIPT_DIR, "stock_state.json")
 CONFIG_FILE = os.path.join(SCRIPT_DIR, "config.json")
 LOG_FILE = os.path.join(SCRIPT_DIR, "monitor.log")
+MAXVIA_STATE_WEB_PATH = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "limpador_contas", "maxvia_state.json"))
+CURRENT_MAXVIA_USER_INFO = {"username": "Itooh - ID: 4271", "balance_str": "$211.08", "balance_usd": 211.08}
 
 # Logging Setup
 logging.basicConfig(
@@ -66,18 +68,32 @@ def get_chrome_cookies() -> str:
     """Extract maxvia88 session cookies from local Google Chrome profile on macOS or config/env."""
     # First: Try live extraction from macOS Google Chrome if available
     try:
-        cmd = ["security", "find-generic-password", "-w", "-s", "Chrome Safe Storage"]
-        password = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).strip()
+        config = load_config()
+        hex_key = config.get("chrome_storage_hex_key")
+        try:
+            cmd = ["security", "find-generic-password", "-w", "-s", "Chrome Safe Storage"]
+            password = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).strip()
+            salt = b"saltysalt"
+            key = pbkdf2_hmac("sha1", password, salt, 1003, 16)
+            hex_key = key.hex()
+            if config.get("chrome_storage_hex_key") != hex_key:
+                config["chrome_storage_hex_key"] = hex_key
+                save_config(config)
+        except Exception:
+            pass
 
-        salt = b"saltysalt"
-        key = pbkdf2_hmac("sha1", password, salt, 1003, 16)
-        hex_key = key.hex()
+        if not hex_key:
+            raise ValueError("No chrome key available")
+
         hex_iv = (b" " * 16).hex()
 
-        paths = glob.glob(os.path.expanduser("~/Library/Application Support/Google/Chrome/*/Cookies"))
+        paths = glob.glob(os.path.expanduser("~/Library/Application Support/Google/Chrome/*/Cookies")) + \
+                glob.glob(os.path.expanduser("~/Library/Application Support/Google/Chrome/*/Network/Cookies"))
         cookies_dict = {}
 
         for path in paths:
+            if not os.path.isfile(path):
+                continue
             tmp_path = "/tmp/chrome_cookies_maxvia_tmp"
             shutil.copyfile(path, tmp_path)
             conn = sqlite3.connect(tmp_path)
@@ -221,9 +237,17 @@ def normalize_price(price_str: str) -> str:
 
 
 def parse_price_val(price_str: str) -> float:
-    """Parse numeric price float from price string like '$0.84' or 'R$ 5,16'."""
+    """Parse numeric price float from price string like '$0.84', 'R$ 5,16', or '55.000 Coins'."""
     if not price_str:
         return 0.0
+    if isinstance(price_str, (int, float)):
+        return float(price_str)
+    if 'coin' in str(price_str).lower():
+        cleaned = re.sub(r'[^\d]', '', str(price_str))
+        try:
+            return float(cleaned)
+        except ValueError:
+            return 0.0
     cleaned = str(price_str).replace('$', '').replace('R$', '').replace('»', '').strip()
     m = re.search(r'[\d]+(?:[.,]\d+)?', cleaned)
     if m:
@@ -239,6 +263,30 @@ def make_product_id(title: str, price: str) -> str:
     clean_t = normalize_title(title).lower()
     clean_p = normalize_price(price)
     return f"{clean_t}_{clean_p}"
+
+
+def is_buyviafb_target(item: dict) -> bool:
+    """
+    Retorna True para os 2 produtos solicitados do BuyViaFB:
+    1. buyviafb_195: 1000x Brazil No2fa 30+ Fr Live Ads (55.000 Coins)
+    2. buyviafb_133: (HOT) Acc Old 1000x Soak 9 Months Full 2fa 1 Hotmail Trust 30 Friend (80.000 Coins)
+    """
+    if not item or not isinstance(item, dict):
+        return False
+    if item.get('site') != 'buyviafb':
+        return False
+    b_id = str(item.get('buyviafb_id', ''))
+    if b_id in ['195', '133']:
+        return True
+    p_id = str(item.get('id', ''))
+    if p_id in ['buyviafb_195', 'buyviafb_133']:
+        return True
+    title = (item.get('raw_title') or item.get('title') or '').lower()
+    if 'brazil' in title and '30+' in title:
+        return True
+    if 'soak 9 months' in title or ('soak' in title and '9 month' in title):
+        return True
+    return False
 
 
 def is_primary_084_profile(item: dict) -> bool:
@@ -277,6 +325,93 @@ def is_brazil_profile(item: dict) -> bool:
     return False
 
 
+
+def is_hot_item_target(item: dict) -> bool:
+    """
+    Retorna True para os 7 perfis solicitados da categoria 'Hot Item (Recommended)':
+    1. ⭐Acc Farmed 902 New 2026 (2FA) ($0.74)
+    2. ⭐Acc Farmed 2025 (2FA) ($1.11)
+    3. ⭐Acc Farmed 2026 (2FA) ($0.88)
+    4. ⭐Acc Farmed XMDT (2FA) ($0.70)
+    5. S1|Personal Ads – Limit $50 ($3.13)
+    6. Set 5-9 Ads Limit 50$ ($4.30)
+    7. V1.0| Acc 902 OLD Loss Greentick (NO2FA) ($2.15)
+    
+    EXCLUI TERMINANTEMENTE:
+    - Combo 1 Account + 9 Ads limit 50$ (ou qualquer Combo 1 Account)
+    """
+    if not item or not isinstance(item, dict):
+        return False
+    if item.get('site', 'maxvia88') != 'maxvia88':
+        return False
+
+    title_clean = normalize_title(item.get('title', '')).lower()
+    raw_title = str(item.get('raw_title', '')).lower()
+    p_id = str(item.get('id', '')).lower()
+    full_text = f"{p_id} {title_clean} {raw_title}"
+
+    # Exclusão estrita solicitada pelo usuário: "Menos esse combo, tá? Combo 1 account"
+    if "combo" in full_text and "1 account" in full_text:
+        return False
+
+    # 1. Acc Farmed 902 New 2026 (2FA) ($0.74)
+    if "farmed 902" in full_text or ("farmed" in full_text and "902" in full_text and "2026" in full_text):
+        return True
+
+    # 2. Acc Farmed 2025 (2FA) ($1.11)
+    if "farmed 2025" in full_text and not any(x in full_text for x in ["combo", "set", "902", "xmdt"]):
+        return True
+
+    # 3. Acc Farmed 2026 (2FA) ($0.88)
+    if "farmed 2026" in full_text and not any(x in full_text for x in ["combo", "set", "902", "xmdt"]):
+        return True
+
+    # 4. Acc Farmed XMDT (2FA) ($0.70)
+    if "farmed xmdt" in full_text or ("xmdt" in full_text and "farmed" in full_text):
+        return True
+
+    # 5. S1|Personal Ads – Limit $50 ($3.13)
+    if ("s1" in full_text or "personal ads" in full_text) and "limit" in full_text and "50" in full_text:
+        if "combo" not in full_text and "set" not in full_text:
+            return True
+
+    # 6. Set 5-9 Ads Limit 50$ ($4.30)
+    if "set 5-9" in full_text or ("set" in full_text and "5-9" in full_text and "limit" in full_text):
+        return True
+
+    # 7. V1.0| Acc 902 OLD Loss Greentick (NO2FA) ($2.15)
+    if "902 old loss" in full_text or "greentick" in full_text or "902 old loss greentick" in full_text:
+        return True
+
+    return False
+
+
+def get_hot_item_info(item: dict):
+    """Retorna metadados visuais e nome limpo para os 7 perfis Hot Items monitorados."""
+    if not is_hot_item_target(item):
+        return None
+    title_clean = normalize_title(item.get('title', '')).lower()
+    raw_title = str(item.get('raw_title', '')).lower()
+    p_id = str(item.get('id', '')).lower()
+    full_text = f"{p_id} {title_clean} {raw_title}"
+
+    if "farmed 902" in full_text or ("farmed" in full_text and "902" in full_text and "2026" in full_text):
+        return {"name": "Acc Farmed 902 New 2026 (2FA)", "price": "$0.74", "icon": "⭐"}
+    if "farmed 2025" in full_text:
+        return {"name": "Acc Farmed 2025 (2FA)", "price": "$1.11", "icon": "⭐"}
+    if "farmed 2026" in full_text:
+        return {"name": "Acc Farmed 2026 (2FA)", "price": "$0.88", "icon": "⭐"}
+    if "farmed xmdt" in full_text or ("xmdt" in full_text and "farmed" in full_text):
+        return {"name": "Acc Farmed XMDT (2FA)", "price": "$0.70", "icon": "⭐"}
+    if ("s1" in full_text or "personal ads" in full_text) and "limit" in full_text and "50" in full_text:
+        return {"name": "S1|Personal Ads – Limit $50", "price": "$3.13", "icon": "⚡"}
+    if "set 5-9" in full_text or ("set" in full_text and "5-9" in full_text and "limit" in full_text):
+        return {"name": "Set 5-9 Ads Limit 50$", "price": "$4.30", "icon": "⚡"}
+    if "902 old loss" in full_text or "greentick" in full_text:
+        return {"name": "V1.0| Acc 902 OLD Loss Greentick (NO2FA)", "price": "$2.15", "icon": "🛡️"}
+    return {"name": item.get('raw_title') or item.get('title'), "price": item.get('price', ''), "icon": "🔥"}
+
+
 def is_budget_farmed_profile(item: dict) -> bool:
     """
     Retorna True para os perfis acessíveis/populares da MaxVia88:
@@ -293,6 +428,59 @@ def is_budget_farmed_profile(item: dict) -> bool:
             if not any(x in title for x in ['combo', 'set', '902', 'xmdt', 'scan']):
                 return True
     return False
+
+
+def get_cat219_info(item: dict):
+    """
+    Identifica e retorna metadados visuais para os 3 perfis prioritários da Categoria 219:
+    1. Via Ramdom New (2FA) ($1.29) -> Azul 🔵
+    2. Acc Scan 1 Year+ (2FA) ($2.60) -> Dourado 🟡
+    3. Acc Farm 6 Month+ (2FA) ($1.04) -> Verde 🟢
+    """
+    if not item or not isinstance(item, dict):
+        return None
+    if item.get('site', 'maxvia88') != 'maxvia88':
+        return None
+    p_id = str(item.get('id', '')).lower()
+    title = normalize_title(item.get('title', '')).lower()
+    raw_title = str(item.get('raw_title', '')).lower()
+    
+    # 1. Via Ramdom New (2FA) ($1.29)
+    if 'via ramdom (2fa)' in p_id or 'via ramdom new (2fa)' in p_id or (('ramdom' in raw_title or 'ramdom' in title) and '2fa' in (raw_title + title) and not any(x in (raw_title + title) for x in ['clone', 'old', 'friend'])):
+        return {
+            'key': 'ramdom',
+            'badge': '🔵',
+            'color': 'AZUL',
+            'clean_name': 'Via Ramdom New (2FA)',
+            'url': item.get('url') or 'https://maxvia88.com/categories/219'
+        }
+
+    # 2. Acc Scan 1 Year+ (2FA) ($2.60)
+    if 'acc scan 1 year+ (2fa)' in p_id or ('scan' in (raw_title + title) and '1 year' in (raw_title + title) and '2fa' in (raw_title + title)):
+        return {
+            'key': 'scan',
+            'badge': '🟡',
+            'color': 'DOURADO',
+            'clean_name': 'Acc Scan 1 Year+ (2FA)',
+            'url': item.get('url') or 'https://maxvia88.com/categories/219'
+        }
+
+    # 3. Acc Farm 6 Month+ (2FA) ($1.04)
+    if 'acc farm 6 month+ (2fa)' in p_id or ('farm' in (raw_title + title) and '6 month' in (raw_title + title) and '2fa' in (raw_title + title)):
+        return {
+            'key': 'farm6m',
+            'badge': '🟢',
+            'color': 'VERDE',
+            'clean_name': 'Acc Farm 6 Month+ (2FA)',
+            'url': item.get('url') or 'https://maxvia88.com/categories/219'
+        }
+    return None
+
+
+def is_via_random_new_profile(item: dict) -> bool:
+    """Compatibilidade: retorna True se for o perfil Via Ramdom New da Categoria 219."""
+    info = get_cat219_info(item)
+    return bool(info and info['key'] == 'ramdom')
 
 
 
@@ -330,6 +518,7 @@ def parse_products_from_html(html: str) -> dict:
                 products[prod_id] = {
                     'id': prod_id,
                     'title': clean_t or raw_title,
+                    'raw_title': raw_title or clean_t,
                     'desc': desc,
                     'stock': stock,
                     'price': clean_p or raw_price
@@ -375,6 +564,7 @@ def parse_products_from_html(html: str) -> dict:
             products[prod_id] = {
                 'id': prod_id,
                 'title': clean_t,
+                'raw_title': raw_title or clean_t,
                 'desc': card.get_text(separator=' ', strip=True)[:100],
                 'stock': stock,
                 'price': clean_p or raw_price
@@ -383,14 +573,53 @@ def parse_products_from_html(html: str) -> dict:
     return products
 
 
+def extract_maxvia_user_info(html: str) -> dict:
+    """Extract user balance and account name from MaxVia88 HTML."""
+    if not html:
+        return {}
+    try:
+        soup = BeautifulSoup(html, 'html.parser')
+        balance_elem = soup.find(id='top_balance')
+        user_str = ""
+        for a in soup.find_all('a', href=re.compile(r'/account')):
+            t = a.get_text(' ', strip=True)
+            if 'ID:' in t:
+                user_str = re.sub(r'\s+', ' ', t).strip()
+                break
+
+        balance_str = balance_elem.get_text(strip=True) if balance_elem else ""
+        balance_val = 0.0
+        if balance_str:
+            m = re.search(r'[\d\.]+', balance_str)
+            if m:
+                balance_val = float(m.group(0))
+
+        res = {}
+        if user_str:
+            res['username'] = user_str
+        if balance_str:
+            res['balance_str'] = balance_str
+            res['balance_usd'] = balance_val
+        return res
+    except Exception as e:
+        logging.debug(f"Error extracting user info: {e}")
+        return {}
+
+
 def fetch_all_products() -> dict:
     """Fetch all products across main page and all dynamically discovered categories."""
+    global CURRENT_MAXVIA_USER_INFO
     cookie_header = get_chrome_cookies()
 
     urls_to_scan = set(["https://maxvia88.com/"])
 
     # First fetch main page to discover category links
     main_html = fetch_page_html("https://maxvia88.com/", cookie_header)
+    if main_html:
+        u_info = extract_maxvia_user_info(main_html)
+        if u_info:
+            CURRENT_MAXVIA_USER_INFO.update(u_info)
+
     soup = BeautifulSoup(main_html, 'html.parser')
     for a in soup.find_all('a', href=True):
         m = re.search(r'/categories/(\d+)', a['href'])
@@ -404,6 +633,10 @@ def fetch_all_products() -> dict:
     all_products = {}
     for url in urls_to_scan:
         html = fetch_page_html(url, cookie_header)
+        if html:
+            u_info = extract_maxvia_user_info(html)
+            if u_info and u_info.get('balance_usd'):
+                CURRENT_MAXVIA_USER_INFO.update(u_info)
         prods = parse_products_from_html(html)
         for p_id, item in prods.items():
             item['site'] = 'maxvia88'
@@ -458,6 +691,41 @@ def fetch_thefbstores_products() -> dict:
     return products
 
 
+def fetch_buyviafb_products() -> dict:
+    """Fetch products from BuyViaFB.com."""
+    url = "https://buyviafb.com/"
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'})
+    products = {}
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            html = resp.read().decode('utf-8', errors='ignore')
+            soup = BeautifulSoup(html, 'html.parser')
+            buttons = soup.find_all('button', onclick=re.compile(r'showPromptMessage', re.I))
+            for btn in buttons:
+                m = re.search(r"showPromptMessage\(\s*'([^']+)'\s*,\s*(\d+)\s*,\s*'([^']*)'\s*,\s*'(\d+)'\s*,\s*'(\d+)'", btn['onclick'])
+                if m:
+                    title, price, infor, stock, prod_id = m.groups()
+                    price_int = int(price)
+                    stock_int = int(stock)
+                    p_id = f"buyviafb_{prod_id}"
+                    price_str = f"{price_int:,} Coins".replace(',', '.')
+                    products[p_id] = {
+                        'id': p_id,
+                        'buyviafb_id': prod_id,
+                        'title': f"[BuyViaFB] {title}",
+                        'raw_title': title,
+                        'price': price_str,
+                        'price_val': price_int,
+                        'stock': stock_int,
+                        'site': 'buyviafb',
+                        'url': 'https://buyviafb.com/'
+                    }
+        logging.info(f"[BuyViaFB] Coletados {len(products)} produtos com sucesso.")
+    except Exception as e:
+        logging.error(f"Erro ao buscar produtos BuyViaFB: {e}")
+    return products
+
+
 def load_state() -> dict:
     """Load stock state from JSON file."""
     if os.path.exists(STATE_FILE):
@@ -478,6 +746,64 @@ def save_state(state: dict):
         logging.error(f"Failed to save state file: {e}")
 
 
+def export_maxvia_web_state(all_products: dict):
+    """Export current MaxVia88 user balance and live product prices to limpador_contas/maxvia_state.json."""
+    try:
+        priority_items = [
+            ("ramdom", "Via Ramdom New (2FA)", 1.29),
+            ("farm 6 month", "Acc Farm 6 Month+ (2FA)", 1.04),
+            ("scan 1 year", "Acc Scan 1 Year+ (2FA)", 2.60),
+            ("farmed 2026", "Acc Farmed 2026 (2FA)", 0.88),
+            ("switzerland", "Via Switzerland Old (2FA)", 4.57),
+            ("canada old", "Via Canada Old (2FA)", 4.57),
+            ("austria old", "Via Austria Old (2FA)", 4.57),
+            ("united states old 902", "Acc USA Old 902 (2FA)", 25.39),
+            ("united states old", "Via United States Old (2FA)", 20.31),
+        ]
+
+        featured = []
+        for kw, fallback_name, fallback_price in priority_items:
+            found = None
+            for p_id, item in all_products.items():
+                if item.get('site') == 'maxvia88':
+                    t = (item.get('raw_title') or item.get('title') or '').lower()
+                    if kw in t:
+                        found = item
+                        break
+            if found:
+                p_val = parse_price_val(found.get('price')) or fallback_price
+                featured.append({
+                    "name": found.get('title') or fallback_name,
+                    "price": p_val,
+                    "price_str": f"${p_val:.2f}",
+                    "stock": found.get('stock', 0),
+                    "url": found.get('url', 'https://maxvia88.com/')
+                })
+            else:
+                featured.append({
+                    "name": fallback_name,
+                    "price": fallback_price,
+                    "price_str": f"${fallback_price:.2f}",
+                    "stock": 0,
+                    "url": "https://maxvia88.com/"
+                })
+
+        web_state = {
+            "updated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "username": CURRENT_MAXVIA_USER_INFO.get("username", "Itooh - ID: 4271"),
+            "balance_str": CURRENT_MAXVIA_USER_INFO.get("balance_str", "$32.16"),
+            "balance_usd": CURRENT_MAXVIA_USER_INFO.get("balance_usd", 32.16),
+            "products": featured
+        }
+
+        os.makedirs(os.path.dirname(MAXVIA_STATE_WEB_PATH), exist_ok=True)
+        with open(MAXVIA_STATE_WEB_PATH, 'w', encoding='utf-8') as f:
+            json.dump(web_state, f, ensure_ascii=False, indent=2)
+        logging.info(f"Exported MaxVia web state to {MAXVIA_STATE_WEB_PATH} (Balance: {web_state['balance_str']})")
+    except Exception as e:
+        logging.error(f"Failed to export MaxVia web state: {e}")
+
+
 def should_notify_product(item_or_title, target_keywords: list = None, site: str = "maxvia88") -> bool:
     """
     Filtra rigorosamente os produtos monitorados:
@@ -493,10 +819,18 @@ def should_notify_product(item_or_title, target_keywords: list = None, site: str
         title = str(item_or_title)
         item = {'title': title, 'site': site}
 
+    # Caso BuyViaFB
+    if is_buyviafb_target(item):
+        return True
+
     if site != 'maxvia88':
         return False
 
     title_clean = normalize_title(title).lower()
+
+    # Caso 0: Perfis Hot Item (Recommended) da MaxVia88 solicitados pelo usuário (7 perfis)
+    if is_hot_item_target(item):
+        return True
 
     # Caso 1: Perfis do Brasil (Prioridade Máxima solicitada pelo usuário)
     if is_brazil_profile(item):
@@ -506,7 +840,11 @@ def should_notify_product(item_or_title, target_keywords: list = None, site: str
     if is_budget_farmed_profile(item):
         return True
 
-    # Caso 3: BM Verificada exclusivamente da MaxVia88
+    # Caso 3: Os 3 perfis prioritários da Categoria 219 (Ramdom New, Scan 1 Year+, Farm 6 Month+)
+    if get_cat219_info(item):
+        return True
+
+    # Caso 4: BM Verificada exclusivamente da MaxVia88
     is_bm = "bm" in title_clean or "business manager" in title_clean
     if is_bm:
         return any(term in title_clean for term in ["verified", "verificada", "verificado", "verif"])
@@ -557,45 +895,81 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
 
         url = item.get('url', '')
         is_new_supplier = (site_source == 'thefbstores')
+        is_buyviafb = (site_source == 'buyviafb')
 
-        if is_new_supplier:
-            tag_header = "[NOVO FORNECEDOR - THE FB STORE]"
-            site_line = "🏪 <b>Fornecedor:</b> 🆕 Novo Fornecedor (TheFBStores.com)\n"
-            url_line = f"\n🔗 <a href='{url}'>Acessar no TheFBStores.com</a>" if url else ""
+        if is_buyviafb:
+            tag_header = "[BUYVIAFB]"
+        elif is_new_supplier:
+            tag_header = "[THE FB STORE]"
         else:
             tag_header = "[MAXVIA88]"
-            site_line = "🏪 <b>Fornecedor:</b> MaxVia88\n"
-            url_line = ""
 
         display_title = item.get('raw_title') or item['title']
         clean_display_title = display_title.replace('⭐', '').replace('✅', '').strip()
 
         if old_item:
-            old_p_val = parse_price_val(old_item.get('price', ''))
-            new_p_val = parse_price_val(item.get('price', ''))
+            old_p_val = old_item.get('price_val') or parse_price_val(old_item.get('price', ''))
+            new_p_val = item.get('price_val') or parse_price_val(item.get('price', ''))
 
-            # Checagem de Alteração de Preço (Aumento ou Redução) - apenas para o perfil principal de $0.84
-            if is_primary_084_profile(item) and old_p_val > 0 and new_p_val > 0 and abs(new_p_val - old_p_val) >= 0.01:
+            # Checagem de Alteração de Preço para BuyViaFB
+            if is_buyviafb and old_p_val > 0 and new_p_val > 0 and old_p_val != new_p_val:
+                p_diff = new_p_val - old_p_val
+                old_p_str = f"{int(old_p_val):,} Coins".replace(',', '.')
+                new_p_str = f"{int(new_p_val):,} Coins".replace(',', '.')
+                diff_str = f"{abs(int(p_diff)):,} Coins".replace(',', '.')
+                if new_p_val > old_p_val:
+                    changes.append(
+                        f"📈🚨 <b>[BUYVIAFB] AUMENTO DE PREÇO DETECTADO!</b> 🚨📈\n"
+                        f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
+                        f"💵 <b>Preço Anterior:</b> {old_p_str}\n"
+                        f"💰 <b>Novo Preço:</b> <b>{new_p_str}</b> (+{diff_str})"
+                    )
+                else:
+                    changes.append(
+                        f"📉🏷️ <b>[BUYVIAFB] REDUÇÃO DE PREÇO!</b> 🏷️📉\n"
+                        f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
+                        f"💵 <b>Preço Anterior:</b> {old_p_str}\n"
+                        f"💰 <b>Novo Preço:</b> <b>{new_p_str}</b> (-{diff_str})"
+                    )
+
+            # Checagem de Alteração de Preço para os 3 perfis prioritários da Categoria 219
+            cat219 = get_cat219_info(item)
+            if cat219 and old_p_val > 0 and new_p_val > 0 and abs(new_p_val - old_p_val) >= 0.01:
+                p_diff = new_p_val - old_p_val
+                b = cat219['badge']
+                name = cat219['clean_name']
+                diff_str = f"+${p_diff:.2f}" if p_diff > 0 else f"-${abs(p_diff):.2f}"
+                if new_p_val > old_p_val:
+                    changes.append(
+                        f"📈🚨 <b>[MAXVIA88] AUMENTO DE PREÇO!</b> 🚨📈\n"
+                        f"{b} <b>{name}</b>\n"
+                        f"💵 <b>Preço Anterior:</b> ${old_p_val:.2f}\n"
+                        f"💰 <b>Novo Preço:</b> <b>${new_p_val:.2f}</b> ({diff_str})"
+                    )
+                else:
+                    changes.append(
+                        f"📉🏷️ <b>[MAXVIA88] REDUÇÃO DE PREÇO!</b> 🏷️📉\n"
+                        f"{b} <b>{name}</b>\n"
+                        f"💵 <b>Preço Anterior:</b> ${old_p_val:.2f}\n"
+                        f"💰 <b>Novo Preço:</b> <b>${new_p_val:.2f}</b> ({diff_str})"
+                    )
+
+            # Checagem de Alteração de Preço (Aumento ou Redução) - perfil monitorado 0.84 da MaxVia88
+            elif is_primary_084_profile(item) and old_p_val > 0 and new_p_val > 0 and abs(new_p_val - old_p_val) >= 0.01:
                 p_diff = new_p_val - old_p_val
                 if new_p_val > old_p_val:
                     changes.append(
                         f"📈🚨 <b>{tag_header} AUMENTO DE PREÇO DETECTADO!</b> 🚨📈\n"
-                        f"{site_line}"
-                        f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
+                        f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
                         f"💵 <b>Preço Anterior:</b> ${old_p_val:.2f}\n"
-                        f"💰 <b>Novo Preço:</b> <b>${new_p_val:.2f}</b> (+${p_diff:.2f})\n"
-                        f"⚡ <i>Atenção: O fornecedor aumentou o valor deste perfil!</i>"
-                        f"{url_line}"
+                        f"💰 <b>Novo Preço:</b> <b>${new_p_val:.2f}</b> (+${p_diff:.2f})"
                     )
                 else:
                     changes.append(
                         f"📉🏷️ <b>{tag_header} REDUÇÃO DE PREÇO!</b> 🏷️📉\n"
-                        f"{site_line}"
-                        f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
+                        f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
                         f"💵 <b>Preço Anterior:</b> ${old_p_val:.2f}\n"
-                        f"💰 <b>Novo Preço:</b> <b>${new_p_val:.2f}</b> (-${abs(p_diff):.2f})\n"
-                        f"⚡ <i>O fornecedor reduziu o valor deste perfil!</i>"
-                        f"{url_line}"
+                        f"💰 <b>Novo Preço:</b> <b>${new_p_val:.2f}</b> (-${abs(p_diff):.2f})"
                     )
 
             old_stock = old_item['stock']
@@ -603,36 +977,61 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
             baseline_stock = old_item.get('last_notified_stock', old_stock)
 
             if new_stock < old_stock:
+                # Caso BuyViaFB: Alerta compras apenas se o estoque estiver abaixo de 5.000 (ou se esgotar)
+                if is_buyviafb:
+                    diff = old_stock - new_stock
+                    item['last_notified_stock'] = new_stock
+                    if new_stock == 0:
+                        changes.append(
+                            f"🔥🔴 <b>[BUYVIAFB] PRODUTO ESGOTOU!</b> 🔴🔥\n"
+                            f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
+                            f"💵 <b>Preço:</b> {item['price']}\n"
+                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>0 unidades</b> (-{diff})"
+                        )
+                    elif new_stock <= 5000:
+                        old_stock_str = f"{old_stock:,}".replace(',', '.')
+                        new_stock_str = f"{new_stock:,}".replace(',', '.')
+                        diff_str = f"{diff:,}".replace(',', '.')
+                        if old_stock > 5000:
+                            changes.append(
+                                f"⚠️📉 <b>[BUYVIAFB] ESTOQUE ENTROU ABAIXO DE 5.000! (-{diff_str})</b> 📉⚠️\n"
+                                f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
+                                f"💵 <b>Preço:</b> {item['price']}\n"
+                                f"📉 <b>Estoque:</b> {old_stock_str} ➔ <b>{new_stock_str} unidades restantes</b> (-{diff_str})"
+                            )
+                        else:
+                            changes.append(
+                                f"🛒⚡ <b>[BUYVIAFB] COMPRA DETECTADA! (-{diff_str})</b> ⚡🛒\n"
+                                f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
+                                f"💵 <b>Preço:</b> {item['price']}\n"
+                                f"📉 <b>Estoque:</b> {old_stock_str} ➔ <b>{new_stock_str} unidades restantes</b> (-{diff_str})"
+                            )
+                    else:
+                        logging.info(f"[BUYVIAFB] Compra em '{clean_display_title}' ({old_stock} -> {new_stock}, -{diff}) ignorada (estoque > 5.000).")
+                    continue
+
                 # Caso 1: BMs verificadas (alertar a cada compra e quando zerar)
                 if is_bm:
                     diff = old_stock - new_stock
                     item['last_notified_stock'] = new_stock
-                    bm_url = item.get('url') or "https://maxvia88.com/categories/118"
                     if new_stock == 0:
                         changes.append(
                             f"💼🔴 <b>[MAXVIA88 - BM VERIFICADA ESGOTOU!]</b>\n"
-                            f"{site_line}"
                             f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>0 unidades</b> (-{diff})\n"
-                            f"⚠️ <i>Todas as unidades disponíveis foram compradas!</i>\n"
-                            f"🔗 <a href='{bm_url}'>Ver BMs no MaxVia88</a>"
+                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>0 unidades</b> (-{diff})"
                         )
                     else:
                         changes.append(
                             f"💼🛒 <b>[MAXVIA88 - BM VERIFICADA COMPRADA!] (-{diff})</b>\n"
-                            f"{site_line}"
                             f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades restantes</b> (-{diff})\n"
-                            f"⚡ <i>Estoque baixando! Restam apenas {new_stock} unidades!</i>\n"
-                            f"🔗 <a href='{bm_url}'>Acessar BM no MaxVia88</a>"
+                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades restantes</b> (-{diff})"
                         )
                     continue
 
                 # Caso 2: Perfis do Brasil (NOVA REGRA: Compras SOMENTE do Brasil!)
                 if is_brazil_profile(item):
-                    cat_url = item.get('url') or "https://maxvia88.com/categories/220"
                     drop_step_alert = rule.get("drop_step_alert") or 5  # Notifica a cada 5 compras ou se zerar
 
                     if new_stock == 0:
@@ -640,11 +1039,8 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                         item['last_notified_stock'] = 0
                         changes.append(
                             f"🔥🔴 <b>[MAXVIA88] PERFIL DO BRASIL ESGOTOU!</b> 🔴🔥\n"
-                            f"{site_line}"
                             f"📦 <b>Produto:</b> 🇧🇷 <b>{clean_display_title}</b> ({item['price']}) 🇧🇷\n"
-                            f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})\n"
-                            f"⚠️ <i>Todos os perfis do Brasil foram vendidos!</i>\n"
-                            f"🔗 <a href='{cat_url}'>Acessar no MaxVia88</a>"
+                            f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})"
                         )
                     else:
                         accumulated_drop = baseline_stock - new_stock
@@ -659,17 +1055,117 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                         item['last_notified_stock'] = new_stock
                         changes.append(
                             f"🛒🇧🇷 <b>[MAXVIA88] COMPRA DETECTADA NO BRASIL! (-{diff})</b> 🇧🇷🛒\n"
-                            f"{site_line}"
                             f"📦 <b>Produto:</b> 🇧🇷 <b>{clean_display_title}</b> ({item['price']}) 🇧🇷\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📉 <b>Estoque:</b> {from_stock} ➔ <b>{new_stock} unidades restantes</b> (-{diff})\n"
-                            f"⚡ <i>Estão comprando perfis do Brasil! Restam {new_stock} em estoque.</i>\n"
-                            f"🔗 <a href='{cat_url}'>Acessar no MaxVia88</a>"
+                            f"📉 <b>Estoque:</b> {from_stock} ➔ <b>{new_stock} unidades restantes</b> (-{diff})"
                         )
                     continue
 
-                # REGRA CRÍTICA DO USUÁRIO: Apenas perfis do Brasil notificam compras!
-                logging.info(f"Queda/compra de estoque para '{item['title']}' ({old_stock} -> {new_stock}) IGNORADA. (Apenas perfis do Brasil notificam compras).")
+                # Caso Categoria 219 (Ramdom New, Scan 1 Year+, Farm 6 Month+)
+                cat219 = get_cat219_info(item)
+                if cat219:
+                    b = cat219['badge']
+                    name = cat219['clean_name']
+                    p_str = f"${parse_price_val(item['price']):.2f}"
+
+                    # Se esgotar completamente, sempre avisa com urgência máxima!
+                    if new_stock == 0:
+                        diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
+                        item['last_notified_stock'] = 0
+                        changes.append(
+                            f"🔥🔴 <b>[MAXVIA88] PRODUTO ESGOTOU!</b> 🔴🔥\n"
+                            f"{b} <b>{name}</b> <code>[{p_str}]</code>\n"
+                            f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})"
+                        )
+                        continue
+
+                    # 1. Via Ramdom New (2FA): Avisar APENAS quando estiver abaixo de 4.000 unidades
+                    if cat219['key'] == 'ramdom':
+                        diff = old_stock - new_stock
+                        item['last_notified_stock'] = new_stock
+                        if new_stock >= 4000:
+                            logging.info(f"[MAXVIA88] Compra para '{name}' ({old_stock} -> {new_stock}, -{diff}) ignorada (estoque >= 4.000. Notificação silenciada até 3.999).")
+                            continue
+
+                        # Estoque está abaixo de 4.000!
+                        old_stock_str = f"{old_stock:,}".replace(',', '.')
+                        new_stock_str = f"{new_stock:,}".replace(',', '.')
+                        diff_str = f"{diff:,}".replace(',', '.')
+                        if old_stock >= 4000 and new_stock < 4000:
+                            changes.append(
+                                f"⚠️📉 <b>[MAXVIA88] ESTOQUE ENTROU ABAIXO DE 4.000! (-{diff_str})</b> 📉⚠️\n"
+                                f"{b} <b>{name}</b> <code>[{p_str}]</code>\n"
+                                f"📉 <b>Estoque:</b> {old_stock_str} ➔ <b>{new_stock_str} unidades restantes</b> (-{diff_str})"
+                            )
+                        else:
+                            changes.append(
+                                f"🛒⚡ <b>[MAXVIA88] COMPRA DETECTADA! (-{diff_str})</b> ⚡🛒\n"
+                                f"{b} <b>{name}</b> <code>[{p_str}]</code>\n"
+                                f"📉 <b>Estoque:</b> {old_stock_str} ➔ <b>{new_stock_str} restantes</b> (-{diff_str})"
+                            )
+                        continue
+
+                    # 2. Acc Scan 1 Year+ (2FA): Avisar em lotes de 80 em 80 compras (ex: 2.314 -> 2.234)
+                    if cat219['key'] == 'scan':
+                        drop_step = rule.get("drop_step_alert") or 80
+                        accumulated_drop = baseline_stock - new_stock
+                        if accumulated_drop < drop_step:
+                            logging.info(f"[MAXVIA88] Queda parcial de estoque para '{name}': {baseline_stock} -> {new_stock} (-{accumulated_drop}). Aguardando lote de {drop_step} para notificar.")
+                            item['last_notified_stock'] = baseline_stock
+                            continue
+
+                        # Atingiu o lote de 80 (ou mais) compras acumuladas!
+                        diff = accumulated_drop
+                        from_stock = baseline_stock
+                        item['last_notified_stock'] = new_stock
+                        from_stock_str = f"{from_stock:,}".replace(',', '.')
+                        new_stock_str = f"{new_stock:,}".replace(',', '.')
+                        diff_str = f"{diff:,}".replace(',', '.')
+                        changes.append(
+                            f"🛒⚡ <b>[MAXVIA88] COMPRA DETECTADA! (-{diff_str})</b> ⚡🛒\n"
+                            f"{b} <b>{name}</b> <code>[{p_str}]</code>\n"
+                            f"📉 <b>Estoque:</b> {from_stock_str} ➔ <b>{new_stock_str} restantes</b> (-{diff_str})"
+                        )
+                        continue
+
+                    # 3. Acc Farm 6 Month+ (2FA): Avisar em lotes de 40 em 40 compras (ex: 3.949 -> 3.909)
+                    if cat219['key'] == 'farm6m':
+                        drop_step = rule.get("drop_step_alert") or 40
+                        accumulated_drop = baseline_stock - new_stock
+                        if accumulated_drop < drop_step:
+                            logging.info(f"[MAXVIA88] Queda parcial de estoque para '{name}': {baseline_stock} -> {new_stock} (-{accumulated_drop}). Aguardando lote de {drop_step} para notificar.")
+                            item['last_notified_stock'] = baseline_stock
+                            continue
+
+                        # Atingiu o lote de 40 (ou mais) compras acumuladas!
+                        diff = accumulated_drop
+                        from_stock = baseline_stock
+                        item['last_notified_stock'] = new_stock
+                        from_stock_str = f"{from_stock:,}".replace(',', '.')
+                        new_stock_str = f"{new_stock:,}".replace(',', '.')
+                        diff_str = f"{diff:,}".replace(',', '.')
+                        changes.append(
+                            f"🛒⚡ <b>[MAXVIA88] COMPRA DETECTADA! (-{diff_str})</b> ⚡🛒\n"
+                            f"{b} <b>{name}</b> <code>[{p_str}]</code>\n"
+                            f"📉 <b>Estoque:</b> {from_stock_str} ➔ <b>{new_stock_str} restantes</b> (-{diff_str})"
+                        )
+                        continue
+
+                    # Demais perfis da Cat 219: Notificação padrão a cada compra
+                    diff = old_stock - new_stock
+                    item['last_notified_stock'] = new_stock
+                    old_stock_str = f"{old_stock:,}".replace(',', '.')
+                    new_stock_str = f"{new_stock:,}".replace(',', '.')
+                    diff_str = f"{diff:,}".replace(',', '.')
+                    changes.append(
+                        f"🛒⚡ <b>[MAXVIA88] COMPRA DETECTADA! (-{diff_str})</b> ⚡🛒\n"
+                        f"{b} <b>{name}</b> <code>[{p_str}]</code>\n"
+                        f"📉 <b>Estoque:</b> {old_stock_str} ➔ <b>{new_stock_str} restantes</b> (-{diff_str})"
+                    )
+                    continue
+
+                # REGRA CRÍTICA DO USUÁRIO: Apenas perfis do Brasil e BuyViaFB notificam compras de 1 em 1!
+                logging.info(f"Queda/compra de estoque para '{item['title']}' ({old_stock} -> {new_stock}) IGNORADA. (Apenas reposição/preço/esgotamento).")
                 item['last_notified_stock'] = new_stock
                 continue
 
@@ -680,101 +1176,105 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     continue
 
                 diff = new_stock - old_stock
-                if is_brazil_profile(item):
-                    cat_url = item.get('url') or "https://maxvia88.com/categories/220"
+                if is_buyviafb:
+                    if old_stock == 0:
+                        changes.append(
+                            f"🎉🚨 <b>[BUYVIAFB] REPOSIÇÃO NO AR! (+{diff})</b> 🚨🎉\n"
+                            f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
+                            f"💵 <b>Preço:</b> {item['price']}\n"
+                            f"📈 <b>Estoque:</b> 0 ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})"
+                        )
+                    else:
+                        changes.append(
+                            f"🟢⚡ <b>[BUYVIAFB] REABASTECIMENTO! (+{diff})</b> ⚡🟢\n"
+                            f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
+                            f"💵 <b>Preço:</b> {item['price']}\n"
+                            f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (+{diff})"
+                        )
+                hot_info = get_hot_item_info(item)
+                if hot_info:
+                    p_name = hot_info['name']
+                    p_price = item.get('price') or hot_info['price']
+                    p_icon = hot_info['icon']
+                    p_url = item.get('url') or 'https://maxvia88.com/categories/1'
+                    if old_stock == 0:
+                        changes.append(
+                            f"🔥🚨 <b>[MAXVIA88 - ENTROU EM ESTOQUE!]</b> 🚨🔥\n"
+                            f"{p_icon} <b>Perfil:</b> <b>{p_name}</b>\n"
+                            f"💵 <b>Preço:</b> <b>{p_price}</b>\n"
+                            f"📈 <b>Estoque:</b> 0 ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})\n"
+                            f"🔗 <b>Comprar agora:</b> {p_url}"
+                        )
+                    else:
+                        changes.append(
+                            f"🎉🟢 <b>[MAXVIA88 - REABASTECIDO!]</b> 🟢🎉\n"
+                            f"{p_icon} <b>Perfil:</b> <b>{p_name}</b>\n"
+                            f"💵 <b>Preço:</b> <b>{p_price}</b>\n"
+                            f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})\n"
+                            f"🔗 <b>Comprar agora:</b> {p_url}"
+                        )
+                    continue
+
+                cat219 = get_cat219_info(item)
+                if cat219:
+                    b = cat219['badge']
+                    name = cat219['clean_name']
+                    p_str = f"${parse_price_val(item['price']):.2f}"
+                    changes.append(
+                        f"🎉🟢 <b>[MAXVIA88] REABASTECIDO (+{diff})!</b> 🟢🎉\n"
+                        f"{b} <b>{name}</b> <code>[{p_str}]</code>\n"
+                        f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})"
+                    )
+                elif is_brazil_profile(item):
                     if old_stock == 0:
                         changes.append(
                             f"🎉🚨 <b>[MAXVIA88] REPOSIÇÃO DO BRASIL NO AR! (+{diff})</b> 🚨🎉\n"
-                            f"{site_line}"
-                            f"⭐ <b>PERFIL DO BRASIL REABASTECIDO!</b> ⭐\n"
                             f"📦 <b>Produto:</b> 🇧🇷 <b>{clean_display_title}</b> 🇧🇷\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📈 <b>Estoque:</b> 0 ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})\n"
-                            f"⚡ <i>Perfis do Brasil acabaram de ser reabastecidos! Garanta o seu rápido!</i>\n"
-                            f"🔗 <a href='{cat_url}'>Acessar Categoria 220 no MaxVia88</a>"
+                            f"📈 <b>Estoque:</b> 0 ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})"
                         )
                     else:
                         changes.append(
                             f"🟢🇧🇷 <b>[MAXVIA88] REABASTECIMENTO DO BRASIL! (+{diff})</b> 🇧🇷🟢\n"
-                            f"{site_line}"
                             f"📦 <b>Produto:</b> 🇧🇷 <b>{clean_display_title}</b> 🇧🇷\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (+{diff})\n"
-                            f"⚡ <i>Novo lote de contas do Brasil adicionado!</i>\n"
-                            f"🔗 <a href='{cat_url}'>Acessar Categoria 220 no MaxVia88</a>"
+                            f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (+{diff})"
                         )
                 elif is_budget_farmed_profile(item):
-                    cat_url = item.get('url') or "https://maxvia88.com/categories/1"
                     changes.append(
-                        f"🎉⚡ <b>[MAXVIA88] PERFIL ACESSÍVEL REABASTECIDO! (+{diff})</b> ⚡🎉\n"
-                        f"{site_line}"
-                        f"⭐ <b>PERFIL POPULAR DE BAIXO CUSTO DISPONÍVEL!</b> ⭐\n"
-                        f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
+                        f"🎉⚡ <b>[MAXVIA88] REABASTECIDO! (+{diff})</b> ⚡🎉\n"
+                        f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
                         f"💵 <b>Preço:</b> {item['price']}\n"
-                        f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})\n"
-                        f"⚡ <i>Reposição dos perfis acessíveis ({clean_display_title})! Garanta o seu rápido!</i>\n"
-                        f"🔗 <a href='{cat_url}'>Acessar no MaxVia88</a>"
+                        f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})"
                     )
                 elif is_new_supplier:
                     changes.append(
-                        f"🟢🔥 <b>{tag_header} REABASTECIMENTO!</b> 🔥🟢\n"
-                        f"{site_line}"
-                        f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
-                        f"💵 <b>Preço:</b> {item['price']}\n"
-                        f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (+{diff})\n"
-                        f"⚡ <i>Novo estoque disponível no fornecedor!</i>"
-                        f"{url_line}"
-                    )
-                elif is_bm:
-                    bm_url = item.get('url') or "https://maxvia88.com/categories/118"
-                    changes.append(
-                        f"💼🎉 <b>[MAXVIA88 - BM VERIFICADA REABASTECIDA!] (+{diff})</b>\n"
-                        f"{site_line}"
+                        f"🟢🔥 <b>{tag_header} REABASTECIMENTO! (+{diff})</b> 🔥🟢\n"
                         f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
                         f"💵 <b>Preço:</b> {item['price']}\n"
-                        f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b>\n"
-                        f"🔗 <a href='{bm_url}'>Acessar BM no MaxVia88</a>"
+                        f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (+{diff})"
+                    )
+                elif is_bm:
+                    changes.append(
+                        f"💼🎉 <b>[MAXVIA88 - BM VERIFICADA REABASTECIDA!] (+{diff})</b>\n"
+                        f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
+                        f"💵 <b>Preço:</b> {item['price']}\n"
+                        f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b>"
                     )
                 elif old_stock == 0:
-                    if is_highlight:
-                        changes.append(
-                            f"🔥🚨 <b>{tag_header} REPOSIÇÃO VIP!</b> 🚨🔥\n"
-                            f"{site_line}"
-                            f"⭐ <b>PRODUTO FAVORITO REABASTECIDO!</b> ⭐\n"
-                            f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
-                            f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📈 <b>Estoque:</b> 0 ➔ <b>{new_stock} unidades</b> (+{diff})\n"
-                            f"⚡ <i>Os perfis foram reabastecidos! Garanta o seu rápido!</i>"
-                            f"{url_line}"
-                        )
-                    else:
-                        changes.append(
-                            f"🎉 <b>{tag_header} REPOSIÇÃO DE ESTOQUE (+{diff})!</b>\n"
-                            f"{site_line}"
-                            f"📦 <b>Produto:</b> {clean_display_title}\n"
-                            f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📈 <b>Estoque:</b> 0 ➔ <b>{new_stock} unidades</b>"
-                            f"{url_line}"
-                        )
+                    changes.append(
+                        f"🎉 <b>{tag_header} REPOSIÇÃO DE ESTOQUE (+{diff})!</b>\n"
+                        f"📦 <b>Produto:</b> {clean_display_title}\n"
+                        f"💵 <b>Preço:</b> {item['price']}\n"
+                        f"📈 <b>Estoque:</b> 0 ➔ <b>{new_stock} unidades</b>"
+                    )
                 else:
-                    if is_highlight:
-                        changes.append(
-                            f"🟢🔥 <b>{tag_header} REABASTECIMENTO!</b> 🔥🟢\n"
-                            f"{site_line}"
-                            f"📦 <b>Produto:</b> ⭐ <b>{clean_display_title}</b> ⭐\n"
-                            f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (+{diff})"
-                            f"{url_line}"
-                        )
-                    else:
-                        changes.append(
-                            f"🟢 <b>{tag_header} REABASTECIDO (+{diff})!</b>\n"
-                            f"{site_line}"
-                            f"📦 <b>Produto:</b> {clean_display_title}\n"
-                            f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b>"
-                            f"{url_line}"
-                        )
+                    changes.append(
+                        f"🟢 <b>{tag_header} REABASTECIDO (+{diff})!</b>\n"
+                        f"📦 <b>Produto:</b> {clean_display_title}\n"
+                        f"💵 <b>Preço:</b> {item['price']}\n"
+                        f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b>"
+                    )
             else:
                 # new_stock == old_stock
                 item['last_notified_stock'] = baseline_stock
@@ -782,26 +1282,36 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
             # Produto novo adicionado ou recém-surgido no monitor com estoque
             new_stock = item['stock']
             item['last_notified_stock'] = new_stock
+            if is_buyviafb:
+                logging.info(f"[BuyViaFB] Produto '{item['title']}' registrado com estoque baseline {new_stock}.")
+                continue
             if new_stock > 0 and notify_restock:
-                if is_bm:
-                    bm_url = item.get('url') or "https://maxvia88.com/categories/118"
+                hot_info = get_hot_item_info(item)
+                if hot_info:
+                    p_name = hot_info['name']
+                    p_price = item.get('price') or hot_info['price']
+                    p_icon = hot_info['icon']
+                    p_url = item.get('url') or 'https://maxvia88.com/categories/1'
+                    changes.append(
+                        f"🔥🚨 <b>[MAXVIA88 - ENTROU EM ESTOQUE!]</b> 🚨🔥\n"
+                        f"{p_icon} <b>Perfil:</b> <b>{p_name}</b>\n"
+                        f"💵 <b>Preço:</b> <b>{p_price}</b>\n"
+                        f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades!</b>\n"
+                        f"🔗 <b>Comprar agora:</b> {p_url}"
+                    )
+                elif is_bm:
                     changes.append(
                         f"💼🎉 <b>[MAXVIA88 - BM VERIFICADA DISPONÍVEL!]</b>\n"
-                        f"{site_line}"
                         f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
                         f"💵 <b>Preço:</b> {item['price']}\n"
-                        f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades</b>\n"
-                        f"🔗 <a href='{bm_url}'>Acessar BM no MaxVia88</a>"
+                        f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades</b>"
                     )
                 else:
                     changes.append(
-                        f"🎉🆕 <b>{tag_header} REPOSIÇÃO DE ESTOQUE!</b>\n"
-                        f"{site_line}"
+                        f"🎉🆕 <b>{tag_header} NOVO PRODUTO COM ESTOQUE!</b>\n"
                         f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
                         f"💵 <b>Preço:</b> {item['price']}\n"
-                        f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades</b>\n"
-                        f"⚡ <i>Este produto acabou de entrar em estoque!</i>"
-                        f"{url_line}"
+                        f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades</b>"
                     )
 
     if changes:
@@ -824,6 +1334,10 @@ def run_cycle(is_startup: bool = False):
     # Also fetch external stores (TheFBStores.com via Base44 API)
     thefb_products = fetch_thefbstores_products()
     all_products.update(thefb_products)
+
+    # Fetch BuyViaFB products
+    buyvia_products = fetch_buyviafb_products()
+    all_products.update(buyvia_products)
 
     if not all_products:
         logging.warning("Nenhum produto retornado na varredura.")
@@ -864,6 +1378,7 @@ def run_cycle(is_startup: bool = False):
 
     compare_and_notify(old_notify_state, new_notify_state, bot_token, chat_id, is_first_run=is_first_run, product_rules=product_rules)
     save_state(all_products)
+    export_maxvia_web_state(all_products)
     logging.info("Ciclo concluído com sucesso.")
 
 

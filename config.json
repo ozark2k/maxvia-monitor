@@ -1,13 +1,73 @@
 {
   "telegram_bot_token": "8692174015:AAFl7TCPswrYFHoMhSbgAtb5V3F8Px1k_HA",
   "telegram_chat_id": "11579952",
-  "cookie": "XSRF-TOKEN=eyJpdiI6IjZCakNpNlV0eHpqUmdPOUJQMkovYmc9PSIsInZhbHVlIjoiQ00wV1BkUDRyMDEzMklkZTFQSmV2bHk0YTFRYW1JaE1NendCcGNmNXRjRXIrZFp2SGowQXd3eGZtKysrMmliQmNjYUdhUHdFVzEvazE5azJDNEgwa2FqSjV0ZStPYnJkVVB0RTl2aFFORTZkRWJva3plU3NOOXkveC9pTU5sWkoiLCJtYWMiOiI2NTUyYzM2MGE1OTgxYTY0MWI3NTkzNmE3ZjYwZTJlMjQ5ZDg5MzU2OGFjZjE0NzcwMGI1OTg4NGUwYmYxNmE2In0%3D; laravel_session=eyJpdiI6IkZrZVo2T2NkeFZ4UTFzOElGcFR3VlE9PSIsInZhbHVlIjoiN0NUWXNVYzdJZXRQby9RZ2cyQWxKQTlLYjdiRFBGbzkzSEdIbFJ0amFYNUxPd1hmeFpyV0NueG56bWVINi81Wjg0dFVYM1ZqSTVkNzduTG8wUE9pM0xvOXlFNXl3ODNUOXlYMVdWM1dOMjMza3FvKy9uaG9LTzEvL3QvK0ZJWDIiLCJtYWMiOiJlNjY4MTlmYjU3ZDUxN2QyNzkzZGU1NzI5NTljYjY1ZmU0ZGQ1MTAwMjJjMDg3NDE1Mjg2NzdjYmU5ZmZlNDdmIn0%3D",
+  "cookie": "XSRF-TOKEN=eyJpdiI6ImxGOVRCa1pKdEdpTFpwQlVOazR0cEE9PSIsInZhbHVlIjoiRE9iTmQxVWZnd3BmM0RsYzdIT3VDWGNyTWUrSTF1REJFWUFpeDIyVm9vMDZaZldhTlMyRTlBcVN4L0JjUXdkZkM1Tld6anlxQW9KejdxK21RUWxoZ3JoWGZ1UnB1bkR4SitHSUpnQWxDZWQxOXpOb2piaTRUUTUyQWVNTVRURlciLCJtYWMiOiIyMTQ4YTZhZGY2Nzk5OGExZjFjY2QwNjkwYTYxM2NmNjg2MjI2ODIyZTJlYzFlYWQ4MGI2NmU3NDJkMmQ0Y2E2In0%3D; laravel_session=eyJpdiI6ImJsQTZockFXL2FxQUdkenBTZmlBNkE9PSIsInZhbHVlIjoiMDh6SkdBb0N4aXJyaTFxcG1za0VKZmcvdzlDdGd1aS8rNXowd1RxQVIxcVpyOU1jVVZtYlIxQVBZVGhuL1dQd1FTbkFBNFRITU5rT0hObTJsTkdLSElQd200L2daYXVuM1ZadC90bFRrb3hzMEtVL0J4bStWeUpIL3JYOFFicy8iLCJtYWMiOiJkNjczYjRlMWMyOWNjODk2YTcwOWM1ZjI4NDJkNGRhMDc3ZTRjM2EzNTM2YjFhZTQ0N2E0NzhlMzU5MTY3ZGM4In0%3D",
   "target_products": [
+    "★Acc Farmed 902 New 2026 (2FA)",
+    "★Acc Farmed 2025 (2FA)",
+    "★Acc Farmed 2026 (2FA)",
+    "★Acc Farmed XMDT (2FA)",
+    "S1|Personal Ads – Limit $50",
+    "Set 5-9 Ads Limit 50$",
+    "V1.0| Acc 902 OLD Loss Greentick (NO2FA)",
     "Acc Farmed 2025",
     "Acc Farmed 2026",
-    "BM Verified"
+    "BM Verified",
+    "1000X BRAZIL NO2FA 30+ FR LIVE ADS",
+    "(HOT) ACC OLD 1000x SOAK 9 MONTHS FULL 2FA 1 HOTMAIL TRUST 30 FRIEND",
+    "Via Ramdom New (2FA)",
+    "Via Ramdom (2FA)",
+    "Acc Scan 1 Year+ (2FA)",
+    "Acc Farm 6 Month+ (2FA)"
   ],
   "product_rules": {
+    "Acc Farmed 902": {
+      "notify_restock": true,
+      "notify_drop": false,
+      "is_highlight": true
+    },
+    "Acc Farmed XMDT": {
+      "notify_restock": true,
+      "notify_drop": false,
+      "is_highlight": true
+    },
+    "Personal Ads – Limit $50": {
+      "notify_restock": true,
+      "notify_drop": false,
+      "is_highlight": true
+    },
+    "Set 5-9 Ads Limit 50$": {
+      "notify_restock": true,
+      "notify_drop": false,
+      "is_highlight": true
+    },
+    "902 OLD Loss Greentick": {
+      "notify_restock": true,
+      "notify_drop": false,
+      "is_highlight": true
+    },
+    "Via Ramdom New (2FA)": {
+      "notify_restock": true,
+      "notify_drop": true,
+      "is_highlight": true
+    },
+    "Via Ramdom": {
+      "notify_restock": true,
+      "notify_drop": true,
+      "is_highlight": true
+    },
+    "Acc Scan 1 Year+ (2FA)": {
+      "notify_restock": true,
+      "notify_drop": true,
+      "drop_step_alert": 80,
+      "is_highlight": true
+    },
+    "Acc Farm 6 Month+ (2FA)": {
+      "notify_restock": true,
+      "notify_drop": true,
+      "drop_step_alert": 40,
+      "is_highlight": true
+    },
     "Acc Farmed 2025": {
       "notify_restock": true,
       "notify_drop": false,
@@ -22,7 +82,20 @@
       "notify_restock": true,
       "notify_drop": false,
       "is_highlight": true
+    },
+    "1000X BRAZIL NO2FA 30+ FR LIVE ADS": {
+      "notify_restock": true,
+      "notify_drop": true,
+      "drop_step_alert": 1,
+      "is_highlight": true
+    },
+    "(HOT) ACC OLD 1000x SOAK 9 MONTHS FULL 2FA 1 HOTMAIL TRUST 30 FRIEND": {
+      "notify_restock": true,
+      "notify_drop": true,
+      "drop_step_alert": 1,
+      "is_highlight": true
     }
   },
-  "check_interval_seconds": 60
+  "check_interval_seconds": 60,
+  "chrome_storage_hex_key": "5160d90819b3e4dceba7ccd2fcc07ba2"
 }
