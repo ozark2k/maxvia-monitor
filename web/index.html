@@ -7162,8 +7162,9 @@
       });
     }
 
-    // Inicializa a cotação e preferências
+    // Inicializa a cotação e preferências (e atualiza a cada 60s em tempo real)
     updateDolarFromAPI();
+    setInterval(updateDolarFromAPI, 60000);
     loadAutoCheckPreference();
 
     // Suporte a Arrastar e Soltar (Drag & Drop) de arquivo .txt na área de entrada
@@ -8259,13 +8260,13 @@
         }
         if (depositBrlMain) {
           depositBrlMain.style.color = '#ffd60a';
-          depositBrlMain.textContent = `R$ ${formatVbrBRL(missingPixBrl)}`;
+          depositBrlMain.textContent = `R$ ${formatVbrBRL(suggestedMissingPix)}`;
         }
         if (depositLine1) {
-          depositLine1.innerHTML = `⚠️ <b style="color: #ffffff;">Faltam ${missingCoins.toLocaleString('pt-BR')} Coins!</b> Aproveita todos os seus <b style="color: #30d158;">${userBalance.toLocaleString('pt-BR')} Coins</b> de saldo`;
+          depositLine1.innerHTML = `⚠️ <b style="color: #ffffff;">Faltam ${missingCoins.toLocaleString('pt-BR')} Coins ($${formatVbrBRL(missingUsdt)} USDT)</b> • Aproveita seus <b style="color: #30d158;">${userBalance.toLocaleString('pt-BR')} Coins</b>`;
         }
         if (depositLine2) {
-          depositLine2.innerHTML = `💡 Deposite <b style="color: #ffd60a;">R$ ${formatVbrBRL(suggestedMissingPix)}</b> no Pix Binance (+R$ 5 taxa) • <span style="color: rgba(255,255,255,0.7);">(Custo total sem saldo seria R$ ${formatVbrBRL(totalDepositBrl)})</span>`;
+          depositLine2.innerHTML = `💡 <b>Valor Seguro Pix:</b> R$ ${formatVbrBRL(suggestedMissingPix)} (Custo seco: R$ ${formatVbrBRL(missingPixBrl)} + margem para taxa de saque Binance)`;
         }
       }
 
