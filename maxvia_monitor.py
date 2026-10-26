@@ -29,6 +29,7 @@ CONFIG_FILE = os.path.join(SCRIPT_DIR, "config.json")
 LOG_FILE = os.path.join(SCRIPT_DIR, "monitor.log")
 MAXVIA_STATE_WEB_PATH = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "limpador_contas", "maxvia_state.json"))
 CURRENT_MAXVIA_USER_INFO = {"username": "Itooh - ID: 4271", "balance_str": "$211.08", "balance_usd": 211.08}
+LATEST_WEB_STATE = {}
 
 # Logging Setup
 logging.basicConfig(
@@ -796,6 +797,9 @@ def export_maxvia_web_state(all_products: dict):
             "products": featured
         }
 
+        global LATEST_WEB_STATE
+        LATEST_WEB_STATE = web_state
+
         os.makedirs(os.path.dirname(MAXVIA_STATE_WEB_PATH), exist_ok=True)
         with open(MAXVIA_STATE_WEB_PATH, 'w', encoding='utf-8') as f:
             json.dump(web_state, f, ensure_ascii=False, indent=2)
@@ -1315,8 +1319,11 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     )
 
     if changes:
-        logging.info(f"Detectadas {len(changes)} alterações de estoque. Enviando alerta Telegram...")
-        send_telegram_message(bot_token, chat_id, "\n\n".join(changes))
+        if "--no-telegram" in sys.argv or os.environ.get("NO_TELEGRAM") == "1":
+            logging.info(f"[NO-TELEGRAM] {len(changes)} alterações detectadas, mas o envio ao Telegram está desativado nesta instância local.")
+        else:
+            logging.info(f"Detectadas {len(changes)} alterações de estoque. Enviando alerta Telegram...")
+            send_telegram_message(bot_token, chat_id, "\n\n".join(changes))
     else:
         logging.info("Nenhuma alteração de estoque nesta rodada. Nenhuma notificação enviada.")
 
@@ -1383,8 +1390,26 @@ def run_cycle(is_startup: bool = False):
 
 
 class HealthHandler(BaseHTTPRequestHandler):
-    """Simple HTTP healthcheck handler for Render Web Service."""
+    """Simple HTTP healthcheck and state endpoint for Render Web Service."""
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS, HEAD')
+        self.send_header('Access-Control-Allow-Headers', '*')
+        self.end_headers()
+
     def do_GET(self):
+        if self.path.startswith('/maxvia_state.json') or self.path.startswith('/api/state'):
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json; charset=utf-8')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS, HEAD')
+            self.send_header('Access-Control-Allow-Headers', '*')
+            self.end_headers()
+            data_str = json.dumps(LATEST_WEB_STATE, ensure_ascii=False) if LATEST_WEB_STATE else "{}"
+            self.wfile.write(data_str.encode('utf-8'))
+            return
+
         self.send_response(200)
         self.send_header('Content-type', 'text/plain; charset=utf-8')
         self.end_headers()
