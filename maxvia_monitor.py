@@ -18,6 +18,8 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+from datetime import datetime
+import calendar
 from hashlib import pbkdf2_hmac
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import threading
@@ -1371,12 +1373,133 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
         logging.info("Nenhuma alteração de estoque nesta rodada. Nenhuma notificação enviada.")
 
 
+def check_server_billing_reminder(config: dict, bot_token: str, chat_id: str, force_test: bool = False) -> bool:
+    """
+    Check if the cloud server (Render) billing renewal is approaching (e.g. 1 day before or on the day),
+    and send an informative notification to Telegram.
+    """
+    billing_cfg = config.get("server_billing", {})
+    if not billing_cfg.get("enabled", True) and not force_test:
+        return False
+
+    is_allowed_to_notify = IS_CLOUD_SERVER or ("--enable-local-telegram" in sys.argv) or force_test
+    if not is_allowed_to_notify or ("--no-telegram" in sys.argv and not force_test) or (os.environ.get("NO_TELEGRAM") == "1" and not force_test):
+        return False
+
+    provider = billing_cfg.get("provider", "Render")
+    amount_usd = float(billing_cfg.get("amount_usd", 7.00))
+    billing_day = int(billing_cfg.get("billing_day", 10))
+    days_before = int(billing_cfg.get("notify_days_before", 1))
+
+    now = datetime.now()
+    today_str = now.strftime("%Y-%m-%d")
+
+    state_file = os.path.join(SCRIPT_DIR, "billing_state.json")
+    billing_state = {}
+    if os.path.exists(state_file):
+        try:
+            with open(state_file, "r", encoding="utf-8") as f:
+                billing_state = json.load(f)
+        except Exception:
+            billing_state = {}
+
+    if not force_test and billing_state.get("last_notified_date") == today_str:
+        return False
+
+    current_year = now.year
+    current_month = now.month
+    try:
+        target_billing_date = datetime(current_year, current_month, billing_day)
+    except ValueError:
+        import calendar
+        last_day = calendar.monthrange(current_year, current_month)[1]
+        target_billing_date = datetime(current_year, current_month, min(billing_day, last_day))
+
+    if target_billing_date.date() < now.date():
+        next_month = current_month + 1 if current_month < 12 else 1
+        next_year = current_year if current_month < 12 else current_year + 1
+        try:
+            target_billing_date = datetime(next_year, next_month, billing_day)
+        except ValueError:
+            import calendar
+            last_day = calendar.monthrange(next_year, next_month)[1]
+            target_billing_date = datetime(next_year, next_month, min(billing_day, last_day))
+
+    diff_days = (target_billing_date.date() - now.date()).days
+
+    # Obter cotação do dólar para conversão estimada em BRL
+    dolar_brl = 5.40
+    try:
+        req = urllib.request.Request("https://api.binance.com/api/v3/ticker/price?symbol=USDTBRL", headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=4) as r:
+            data = json.loads(r.read().decode('utf-8'))
+            dolar_brl = float(data.get("price", 5.40))
+    except Exception:
+        pass
+
+    approx_brl = amount_usd * dolar_brl
+
+    msg = None
+    if force_test:
+        msg = (
+            f"🔔 <b>[TESTE] AVISO DE FATURA DO SERVIDOR ({provider.upper()})</b>\n\n"
+            f"⚠️ <b>Lembrete programado para avisar 1 dia antes da renovação!</b>\n\n"
+            f"📅 <b>Dia do Vencimento:</b> Todo dia {billing_day}\n"
+            f"💵 <b>Valor da Assinatura:</b> ${amount_usd:.2f} USD (~R$ {approx_brl:.2f})\n"
+            f"🌐 <b>Servidor Online:</b> Monitor 24/7 & Calculadora Universal\n"
+            f"🔗 <b>Link do Sistema:</b> https://maxvia-monitor.onrender.com\n\n"
+            f"💡 <i>Você receberá este aviso automático no Telegram todo mês (no dia {billing_day - 1} e no dia {billing_day}) para nunca deixar o servidor offline!</i>\n\n"
+            f"👉 <b>Painel de Cobrança:</b> https://dashboard.render.com/billing"
+        )
+    elif diff_days == days_before:
+        msg = (
+            f"🔔 <b>AVISO DE RENOVAÇÃO DO SERVIDOR ({provider.upper()})</b>\n\n"
+            f"⚠️ <b>Amanhã (Dia {billing_day}) vence a fatura do seu servidor na nuvem!</b>\n\n"
+            f"📅 <b>Vencimento:</b> Amanhã, dia {billing_day}\n"
+            f"💵 <b>Valor:</b> ${amount_usd:.2f} USD (~R$ {approx_brl:.2f})\n"
+            f"🌐 <b>Serviço:</b> Monitor de Estoque 24/7 & Calculadora\n"
+            f"🔗 <b>Link do Servidor:</b> https://maxvia-monitor.onrender.com\n\n"
+            f"💡 <i>Lembrete com 1 dia de antecedência para você conferir o saldo/limite do seu cartão ou pagar no painel, garantindo que o bot do Telegram e a calculadora continuem 100% online sem interrupção!</i>\n\n"
+            f"👉 <b>Painel Render:</b> https://dashboard.render.com/billing"
+        )
+    elif diff_days == 0:
+        msg = (
+            f"🚨 <b>HOJE É O DIA DE PAGAR O SERVIDOR ({provider.upper()})!</b>\n\n"
+            f"⚠️ <b>A fatura do seu servidor vence HOJE (Dia {billing_day})!</b>\n\n"
+            f"💵 <b>Valor:</b> ${amount_usd:.2f} USD (~R$ {approx_brl:.2f})\n"
+            f"🌐 <b>Serviço:</b> Monitor 24/7 & Calculadora Universal\n"
+            f"🔗 <b>Link do Servidor:</b> https://maxvia-monitor.onrender.com\n\n"
+            f"👉 <b>Acessar Fatura e Pagar:</b> https://dashboard.render.com/billing"
+        )
+
+    if msg:
+        logging.info(f"Enviando lembrete de pagamento do servidor {provider} (diff_days={diff_days})...")
+        if send_telegram_message(bot_token, chat_id, msg):
+            if not force_test:
+                billing_state["last_notified_date"] = today_str
+                billing_state["last_diff_days"] = diff_days
+                try:
+                    with open(state_file, "w", encoding="utf-8") as f:
+                        json.dump(billing_state, f, indent=2)
+                except Exception as e:
+                    logging.warning(f"Could not save billing_state: {e}")
+            return True
+
+    return False
+
+
 def run_cycle(is_startup: bool = False):
     """Run a single check cycle."""
     config = load_config()
     bot_token = config.get("telegram_bot_token") or os.environ.get("TELEGRAM_BOT_TOKEN", "")
     chat_id = config.get("telegram_chat_id") or os.environ.get("TELEGRAM_CHAT_ID", "")
     product_rules = config.get("product_rules", {})
+
+    # 1. Verifica lembrete de pagamento da fatura do servidor na nuvem (Render)
+    try:
+        check_server_billing_reminder(config, bot_token, chat_id)
+    except Exception as e:
+        logging.warning(f"Erro ao verificar lembrete de fatura do servidor: {e}")
 
     logging.info("Iniciando verificação de estoque MaxVia88...")
     all_products = fetch_all_products()
@@ -1499,6 +1622,15 @@ def keep_alive_ping():
 
 
 def main():
+    if "--test-billing-alert" in sys.argv:
+        config = load_config()
+        bot_token = config.get("telegram_bot_token") or os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        chat_id = config.get("telegram_chat_id") or os.environ.get("TELEGRAM_CHAT_ID", "")
+        print(f"Sending test billing notification to chat {chat_id}...")
+        ok = check_server_billing_reminder(config, bot_token, chat_id, force_test=True)
+        print("Success!" if ok else "Failed.")
+        return
+
     if "--once" in sys.argv:
         run_cycle()
         return

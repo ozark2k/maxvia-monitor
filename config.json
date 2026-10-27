@@ -1,7 +1,7 @@
 {
   "telegram_bot_token": "8692174015:AAFl7TCPswrYFHoMhSbgAtb5V3F8Px1k_HA",
   "telegram_chat_id": "11579952",
-  "cookie": "XSRF-TOKEN=eyJpdiI6ImdMWno0MlpOeS9sTEorRDF4dHJxWkE9PSIsInZhbHVlIjoiU3RuNDVEWGdlTHRNVnI1cVdVVGowbW5tcWRhd2Q0b001SSt0akhKQVBvVDVQZUppaWJaOUFTZzEwT2FQSWt6cTBpdXhFekJhaXlmaDZSQ1kvSStpaFlDUG9POGhaekZXTlBGcHRMeXBNTjBnVTlrbWJ1MW1rbmhGR0lUWlV2R0UiLCJtYWMiOiIzOGE5YzQ2YTU4Y2UwYmIzMDM3NTg2MzFiNzYyMjEwOWEwYjAzYzIyYTFiZTMzZjliZDFiNDRlYjhmYTJiYzVmIn0%3D; laravel_session=eyJpdiI6IlVEdDRsK3dZQk5PSzhMM3dMWUhaSlE9PSIsInZhbHVlIjoiUGxnaEVGbHo2amQ0Z0tDeEhOL2JXVDkzRjBhMEoxdHhCS2tmYjJTbFJyc0xIMUJJUlRMWXBNV01qNnp3RTNKSnVtdHBjL3BCcUxSckxldnR6dVYzeE9oZmd5UHliZmJHSndlMlNIZzhnYVEzajB2R3lzbExnTzdiYXZlVjdnVHoiLCJtYWMiOiJlOGEyMDBjMWUxNmVjOGYxZDQ2ZjYwOWViNzZkZWFhNjM1YWZmZWNjZmVjYWE5NzJjYzBkMDYwODQ4ODUwOWEwIn0%3D",
+  "cookie": "XSRF-TOKEN=eyJpdiI6Im9rRE92L1NMdGtKM2JQSTZ2eGNPZmc9PSIsInZhbHVlIjoiYmZiQ0tWZy9ia1dzZ1VmbkxxdjA3TGcvVVBrQStrWUVBQnU0NWF1L0tmeVBhbjRIQXgvVTVjMlk3cnJ3enV4VmJZVk91R0ZLRHJCNmFyMWt6SFZrM29FY3MzVWd0U2cwSU83dTR2K3p1QTArWFhrbTYvRmIyNE5ha2ZpRmxteXoiLCJtYWMiOiIzMmJjYjQ1OTY2ZmI3OTRhMTZmMDNkMmU3MDZlZTI2MzRhYTJkNzEwMzU5ZjM2ODVkODMwODFhYTBlMTczZjdlIn0%3D; laravel_session=eyJpdiI6IlprMVVEb3MzL25qaFdETFJ4di9FU1E9PSIsInZhbHVlIjoicmIrRVRjelFKVlV0RnNMNDJIRWxpTlljYmVyR2tLSWphZ0NreTRyb0o1OU9udDBuTkw5M0NhZHhCWjFQM0lhOWt4QkpQQkhHV2NpdnRPQlgyakRUU015T1ltKzR6OTE2TVAxdmZsSlZnR2NoMm0xbHFueDc4aG5SMGlGcGRJbEsiLCJtYWMiOiIxOTE1N2ViMDY5ZThhYTJkZWJlOGEyY2I0NTIwOWU2NzNjNjM0YmNjMWYxNzMyMTAwMTFmNjEzZWU3YjZiMzNiIn0%3D",
   "target_products": [
     "★Acc Farmed 902 New 2026 (2FA)",
     "★Acc Farmed 2025 (2FA)",
@@ -95,6 +95,13 @@
       "drop_step_alert": 1,
       "is_highlight": true
     }
+  },
+  "server_billing": {
+    "enabled": true,
+    "provider": "Render",
+    "amount_usd": 7.00,
+    "billing_day": 10,
+    "notify_days_before": 1
   },
   "check_interval_seconds": 60,
   "chrome_storage_hex_key": "5160d90819b3e4dceba7ccd2fcc07ba2"
