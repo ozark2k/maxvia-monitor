@@ -14,6 +14,7 @@
     "Acc Farmed 2026",
     "BM Verified",
     "1000X BRAZIL NO2FA 30+ FR LIVE ADS",
+    "1000X BRAZIL NO2FA 0-30 FR LIVE ADS",
     "(HOT) ACC OLD 1000x SOAK 9 MONTHS FULL 2FA 1 HOTMAIL TRUST 30 FRIEND",
     "Via Ramdom New (2FA)",
     "Via Ramdom (2FA)",
@@ -86,7 +87,13 @@
     "1000X BRAZIL NO2FA 30+ FR LIVE ADS": {
       "notify_restock": true,
       "notify_drop": true,
-      "drop_step_alert": 1,
+      "drop_step_alert": 10,
+      "is_highlight": true
+    },
+    "1000X BRAZIL NO2FA 0-30 FR LIVE ADS": {
+      "notify_restock": true,
+      "notify_drop": true,
+      "drop_step_alert": 10,
       "is_highlight": true
     },
     "(HOT) ACC OLD 1000x SOAK 9 MONTHS FULL 2FA 1 HOTMAIL TRUST 30 FRIEND": {

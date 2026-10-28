@@ -303,22 +303,23 @@ def make_product_id(title: str, price: str) -> str:
 
 def is_buyviafb_target(item: dict) -> bool:
     """
-    Retorna True para os 2 produtos solicitados do BuyViaFB:
-    1. buyviafb_195: 1000x Brazil No2fa 30+ Fr Live Ads (55.000 Coins)
-    2. buyviafb_133: (HOT) Acc Old 1000x Soak 9 Months Full 2fa 1 Hotmail Trust 30 Friend (80.000 Coins)
+    Retorna True para os produtos solicitados do BuyViaFB:
+    1. buyviafb_194: 1000x Brazil No2fa 0-30 Fr Live Ads (45.000 Coins)
+    2. buyviafb_195: 1000x Brazil No2fa 30+ Fr Live Ads (55.000 Coins)
+    3. buyviafb_133: (HOT) Acc Old 1000x Soak 9 Months Full 2fa 1 Hotmail Trust 30 Friend (80.000 Coins)
     """
     if not item or not isinstance(item, dict):
         return False
     if item.get('site') != 'buyviafb':
         return False
     b_id = str(item.get('buyviafb_id', ''))
-    if b_id in ['195', '133']:
+    if b_id in ['194', '195', '133']:
         return True
     p_id = str(item.get('id', ''))
-    if p_id in ['buyviafb_195', 'buyviafb_133']:
+    if p_id in ['buyviafb_194', 'buyviafb_195', 'buyviafb_133']:
         return True
     title = (item.get('raw_title') or item.get('title') or '').lower()
-    if 'brazil' in title and '30+' in title:
+    if 'brazil' in title:
         return True
     if 'soak 9 months' in title or ('soak' in title and '9 month' in title):
         return True
@@ -727,38 +728,119 @@ def fetch_thefbstores_products() -> dict:
     return products
 
 
+KNOWN_BUYVIAFB_IDS = {
+    '1000x brazil no2fa 30+ fr live ads': '195',
+    '1000x brazil no2fa 0-30 fr live ads': '194',
+    '(hot) acc old 1000x soak 9 months full 2fa 1 hotmail trust 30 friend': '133',
+}
+
+
+def _parse_buyviafb_html(html: str, page_url: str, products: dict):
+    """Parse BuyViaFB cards and buttons, including Sold Out items with 0 stock."""
+    soup = BeautifulSoup(html, 'html.parser')
+
+    # 1. Parse structured product cards (handles both in-stock and Sold Out items)
+    for card in soup.find_all('div', class_='card'):
+        h1 = card.find('h1')
+        if not h1:
+            continue
+        raw_title = h1.get_text(strip=True)
+        if not raw_title or len(raw_title) < 3:
+            continue
+
+        btn = card.find('button')
+        btn_onclick = btn.get('onclick', '') if btn else ''
+        btn_text = btn.get_text(strip=True) if btn else ''
+
+        prod_id = None
+        stock_val = 0
+        price_val = 0
+
+        # Tenta obter dados do onclick showPromptMessage
+        m = re.search(r"showPromptMessage\(\s*'([^']+)'\s*,\s*(\d+)\s*,\s*'([^']*)'\s*,\s*'(\d+)'\s*,\s*'(\d+)'", btn_onclick)
+        if m:
+            t, price, infor, stock, pid = m.groups()
+            prod_id = pid
+            price_val = int(price)
+            stock_val = int(stock)
+            raw_title = t
+        else:
+            # Caso Sold Out ou sem onclick
+            if 'sold out' in btn_text.lower():
+                stock_val = 0
+            stock_badge = card.find(class_='badge')
+            if stock_badge:
+                m_st = re.search(r'\d+', stock_badge.get_text())
+                if m_st:
+                    stock_val = int(m_st.group())
+
+            price_tag = card.find('strong', class_='text-danger')
+            if price_tag:
+                m_pr = re.search(r'([\d,]+)', price_tag.get_text())
+                if m_pr:
+                    price_val = int(m_pr.group(1).replace(',', ''))
+
+            clean_key = re.sub(r'\s+', ' ', raw_title.strip().lower())
+            prod_id = KNOWN_BUYVIAFB_IDS.get(clean_key)
+            if not prod_id:
+                slug = re.sub(r'[^a-z0-9]+', '_', clean_key).strip('_')
+                prod_id = slug
+
+        p_id = f"buyviafb_{prod_id}"
+        price_str = f"{price_val:,} Coins".replace(',', '.')
+        products[p_id] = {
+            'id': p_id,
+            'buyviafb_id': str(prod_id),
+            'title': f"[BuyViaFB] {raw_title}",
+            'raw_title': raw_title,
+            'price': price_str,
+            'price_val': price_val,
+            'stock': stock_val,
+            'site': 'buyviafb',
+            'url': page_url
+        }
+
+    # 2. Parse any additional buttons with showPromptMessage not captured by card div
+    buttons = soup.find_all('button', onclick=re.compile(r'showPromptMessage', re.I))
+    for btn in buttons:
+        m = re.search(r"showPromptMessage\(\s*'([^']+)'\s*,\s*(\d+)\s*,\s*'([^']*)'\s*,\s*'(\d+)'\s*,\s*'(\d+)'", btn['onclick'])
+        if m:
+            title, price, infor, stock, prod_id = m.groups()
+            p_id = f"buyviafb_{prod_id}"
+            if p_id not in products:
+                price_int = int(price)
+                stock_int = int(stock)
+                price_str = f"{price_int:,} Coins".replace(',', '.')
+                products[p_id] = {
+                    'id': p_id,
+                    'buyviafb_id': prod_id,
+                    'title': f"[BuyViaFB] {title}",
+                    'raw_title': title,
+                    'price': price_str,
+                    'price_val': price_int,
+                    'stock': stock_int,
+                    'site': 'buyviafb',
+                    'url': page_url
+                }
+
+
 def fetch_buyviafb_products() -> dict:
-    """Fetch products from BuyViaFB.com."""
-    url = "https://buyviafb.com/"
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'})
+    """Fetch products from BuyViaFB.com (homepage and category 186 VIA BRAZIL)."""
+    urls_to_scrape = [
+        "https://buyviafb.com/",
+        "https://buyviafb.com/category/186"
+    ]
     products = {}
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            html = resp.read().decode('utf-8', errors='ignore')
-            soup = BeautifulSoup(html, 'html.parser')
-            buttons = soup.find_all('button', onclick=re.compile(r'showPromptMessage', re.I))
-            for btn in buttons:
-                m = re.search(r"showPromptMessage\(\s*'([^']+)'\s*,\s*(\d+)\s*,\s*'([^']*)'\s*,\s*'(\d+)'\s*,\s*'(\d+)'", btn['onclick'])
-                if m:
-                    title, price, infor, stock, prod_id = m.groups()
-                    price_int = int(price)
-                    stock_int = int(stock)
-                    p_id = f"buyviafb_{prod_id}"
-                    price_str = f"{price_int:,} Coins".replace(',', '.')
-                    products[p_id] = {
-                        'id': p_id,
-                        'buyviafb_id': prod_id,
-                        'title': f"[BuyViaFB] {title}",
-                        'raw_title': title,
-                        'price': price_str,
-                        'price_val': price_int,
-                        'stock': stock_int,
-                        'site': 'buyviafb',
-                        'url': 'https://buyviafb.com/'
-                    }
-        logging.info(f"[BuyViaFB] Coletados {len(products)} produtos com sucesso.")
-    except Exception as e:
-        logging.error(f"Erro ao buscar produtos BuyViaFB: {e}")
+    for url in urls_to_scrape:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'})
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                html = resp.read().decode('utf-8', errors='ignore')
+                _parse_buyviafb_html(html, url, products)
+        except Exception as e:
+            logging.error(f"Erro ao buscar produtos BuyViaFB ({url}): {e}")
+
+    logging.info(f"[BuyViaFB] Coletados {len(products)} produtos com sucesso.")
     return products
 
 
@@ -1024,18 +1106,51 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
             baseline_stock = old_item.get('last_notified_stock', old_stock)
 
             if new_stock < old_stock:
-                # Caso BuyViaFB: Alerta compras apenas se o estoque estiver abaixo de 5.000 (ou se esgotar)
+                # Caso BuyViaFB: Alerta compras apenas se o estoque estiver abaixo de 5.000 (ou se esgotar), ou em lotes configurados (ex: 10 em 10)
                 if is_buyviafb:
-                    diff = old_stock - new_stock
-                    item['last_notified_stock'] = new_stock
+                    # 1. Se o produto esgotou (bateu 0), notifica IMEDIATAMENTE
                     if new_stock == 0:
+                        diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
+                        item['last_notified_stock'] = 0
                         changes.append(
                             f"🔥🔴 <b>[BUYVIAFB] PRODUTO ESGOTOU!</b> 🔴🔥\n"
                             f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>0 unidades</b> (-{diff})"
+                            f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})"
                         )
-                    elif new_stock <= 5000:
+                        continue
+
+                    # 2. Regra de lote de compras (ex: de 10 em 10 solicitado pelo usuário)
+                    drop_step = rule.get("drop_step_alert")
+                    if not drop_step and 'brazil' in clean_display_title.lower():
+                        drop_step = 10
+
+                    if drop_step:
+                        accumulated_drop = baseline_stock - new_stock
+                        if accumulated_drop < drop_step:
+                            logging.info(f"[BUYVIAFB] Queda parcial para '{clean_display_title}': {baseline_stock} -> {new_stock} (-{accumulated_drop}). Aguardando lote de {drop_step} para notificar.")
+                            item['last_notified_stock'] = baseline_stock
+                            continue
+
+                        # Atingiu o lote de compras (ex: 10)
+                        diff = accumulated_drop
+                        from_stock = baseline_stock
+                        item['last_notified_stock'] = new_stock
+                        from_stock_str = f"{from_stock:,}".replace(',', '.')
+                        new_stock_str = f"{new_stock:,}".replace(',', '.')
+                        diff_str = f"{diff:,}".replace(',', '.')
+                        changes.append(
+                            f"🛒⚡ <b>[BUYVIAFB] COMPRA DETECTADA! (-{diff_str})</b> ⚡🛒\n"
+                            f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
+                            f"💵 <b>Preço:</b> {item['price']}\n"
+                            f"📉 <b>Estoque:</b> {from_stock_str} ➔ <b>{new_stock_str} unidades restantes</b> (-{diff_str})"
+                        )
+                        continue
+
+                    # 3. Compras normais em produtos BuyViaFB sem lote específico:
+                    if new_stock <= 5000:
+                        diff = old_stock - new_stock
+                        item['last_notified_stock'] = new_stock
                         old_stock_str = f"{old_stock:,}".replace(',', '.')
                         new_stock_str = f"{new_stock:,}".replace(',', '.')
                         diff_str = f"{diff:,}".replace(',', '.')
@@ -1054,6 +1169,8 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                                 f"📉 <b>Estoque:</b> {old_stock_str} ➔ <b>{new_stock_str} unidades restantes</b> (-{diff_str})"
                             )
                     else:
+                        diff = old_stock - new_stock
+                        item['last_notified_stock'] = new_stock
                         logging.info(f"[BUYVIAFB] Compra em '{clean_display_title}' ({old_stock} -> {new_stock}, -{diff}) ignorada (estoque > 5.000).")
                     continue
 
@@ -1238,6 +1355,7 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                             f"💵 <b>Preço:</b> {item['price']}\n"
                             f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (+{diff})"
                         )
+                    continue
                 hot_info = get_hot_item_info(item)
                 if hot_info:
                     p_name = hot_info['name']
@@ -1360,6 +1478,25 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                         f"💵 <b>Preço:</b> {item['price']}\n"
                         f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades</b>"
                     )
+
+    # Checagem de itens monitorados em old_state que desapareceram completamente de new_state
+    for old_id, old_item in old_state.items():
+        if old_id not in new_state:
+            old_title_clean = normalize_title(old_item.get('title', '')).lower()
+            old_site = old_item.get('site', 'maxvia88')
+            found = any(
+                normalize_title(it.get('title', '')).lower() == old_title_clean and it.get('site', 'maxvia88') == old_site
+                for it in new_state.values()
+            )
+            if not found and old_item.get('stock', 0) > 0:
+                clean_title = (old_item.get('raw_title') or old_item.get('title', '')).replace('⭐', '').replace('✅', '').strip()
+                old_st = old_item.get('stock', 0)
+                changes.append(
+                    f"🔥🔴 <b>[{old_site.upper()}] PRODUTO ESGOTOU / SAIU DO AR!</b> 🔴🔥\n"
+                    f"📦 <b>Produto:</b> <b>{clean_title}</b>\n"
+                    f"💵 <b>Preço:</b> {old_item.get('price', '')}\n"
+                    f"📉 <b>Estoque:</b> {old_st} ➔ <b>0 unidades</b> (-{old_st})"
+                )
 
     if changes:
         # Trava permanente de duplicidade: apenas a nuvem (Render) ou flag explícita podem enviar alertas
