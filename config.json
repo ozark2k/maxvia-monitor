@@ -18,7 +18,6 @@
     "(HOT) ACC OLD 1000x SOAK 9 MONTHS FULL 2FA 1 HOTMAIL TRUST 30 FRIEND",
     "Via Ramdom New (2FA)",
     "Via Ramdom (2FA)",
-    "Acc Scan 1 Year+ (2FA)",
     "Acc Farm 6 Month+ (2FA)"
   ],
   "product_rules": {
@@ -55,12 +54,6 @@
     "Via Ramdom": {
       "notify_restock": true,
       "notify_drop": true,
-      "is_highlight": true
-    },
-    "Acc Scan 1 Year+ (2FA)": {
-      "notify_restock": true,
-      "notify_drop": true,
-      "drop_step_alert": 80,
       "is_highlight": true
     },
     "Acc Farm 6 Month+ (2FA)": {

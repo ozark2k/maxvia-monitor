@@ -469,10 +469,10 @@ def is_budget_farmed_profile(item: dict) -> bool:
 
 def get_cat219_info(item: dict):
     """
-    Identifica e retorna metadados visuais para os 3 perfis prioritários da Categoria 219:
+    Identifica e retorna metadados visuais para os perfis prioritários da Categoria 219:
     1. Via Ramdom New (2FA) ($1.29) -> Azul 🔵
-    2. Acc Scan 1 Year+ (2FA) ($2.60) -> Dourado 🟡
-    3. Acc Farm 6 Month+ (2FA) ($1.04) -> Verde 🟢
+    2. Acc Farm 6 Month+ (2FA) ($1.04) -> Verde 🟢
+    (Acc Scan 1 Year+ desativado a pedido do usuário)
     """
     if not item or not isinstance(item, dict):
         return None
@@ -492,17 +492,7 @@ def get_cat219_info(item: dict):
             'url': item.get('url') or 'https://maxvia88.com/categories/219'
         }
 
-    # 2. Acc Scan 1 Year+ (2FA) ($2.60)
-    if 'acc scan 1 year+ (2fa)' in p_id or ('scan' in (raw_title + title) and '1 year' in (raw_title + title) and '2fa' in (raw_title + title)):
-        return {
-            'key': 'scan',
-            'badge': '🟡',
-            'color': 'DOURADO',
-            'clean_name': 'Acc Scan 1 Year+ (2FA)',
-            'url': item.get('url') or 'https://maxvia88.com/categories/219'
-        }
-
-    # 3. Acc Farm 6 Month+ (2FA) ($1.04)
+    # 2. Acc Farm 6 Month+ (2FA) ($1.04)
     if 'acc farm 6 month+ (2fa)' in p_id or ('farm' in (raw_title + title) and '6 month' in (raw_title + title) and '2fa' in (raw_title + title)):
         return {
             'key': 'farm6m',
@@ -1269,30 +1259,7 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                             )
                         continue
 
-                    # 2. Acc Scan 1 Year+ (2FA): Avisar em lotes de 80 em 80 compras (ex: 2.314 -> 2.234)
-                    if cat219['key'] == 'scan':
-                        drop_step = rule.get("drop_step_alert") or 80
-                        accumulated_drop = baseline_stock - new_stock
-                        if accumulated_drop < drop_step:
-                            logging.info(f"[MAXVIA88] Queda parcial de estoque para '{name}': {baseline_stock} -> {new_stock} (-{accumulated_drop}). Aguardando lote de {drop_step} para notificar.")
-                            item['last_notified_stock'] = baseline_stock
-                            continue
-
-                        # Atingiu o lote de 80 (ou mais) compras acumuladas!
-                        diff = accumulated_drop
-                        from_stock = baseline_stock
-                        item['last_notified_stock'] = new_stock
-                        from_stock_str = f"{from_stock:,}".replace(',', '.')
-                        new_stock_str = f"{new_stock:,}".replace(',', '.')
-                        diff_str = f"{diff:,}".replace(',', '.')
-                        changes.append(
-                            f"🛒⚡ <b>[MAXVIA88] COMPRA DETECTADA! (-{diff_str})</b> ⚡🛒\n"
-                            f"{b} <b>{name}</b> <code>[{p_str}]</code>\n"
-                            f"📉 <b>Estoque:</b> {from_stock_str} ➔ <b>{new_stock_str} restantes</b> (-{diff_str})"
-                        )
-                        continue
-
-                    # 3. Acc Farm 6 Month+ (2FA): Avisar em lotes de 40 em 40 compras (ex: 3.949 -> 3.909)
+                    # Acc Farm 6 Month+ (2FA): Avisar em lotes de 40 em 40 compras (ex: 3.949 -> 3.909)
                     if cat219['key'] == 'farm6m':
                         drop_step = rule.get("drop_step_alert") or 40
                         accumulated_drop = baseline_stock - new_stock
