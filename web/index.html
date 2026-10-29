@@ -2592,6 +2592,251 @@
 
     </div>
 
+    <!-- Bloco Universal: Calculadora VuaVia (VND ₫ ⇄ Dólar ⇄ Pix & Simulador de Venda/Lucro) -->
+    <div id="sec-vuavia" class="panel" style="margin-top: 1rem; padding: 1.4rem 1.6rem; border: 2px solid rgba(249, 115, 22, 0.7); background: linear-gradient(180deg, rgba(28, 17, 12, 0.98) 0%, rgba(16, 10, 7, 0.99) 100%); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.12); border-radius: 22px;">
+      
+      <!-- Header Universal Limpo -->
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 1.2rem; border-bottom: 1.5px solid rgba(249, 115, 22, 0.25); padding-bottom: 0.85rem;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="background: rgba(249, 115, 22, 0.22); width: 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border: 1.5px solid rgba(249, 115, 22, 0.55);">
+            🇻🇳
+          </div>
+          <div>
+            <h2 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 900; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 10px; letter-spacing: 0.02em;">
+              <span>CALCULADORA UNIVERSAL VUAVIA</span>
+              <span style="font-size: 0.8rem; background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.5); padding: 3px 10px; border-radius: 20px; font-weight: 900;">VND ₫ ⇄ DÓLAR ⇄ PIX</span>
+            </h2>
+          </div>
+        </div>
+
+        <!-- Cotação Atual VND / USDT -->
+        <div style="display: flex; align-items: center; gap: 10px; background: rgba(0, 0, 0, 0.5); border: 1.5px solid rgba(249, 115, 22, 0.45); border-radius: 12px; padding: 6px 14px;">
+          <div style="font-size: 0.95rem; color: rgba(255, 255, 255, 0.9); font-weight: 800;">
+            1 USDT = <b id="vua-vnd-rate-display" style="color: #fb923c; font-size: 1.25rem;">25.400 ₫</b>
+          </div>
+          <button type="button" onclick="editVuaVndRate()" style="background: rgba(249, 115, 22, 0.22); border: 1.5px solid rgba(249, 115, 22, 0.5); color: #fb923c; padding: 4px 10px; border-radius: 8px; font-size: 0.85rem; font-weight: 900; cursor: pointer; transition: all 0.2s;" title="Ajustar cotação do Đồng (VND por USDT)">
+            ⚙️ Cotação
+          </button>
+        </div>
+      </div>
+
+      <!-- SEU SALDO DISPONÍVEL NO VUAVIA (BALANCE) -->
+      <div style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.18) 0%, rgba(38, 18, 10, 0.95) 100%); border: 2px solid #ea580c; border-radius: 18px; padding: 14px 18px; margin-bottom: 1.35rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);">
+        
+        <!-- Lado Esquerdo: Saldo Atual e Conversão -->
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="background: rgba(249, 115, 22, 0.25); width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 1.5px solid #f97316;">
+            💳
+          </div>
+          <div>
+            <div style="font-size: 0.95rem; font-weight: 800; color: #fdba74; letter-spacing: 0.05em; text-transform: uppercase; display: flex; align-items: center; gap: 8px;">
+              <span>SEU SALDO ATUAL NO VUAVIA (BALANCE)</span>
+              <span id="vua-account-badge" style="font-size: 0.75rem; background: rgba(249, 115, 22, 0.3); color: #ffffff; padding: 2px 8px; border-radius: 10px; border: 1px solid rgba(249, 115, 22, 0.6);">🟢 Itallo Sousa</span>
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 3px; flex-wrap: wrap;">
+              <span id="vua-balance-display" style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 900; color: #ffffff; text-shadow: 0 0 18px rgba(249, 115, 22, 0.7); line-height: 1;">
+                83.660 ₫
+              </span>
+              <span id="vua-balance-subtext" style="font-size: 1.15rem; font-weight: 800; color: #fb923c;">
+                = $3,29 USDT (~R$ 17,65)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lado Direito: Ajuste Rápido do Saldo + Status do Pedido -->
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <div id="vua-balance-status-badge" style="background: rgba(249, 115, 22, 0.25); border: 2px solid #f97316; border-radius: 12px; padding: 8px 14px; display: flex; flex-direction: column; align-items: flex-end;">
+            <div id="vua-balance-status-title" style="font-size: 1rem; font-weight: 900; color: #ffffff; display: flex; align-items: center; gap: 6px;">
+              <span>✅</span> Saldo Cobre 100%!
+            </div>
+            <div id="vua-balance-status-desc" style="font-size: 0.82rem; font-weight: 700; color: #fed7aa;">
+              Sobra 53.660 ₫ no site
+            </div>
+          </div>
+
+          <input type="hidden" id="vua-input-balance" value="83660">
+
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button type="button" onclick="promptSetVuaBalance()" style="background: rgba(249, 115, 22, 0.25); border: 1.5px solid #f97316; color: #fdba74; padding: 7px 12px; border-radius: 10px; font-size: 0.82rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s;" title="Atualizar saldo manual do VuaVia (ex: 83.660)">
+              ✏️ Saldo Manual
+            </button>
+            <button type="button" onclick="setVuaBalance(0)" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; padding: 7px 9px; border-radius: 10px; font-size: 0.82rem; font-weight: 800; cursor: pointer; transition: all 0.2s;" title="Zerar Saldo para simular compra">
+              ⚡ Zerar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Três Inputs Principais -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.35rem;">
+        
+        <!-- Input 1: Custo do Ativo em VND -->
+        <div style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(251, 146, 60, 0.45); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+            <label for="vua-input-vnd" style="color: #fb923c; font-size: 1.15rem; font-weight: 900; display: flex; align-items: center; gap: 6px;">
+              <span>🇻🇳 Custo do Ativo (VND ₫)</span>
+            </label>
+            <span style="font-size: 0.82rem; color: #fb923c; font-weight: 800; background: rgba(251, 146, 60, 0.15); padding: 2px 8px; border-radius: 8px; border: 1px solid rgba(251, 146, 60, 0.35);">Copie e cole aqui direto</span>
+          </div>
+
+          <div class="input-wrapper" style="border-color: rgba(251, 146, 60, 0.6); padding: 8px 12px; box-shadow: 0 0 16px rgba(251, 146, 60, 0.15); display: flex; align-items: center;">
+            <span class="input-prefix" style="color: #fb923c; font-size: 1.8rem; font-weight: 900;">₫</span>
+            <input type="text" id="vua-input-vnd" class="form-input" value="30.000" inputmode="text" placeholder="30.000 ou 60.000 VND" onpaste="handleVuaPaste(event)" oninput="formatVuaVndLive(this)" onkeydown="handleVuaInputKeydown(event, this, formatVuaVndLive)" onblur="formatVuaVndInput()" style="font-size: 2.3rem; font-weight: 900; padding: 4px 6px; color: #ffffff !important; flex: 1;">
+            <div style="display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 0 4px 0 8px; border-left: 1px solid rgba(251, 146, 60, 0.35); user-select: none; z-index: 2;">
+              <button type="button" onmousedown="event.preventDefault()" onclick="stepVuaVnd(5000)" title="Aumentar 5.000 ₫" style="background: rgba(251, 146, 60, 0.18); border: 1.5px solid rgba(251, 146, 60, 0.5); color: #fb923c; font-size: 0.85rem; font-weight: 900; padding: 4px 10px; cursor: pointer; line-height: 1; border-radius: 6px; transition: all 0.15s; display: flex; align-items: center; justify-content: center;">▲</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="stepVuaVnd(-5000)" title="Diminuir 5.000 ₫" style="background: rgba(251, 146, 60, 0.18); border: 1.5px solid rgba(251, 146, 60, 0.5); color: #fb923c; font-size: 0.85rem; font-weight: 900; padding: 4px 10px; cursor: pointer; line-height: 1; border-radius: 6px; transition: all 0.15s; display: flex; align-items: center; justify-content: center;">▼</button>
+            </div>
+          </div>
+
+          <!-- Chips Rápidos dos Preços mais Comuns do VuaVia -->
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px;">
+            <button type="button" onclick="setVuaVnd(30000)" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255,255,255,0.15); color: #fde047; padding: 2px 7px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; cursor: pointer;">⭐ 30.000 (BR 2FA)</button>
+            <button type="button" onclick="setVuaVnd(60000)" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255,255,255,0.15); color: #d1d5db; padding: 2px 7px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; cursor: pointer;">60.000 (Via Ngoại)</button>
+            <button type="button" onclick="setVuaVnd(70000)" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255,255,255,0.15); color: #d1d5db; padding: 2px 7px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; cursor: pointer;">70.000 (US/UE)</button>
+            <button type="button" onclick="setVuaVnd(200000)" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255,255,255,0.15); color: #d1d5db; padding: 2px 7px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; cursor: pointer;">200.000 (BR Ads)</button>
+          </div>
+          
+          <div id="vua-unit-cost-subtext" style="font-size: 1.05rem; font-weight: 800; color: #fb923c; display: flex; justify-content: space-between; border-top: 1px dashed rgba(255,255,255,0.12); padding-top: 6px; margin-top: 2px;">
+            <span>= $1,18 USDT</span>
+            <span style="color: rgba(255,255,255,0.9);">R$ 6,33 no Pix</span>
+          </div>
+        </div>
+
+        <!-- Input 2: Quantidade de Perfis/Ativos -->
+        <div style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(96, 165, 250, 0.45); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label for="vua-input-qty" style="color: #60a5fa; font-size: 1.15rem; font-weight: 900; display: flex; align-items: center; gap: 6px;">
+              <span>📦 Quantidade a Comprar</span>
+            </label>
+            <button type="button" onclick="syncVuaWithCleaned()" style="background: rgba(96, 165, 250, 0.2); border: 1px solid rgba(96, 165, 250, 0.5); color: #60a5fa; padding: 3px 10px; border-radius: 8px; font-size: 0.82rem; font-weight: 800; cursor: pointer;" title="Usar quantidade de contas válidas do limpador">
+              ⚡ Usar Válidas (<span id="vua-sync-count">0</span>)
+            </button>
+          </div>
+
+          <div class="input-wrapper" style="border-color: rgba(96, 165, 250, 0.6); padding: 8px 12px; box-shadow: 0 0 16px rgba(96, 165, 250, 0.15); display: flex; align-items: center;">
+            <span class="input-prefix" style="color: #60a5fa; font-size: 1.8rem; font-weight: 900;">📦</span>
+            <input type="text" id="vua-input-qty" class="form-input" value="1" inputmode="numeric" placeholder="1" oninput="formatVuaQtyLive(this)" onkeydown="handleVuaInputKeydown(event, this, formatVuaQtyLive)" onblur="formatVuaQtyInput()" style="font-size: 2.3rem; font-weight: 900; padding: 4px 6px; color: #ffffff !important; flex: 1;">
+            <span id="vua-qty-suffix" style="font-size: 1.15rem; font-weight: 900; color: #60a5fa; padding-right: 6px; white-space: nowrap;">perfil</span>
+            <div style="display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 0 4px 0 8px; border-left: 1px solid rgba(96, 165, 250, 0.35); user-select: none; z-index: 2;">
+              <button type="button" onmousedown="event.preventDefault()" onclick="stepVuaQty(1)" title="Aumentar 1" style="background: rgba(96, 165, 250, 0.22); border: 1.5px solid rgba(96, 165, 250, 0.55); color: #93c5fa; font-size: 0.85rem; font-weight: 900; padding: 4px 10px; cursor: pointer; line-height: 1; border-radius: 6px; transition: all 0.15s; display: flex; align-items: center; justify-content: center;">▲</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="stepVuaQty(-1)" title="Diminuir 1" style="background: rgba(96, 165, 250, 0.22); border: 1.5px solid rgba(96, 165, 250, 0.55); color: #93c5fa; font-size: 0.85rem; font-weight: 900; padding: 4px 10px; cursor: pointer; line-height: 1; border-radius: 6px; transition: all 0.15s; display: flex; align-items: center; justify-content: center;">▼</button>
+            </div>
+          </div>
+
+          <div id="vua-total-vnd-subtext" style="font-size: 1.05rem; font-weight: 800; color: #60a5fa; display: flex; justify-content: space-between; border-top: 1px dashed rgba(255,255,255,0.12); padding-top: 6px; margin-top: 2px;">
+            <span id="vua-qty-readable-label">1 perfil (uma unidade)</span>
+            <span id="vua-total-vnd-needed" style="color: #ffffff;">30.000 ₫</span>
+          </div>
+        </div>
+
+        <!-- Input 3: Preço de Venda ao Cliente -->
+        <div style="background: rgba(0, 0, 0, 0.45); border: 1.5px solid rgba(48, 209, 88, 0.45); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label for="vua-sell-price" style="color: #30d158; font-size: 1.15rem; font-weight: 900; display: flex; align-items: center; gap: 6px;">
+              <span>🏷️ Preço de Venda (R$ cada)</span>
+            </label>
+            <span style="font-size: 0.85rem; color: rgba(255,255,255,0.7); font-weight: 700;">Cobrar do Cliente</span>
+          </div>
+
+          <div class="input-wrapper" style="border-color: rgba(48, 209, 88, 0.6); padding: 8px 14px; box-shadow: 0 0 16px rgba(48, 209, 88, 0.15);">
+            <span class="input-prefix" style="color: #30d158; font-size: 1.8rem; font-weight: 900;">R$</span>
+            <input type="number" id="vua-sell-price" class="form-input" value="17" min="1" step="1" oninput="calculateVuavia()" style="font-size: 2.3rem; font-weight: 900; padding: 4px 10px; color: #ffffff !important;">
+          </div>
+
+          <div style="font-size: 1.05rem; font-weight: 800; color: #30d158; display: flex; justify-content: space-between; border-top: 1px dashed rgba(255,255,255,0.12); padding-top: 6px; margin-top: 2px;">
+            <span>Valor Cobrado:</span>
+            <span id="vua-sell-unit-subtext" style="color: #ffffff;">R$ 17,00 / unidade</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Três Cards Grandes de Resultado -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 1.15rem;">
+        
+        <!-- CARD 1: DEPOSITAR NO PIX (BINANCE) / STATUS SALDO -->
+        <div id="vua-card-deposit" class="calc-result-card" style="padding: 1.4rem 1.6rem; background: linear-gradient(135deg, rgba(249, 115, 22, 0.16) 0%, rgba(35, 18, 10, 0.95) 100%); border: 2.5px solid #fb923c; border-radius: 18px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5); transition: all 0.3s ease;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <span id="vua-deposit-card-label" class="stat-label" style="font-size: 1.15rem; color: #fb923c; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; display: flex; align-items: center; gap: 8px;">
+              <span>🏦</span> DEPOSITAR NO PIX (BINANCE):
+            </span>
+            <span id="vua-deposit-usdt-badge" style="background: rgba(249, 115, 22, 0.25); border: 1.5px solid #fb923c; color: #ffffff; font-size: 1.05rem; font-weight: 900; padding: 4px 12px; border-radius: 12px;">
+              $1.18 USDT
+            </span>
+          </div>
+
+          <!-- NÚMERO GIGANTE PIX -->
+          <div id="vua-deposit-brl-main" style="font-family: var(--font-display); font-size: 3.6rem; font-weight: 900; color: #fb923c; text-shadow: 0 0 25px rgba(249, 115, 22, 0.55), 0 2px 10px rgba(0,0,0,0.8); letter-spacing: -0.03em; line-height: 1.05; margin: 0.35rem 0;">
+            R$ 0,00
+          </div>
+
+          <div style="border-top: 1px dashed rgba(255, 255, 255, 0.2); padding-top: 0.65rem; margin-top: 0.45rem; display: flex; flex-direction: column; gap: 4px;">
+            <div id="vua-deposit-line1" style="font-size: 1.05rem; color: #ffffff; font-weight: 800;">
+              💵 Custo exato: <span id="vua-deposit-usdt-subtext" style="color: #fb923c;">$1.18 USDT</span> (<span id="vua-vnd-needed-subtext">30.000 ₫</span>)
+            </div>
+            <div id="vua-deposit-line2" style="font-size: 0.95rem; color: rgba(255, 255, 255, 0.85); font-weight: 700;">
+              💡 Dica: Deposite <b id="vua-deposit-pix-suggested" style="color: #ffd60a;">R$ 11,00</b> (+R$ 5 de margem pra taxa de rede)
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 2: O CLIENTE TE PAGA (TOTAL) -->
+        <div class="calc-result-card" style="padding: 1.4rem 1.6rem; background: linear-gradient(135deg, rgba(229, 193, 88, 0.18) 0%, rgba(35, 30, 20, 0.95) 100%); border: 2.5px solid var(--accent-gold); border-radius: 18px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <span class="stat-label" style="font-size: 1.15rem; color: var(--accent-gold); font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; display: flex; align-items: center; gap: 8px;">
+              <span>💰</span> O CLIENTE TE PAGA (TOTAL):
+            </span>
+            <span id="vua-badge-qty" style="background: rgba(229, 193, 88, 0.25); border: 1.5px solid var(--accent-gold); color: #ffffff; font-size: 1.05rem; font-weight: 900; padding: 4px 12px; border-radius: 12px;">
+              1 perfil
+            </span>
+          </div>
+
+          <!-- NÚMERO GIGANTE CLIENTE -->
+          <div id="vua-client-total-brl" style="font-family: var(--font-display); font-size: 3.6rem; font-weight: 900; color: #ffffff; text-shadow: 0 0 25px rgba(229, 193, 88, 0.55), 0 2px 10px rgba(0,0,0,0.8); letter-spacing: -0.03em; line-height: 1.05; margin: 0.35rem 0;">
+            R$ 17,00
+          </div>
+
+          <div style="border-top: 1px dashed rgba(255, 255, 255, 0.2); padding-top: 0.65rem; margin-top: 0.45rem; display: flex; justify-content: space-between; align-items: center;">
+            <div id="vua-detail-subtext" style="font-size: 1.05rem; color: #ffffff; font-weight: 800;">
+              1 perfil × R$ 17,00 cada
+            </div>
+            <button type="button" onclick="copyVuaQuote()" style="background: rgba(229, 193, 88, 0.2); border: 1px solid var(--accent-gold); color: #ffd60a; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;" title="Copiar orçamento pronto para o WhatsApp">
+              📋 Copiar WhatsApp
+            </button>
+          </div>
+        </div>
+
+        <!-- CARD 3: SEU LUCRO LIMPO NO BOLSO -->
+        <div class="calc-result-card" style="padding: 1.4rem 1.6rem; background: linear-gradient(135deg, rgba(48, 209, 88, 0.2) 0%, rgba(18, 35, 24, 0.95) 100%); border: 2.5px solid #30d158; border-radius: 18px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <span class="stat-label" style="font-size: 1.15rem; color: #30d158; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; display: flex; align-items: center; gap: 8px;">
+              <span>🚀</span> LUCRO LIMPO NO BOLSO:
+            </span>
+            <span id="vua-margin-badge" style="background: rgba(48, 209, 88, 0.25); border: 1.5px solid #30d158; color: #30d158; font-size: 1.05rem; font-weight: 900; padding: 4px 12px; border-radius: 12px;">
+              +62.8%
+            </span>
+          </div>
+
+          <!-- NÚMERO GIGANTE LUCRO -->
+          <div id="vua-profit-total" style="font-family: var(--font-display); font-size: 3.6rem; font-weight: 900; color: #30d158; text-shadow: 0 0 25px rgba(48, 209, 88, 0.55), 0 2px 10px rgba(0,0,0,0.8); letter-spacing: -0.03em; line-height: 1.05; margin: 0.35rem 0;">
+            + R$ 10,67
+          </div>
+
+          <div style="border-top: 1px dashed rgba(255, 255, 255, 0.2); padding-top: 0.65rem; margin-top: 0.45rem; display: flex; flex-direction: column; gap: 4px;">
+            <div id="vua-profit-per-unit-subtext" style="font-size: 1.05rem; color: #ffffff; font-weight: 800;">
+              💰 R$ 10,67 de lucro livre em cada perfil
+            </div>
+            <div id="vua-profit-cashflow-subtext" style="font-size: 0.95rem; color: #a7f3d0; font-weight: 700;">
+              💵 Como seu saldo já cobre, entra R$ 17,00 bruto no bolso hoje!
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
 
   </main>
 
@@ -3245,7 +3490,8 @@
       const btnDownloadText = document.getElementById('btn-download-text');
       const workspaceSec = document.querySelector('.workspace');
       const secOrcamento = document.getElementById('sec-orcamento-cliente');
-      const secBuyvia = document.getElementById('sec-buyviafb');
+      const secBuyvia = document.getElementById('sec-buyviafb') || document.getElementById('sec-via-brasil');
+      const secVuavia = document.getElementById('sec-vuavia');
       const cnpjSec = document.getElementById('cnpj-generator-section');
 
       if (mode === 'cnpj') {
@@ -3271,6 +3517,7 @@
         if (workspaceSec) workspaceSec.style.display = 'none';
         if (secOrcamento) secOrcamento.style.display = 'none';
         if (secBuyvia) secBuyvia.style.display = 'none';
+        if (secVuavia) secVuavia.style.display = 'none';
         if (cnpjSec) cnpjSec.style.display = 'block';
 
         initCnpjGenerator();
@@ -3282,6 +3529,7 @@
       if (workspaceSec) workspaceSec.style.display = '';
       if (secOrcamento) secOrcamento.style.display = 'block';
       if (secBuyvia) secBuyvia.style.display = 'block';
+      if (secVuavia) secVuavia.style.display = 'block';
       if (btnCnpj) {
         btnCnpj.style.background = 'transparent';
         btnCnpj.style.borderColor = 'transparent';
@@ -7169,6 +7417,7 @@
       const viaBrlDisplay = document.getElementById('via-rate-brl-display');
       if (viaBrlDisplay) viaBrlDisplay.textContent = `R$ ${rateNum}`;
       if (typeof calculateViaBrasil === 'function') calculateViaBrasil();
+      if (typeof calculateVuavia === 'function') calculateVuavia();
     }
 
     // Função para buscar o dólar / USDT em tempo real (priorizando Binance USDT/BRL)
@@ -8495,6 +8744,605 @@
         });
     }
 
+    // ==========================================
+    // CALCULADORA UNIVERSAL VUAVIA (VND ₫ ⇄ USDT ⇄ PIX)
+    // ==========================================
+    function getVuaVndRate() {
+      try {
+        const saved = localStorage.getItem('vuavia_vnd_rate');
+        return saved ? parseFloat(saved) || 25400 : 25400;
+      } catch(e) {
+        return 25400;
+      }
+    }
+
+    function editVuaVndRate() {
+      const current = getVuaVndRate();
+      const val = prompt('Cotação do Đồng Vietnamita por 1 USDT:\n(Geralmente entre 25.000 e 25.500 no VuaVia)', current);
+      if (val !== null) {
+        const clean = parseFloat(String(val).replace(/\D/g, ''));
+        if (!isNaN(clean) && clean >= 10000 && clean <= 50000) {
+          localStorage.setItem('vuavia_vnd_rate', String(clean));
+          const disp = document.getElementById('vua-vnd-rate-display');
+          if (disp) disp.textContent = `${clean.toLocaleString('pt-BR')} ₫`;
+          calculateVuavia();
+          showToast(`Cotação VuaVia definida: 1 USDT = ${clean.toLocaleString('pt-BR')} ₫! 🇻🇳`);
+        } else {
+          showToast('Valor inválido. Mantida a cotação anterior.');
+        }
+      }
+    }
+
+    function parseVuaVnd(raw) {
+      if (raw === null || raw === undefined) return 30000;
+      let str = String(raw).trim().toLowerCase();
+      if (!str) return 30000;
+
+      // Suporte a "30k", "60k", "200k"
+      if (str.endsWith('k')) {
+        const num = parseFloat(str.slice(0, -1).replace(',', '.'));
+        return isNaN(num) ? 30000 : Math.round(num * 1000);
+      }
+
+      // Remove caracteres não numéricos exceto dígitos
+      const digits = str.replace(/\D/g, '');
+      let num = parseInt(digits, 10);
+      if (isNaN(num)) return 30000;
+
+      // Se o usuário digitou abreviado como "30" ou "60" significando 30 mil ou 60 mil
+      if (num > 0 && num <= 999) {
+        num = num * 1000;
+      }
+
+      return num;
+    }
+
+    function handleVuaPaste(e) {
+      setTimeout(() => {
+        const input = document.getElementById('vua-input-vnd');
+        if (input) {
+          const val = parseVuaVnd(input.value);
+          input.value = val.toLocaleString('pt-BR');
+          try { localStorage.setItem('vuavia_vnd', String(val)); } catch(err){}
+          calculateVuavia();
+          showToast(`🇻🇳 Carregado do VuaVia: ${val.toLocaleString('pt-BR')} ₫!`);
+          if (typeof playChime === 'function') playChime('success');
+        }
+      }, 20);
+    }
+
+    function handleVuaInputKeydown(e, input, liveFormatter) {
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (input.id === 'vua-input-qty') stepVuaQty(1);
+        else if (input.id === 'vua-input-vnd') stepVuaVnd(5000);
+        return;
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (input.id === 'vua-input-qty') stepVuaQty(-1);
+        else if (input.id === 'vua-input-vnd') stepVuaVnd(-5000);
+        return;
+      }
+      if (e.key === 'Backspace') {
+        const pos = input.selectionStart;
+        if (pos === input.selectionEnd && pos > 0) {
+          if (input.value[pos - 1] === '.') {
+            e.preventDefault();
+            const v = input.value;
+            input.value = v.slice(0, pos - 2) + v.slice(pos);
+            input.setSelectionRange(pos - 2, pos - 2);
+            if (liveFormatter) liveFormatter(input);
+          }
+        }
+      } else if (e.key === 'Enter') {
+        input.blur();
+      }
+    }
+
+    function formatVuaVndLive(input) {
+      formatVbrLiveMask(input, () => {
+        try {
+          const v = parseVuaVnd(input.value);
+          localStorage.setItem('vuavia_vnd', String(v));
+        } catch(e){}
+        calculateVuavia();
+      });
+    }
+
+    function formatVuaVndInput() {
+      const input = document.getElementById('vua-input-vnd');
+      if (input) {
+        const vnd = parseVuaVnd(input.value);
+        if (vnd > 0) {
+          input.value = vnd.toLocaleString('pt-BR');
+          try { localStorage.setItem('vuavia_vnd', String(vnd)); } catch(e){}
+        }
+      }
+    }
+
+    function stepVuaVnd(delta) {
+      const input = document.getElementById('vua-input-vnd');
+      if (input) {
+        let vnd = parseVuaVnd(input.value);
+        vnd = Math.max(1000, vnd + delta);
+        input.value = vnd.toLocaleString('pt-BR');
+        try { localStorage.setItem('vuavia_vnd', String(vnd)); } catch(e){}
+        calculateVuavia();
+      }
+    }
+
+    function setVuaVnd(amount) {
+      const input = document.getElementById('vua-input-vnd');
+      if (input) {
+        input.value = amount.toLocaleString('pt-BR');
+        try { localStorage.setItem('vuavia_vnd', String(amount)); } catch(e){}
+        calculateVuavia();
+        showToast(`🇻🇳 Carregado: ${amount.toLocaleString('pt-BR')} ₫!`);
+      }
+    }
+
+    // --- SALDO VUAVIA ---
+    function parseVuaBalance(raw) {
+      if (raw === null || raw === undefined) return 83660;
+      let str = String(raw).trim().toLowerCase();
+      if (!str) return 0;
+      if (str.endsWith('k')) {
+        const num = parseFloat(str.slice(0, -1).replace(',', '.'));
+        return isNaN(num) ? 0 : Math.round(num * 1000);
+      }
+      const digits = str.replace(/\D/g, '');
+      let num = parseInt(digits, 10);
+      return isNaN(num) ? 0 : num;
+    }
+
+    function getVuaBalance() {
+      const saved = localStorage.getItem('vuavia_balance');
+      if (saved !== null && saved !== '') {
+        return parseVuaBalance(saved);
+      }
+      const input = document.getElementById('vua-input-balance');
+      if (input && input.value !== '') {
+        return parseVuaBalance(input.value);
+      }
+      return 83660;
+    }
+
+    function setVuaBalance(val) {
+      const input = document.getElementById('vua-input-balance');
+      if (input) input.value = String(val);
+      try { localStorage.setItem('vuavia_balance', String(val)); } catch(e){}
+      calculateVuavia();
+      if (val === 0) {
+        showToast('Saldo VuaVia zerado para simulação!');
+      } else {
+        showToast(`Saldo VuaVia atualizado para ${val.toLocaleString('pt-BR')} ₫! 💳`);
+      }
+    }
+
+    function promptSetVuaBalance() {
+      const current = getVuaBalance();
+      const val = prompt('Digite seu saldo atual no VuaVia (ex: 83.660 ou 83660):', current.toLocaleString('pt-BR'));
+      if (val !== null) {
+        const parsed = parseVuaBalance(val);
+        setVuaBalance(parsed);
+      }
+    }
+
+    // --- QUANTIDADE E PREÇO DE VENDA VUAVIA ---
+    function parseVuaQty(raw) {
+      return parseVbrQty(raw);
+    }
+
+    function formatVuaQtyLive(input) {
+      formatVbrLiveMask(input, () => {
+        try {
+          const q = parseVuaQty(input.value);
+          localStorage.setItem('vuavia_qty', String(q));
+        } catch(e){}
+        calculateVuavia();
+      });
+    }
+
+    function formatVuaQtyInput() {
+      const input = document.getElementById('vua-input-qty');
+      if (input) {
+        const qty = parseVuaQty(input.value);
+        input.value = qty.toLocaleString('pt-BR');
+        try { localStorage.setItem('vuavia_qty', String(qty)); } catch(e){}
+        calculateVuavia();
+      }
+    }
+
+    function stepVuaQty(delta) {
+      const input = document.getElementById('vua-input-qty');
+      if (input) {
+        let qty = parseVuaQty(input.value);
+        qty = Math.max(1, qty + delta);
+        input.value = qty.toLocaleString('pt-BR');
+        try { localStorage.setItem('vuavia_qty', String(qty)); } catch(e){}
+        calculateVuavia();
+      }
+    }
+
+    function setVuaQty(qty) {
+      const input = document.getElementById('vua-input-qty');
+      if (input) {
+        const val = typeof qty === 'number' ? qty : parseVuaQty(qty);
+        input.value = val.toLocaleString('pt-BR');
+        try { localStorage.setItem('vuavia_qty', String(val)); } catch(e){}
+        calculateVuavia();
+      }
+    }
+
+    function syncVuaWithCleaned() {
+      const validCountStr = document.getElementById('stat-valid')?.textContent || '0';
+      const count = parseInt(validCountStr.replace(/\D/g, ''), 10) || 1;
+      setVuaQty(count > 0 ? count : 1);
+      showToast(`Carregadas ${count.toLocaleString('pt-BR')} contas válidas para o VuaVia! ⚡`);
+    }
+
+    // --- CÁLCULO GERAL VUAVIA ---
+    function calculateVuavia() {
+      const rate = (typeof getDirectSupplierRate === 'function' ? getDirectSupplierRate() : (typeof getDolarRate === 'function' ? getDolarRate() : 5.03)) || 5.03;
+      const vndPerUsdt = getVuaVndRate();
+
+      const rateDisplay = document.getElementById('vua-vnd-rate-display');
+      if (rateDisplay) rateDisplay.textContent = `${vndPerUsdt.toLocaleString('pt-BR')} ₫`;
+
+      const syncBadge = document.getElementById('vua-sync-count');
+      if (syncBadge) {
+        const count = typeof currentCleanedAccounts !== 'undefined' && currentCleanedAccounts ? currentCleanedAccounts.length : 0;
+        syncBadge.textContent = count.toLocaleString('pt-BR');
+      }
+
+      const vndInput = document.getElementById('vua-input-vnd');
+      const vndPerUnit = Math.max(1, parseVuaVnd(vndInput?.value));
+
+      const qtyInput = document.getElementById('vua-input-qty');
+      const qty = parseVuaQty(qtyInput?.value);
+
+      const sellPriceInput = document.getElementById('vua-sell-price');
+      const sellPriceStr = String(sellPriceInput?.value || '17').trim().replace('R$', '').trim().replace(',', '.');
+      const sellPrice = Math.max(0, parseFloat(sellPriceStr) || 17.00);
+      try {
+        if (sellPriceInput && sellPriceInput.value) {
+          localStorage.setItem('vuavia_sell_price', String(sellPriceInput.value));
+        }
+      } catch(e){}
+
+      // Conversões
+      const unitUsdt = vndPerUnit / vndPerUsdt;
+      const unitPixBrl = unitUsdt * rate;
+
+      const totalVnd = qty * vndPerUnit;
+      const totalDepositUsdt = unitUsdt * qty;
+      const totalDepositBrl = totalDepositUsdt * rate;
+      const suggestedPixDeposit = Math.ceil(totalDepositBrl + 5.0);
+
+      const totalRevenueBrl = qty * sellPrice;
+      const totalProfitBrl = totalRevenueBrl - totalDepositBrl;
+      const profitPerUnit = totalProfitBrl / qty;
+      const marginPct = totalRevenueBrl > 0 ? (totalProfitBrl / totalRevenueBrl) * 100 : 0;
+
+      // Saldo do usuário no VuaVia
+      const userBalance = getVuaBalance();
+      const balanceUsdt = userBalance / vndPerUsdt;
+      const balanceBrl = balanceUsdt * rate;
+
+      const balanceDisplay = document.getElementById('vua-balance-display');
+      if (balanceDisplay) balanceDisplay.textContent = `${userBalance.toLocaleString('pt-BR')} ₫`;
+
+      const balanceSubtext = document.getElementById('vua-balance-subtext');
+      if (balanceSubtext) {
+        balanceSubtext.textContent = `= $${formatVbrBRL(balanceUsdt)} USDT (~R$ ${formatVbrBRL(balanceBrl)})`;
+      }
+
+      const BINANCE_MIN_USDT = 5.0;
+      const BINANCE_FEE_USDT = 0.20;
+      const binanceMinPix = Math.max(26, Math.ceil((BINANCE_MIN_USDT + BINANCE_FEE_USDT) * rate));
+
+      const isFullyCovered = userBalance >= totalVnd;
+      const missingVnd = Math.max(0, totalVnd - userBalance);
+      const remainingBalanceVnd = Math.max(0, userBalance - totalVnd);
+      const remainingBalanceUsdt = remainingBalanceVnd / vndPerUsdt;
+      const remainingBalanceBrl = remainingBalanceUsdt * rate;
+
+      const missingUsdt = missingVnd / vndPerUsdt;
+      const missingPixBrl = missingUsdt * rate;
+      const isMissingBelowBinanceMin = missingUsdt > 0 && missingUsdt < BINANCE_MIN_USDT;
+
+      let suggestedMissingPix;
+      if (isMissingBelowBinanceMin) {
+        suggestedMissingPix = binanceMinPix;
+      } else if (missingPixBrl > 500) {
+        suggestedMissingPix = Math.ceil((missingPixBrl + 10) / 10) * 10;
+      } else if (missingPixBrl > 100) {
+        suggestedMissingPix = Math.ceil((missingPixBrl + 5) / 5) * 5;
+      } else {
+        suggestedMissingPix = Math.ceil(missingPixBrl + 4.0);
+      }
+
+      const vndAddedFromMinBinance = BINANCE_MIN_USDT * vndPerUsdt;
+      const surplusVndAfterMinDeposit = (userBalance + vndAddedFromMinBinance) - totalVnd;
+      const surplusUsdtAfterMinDeposit = surplusVndAfterMinDeposit / vndPerUsdt;
+      const surplusBrlAfterMinDeposit = surplusUsdtAfterMinDeposit * rate;
+
+      // Status Badge
+      const statusBadge = document.getElementById('vua-balance-status-badge');
+      const statusTitle = document.getElementById('vua-balance-status-title');
+      const statusDesc = document.getElementById('vua-balance-status-desc');
+
+      if (statusBadge && statusTitle && statusDesc) {
+        if (userBalance === 0) {
+          statusBadge.style.background = 'rgba(255, 69, 58, 0.2)';
+          statusBadge.style.borderColor = '#ff453a';
+          statusTitle.innerHTML = '<span>⚠️</span> Sem Saldo no Site';
+          statusTitle.style.color = '#ff453a';
+          if (totalDepositUsdt < BINANCE_MIN_USDT) {
+            statusDesc.textContent = `Deposite R$ ${formatVbrBRL(binanceMinPix)} no Pix (mínimo 5 USDT Binance)`;
+          } else {
+            statusDesc.textContent = `Deposite R$ ${formatVbrBRL(suggestedPixDeposit)} no Pix`;
+          }
+          statusDesc.style.color = 'rgba(255,255,255,0.8)';
+        } else if (isFullyCovered) {
+          statusBadge.style.background = 'rgba(48, 209, 88, 0.22)';
+          statusBadge.style.borderColor = '#30d158';
+          statusTitle.innerHTML = '<span>✅</span> Saldo Cobre 100%!';
+          statusTitle.style.color = '#30d158';
+          statusDesc.textContent = `Sobra ${remainingBalanceVnd.toLocaleString('pt-BR')} ₫ ($${formatVbrBRL(remainingBalanceUsdt)})`;
+          statusDesc.style.color = '#a7f3d0';
+        } else {
+          statusBadge.style.background = 'rgba(255, 214, 10, 0.2)';
+          statusBadge.style.borderColor = '#ffd60a';
+          statusTitle.innerHTML = `<span>⚠️</span> Faltam ${missingVnd.toLocaleString('pt-BR')} ₫ ($${formatVbrBRL(missingUsdt)} USDT)`;
+          statusTitle.style.color = '#ffd60a';
+          if (isMissingBelowBinanceMin) {
+            statusDesc.textContent = `Deposite R$ ${formatVbrBRL(binanceMinPix)} no Pix (mínimo 5 USDT Binance)`;
+          } else {
+            statusDesc.textContent = `Deposite R$ ${formatVbrBRL(suggestedMissingPix)} no Pix`;
+          }
+          statusDesc.style.color = '#ffffff';
+        }
+      }
+
+      // Textos auxiliares dos inputs
+      const unitCostSubtext = document.getElementById('vua-unit-cost-subtext');
+      if (unitCostSubtext) {
+        unitCostSubtext.innerHTML = `<span>= $${formatVbrBRL(unitUsdt)} USDT</span><span style="color: rgba(255,255,255,0.9);">R$ ${formatVbrBRL(unitPixBrl)} no Pix</span>`;
+      }
+
+      const qtySuffix = document.getElementById('vua-qty-suffix');
+      if (qtySuffix) qtySuffix.textContent = qty === 1 ? 'perfil' : 'perfis';
+
+      const qtyReadableLabel = document.getElementById('vua-qty-readable-label');
+      if (qtyReadableLabel) {
+        qtyReadableLabel.textContent = getQtyHumanReadable(qty);
+      }
+
+      const totalVndNeeded = document.getElementById('vua-total-vnd-needed');
+      if (totalVndNeeded) totalVndNeeded.textContent = `${totalVnd.toLocaleString('pt-BR')} ₫`;
+
+      const sellUnitSubtext = document.getElementById('vua-sell-unit-subtext');
+      if (sellUnitSubtext) sellUnitSubtext.textContent = `R$ ${formatVbrBRL(sellPrice)} / unidade`;
+
+      // CARD 1: PIX / BINANCE / STATUS DO SALDO
+      const cardDeposit = document.getElementById('vua-card-deposit');
+      const depositCardLabel = document.getElementById('vua-deposit-card-label');
+      const depositUsdtBadge = document.getElementById('vua-deposit-usdt-badge');
+      const depositBrlMain = document.getElementById('vua-deposit-brl-main');
+      const depositLine1 = document.getElementById('vua-deposit-line1');
+      const depositLine2 = document.getElementById('vua-deposit-line2');
+
+      if (userBalance === 0) {
+        if (totalDepositUsdt < BINANCE_MIN_USDT) {
+          if (cardDeposit) {
+            cardDeposit.style.borderColor = '#ffd60a';
+            cardDeposit.style.background = 'linear-gradient(135deg, rgba(255, 214, 10, 0.16) 0%, rgba(35, 28, 15, 0.96) 100%)';
+          }
+          if (depositCardLabel) {
+            depositCardLabel.innerHTML = '<span>⚠️</span> DEPOSITAR NO PIX (MÍNIMO BINANCE):';
+            depositCardLabel.style.color = '#ffd60a';
+          }
+          if (depositUsdtBadge) {
+            depositUsdtBadge.style.borderColor = '#ffd60a';
+            depositUsdtBadge.style.background = 'rgba(255, 214, 10, 0.25)';
+            depositUsdtBadge.style.color = '#ffd60a';
+            depositUsdtBadge.textContent = 'Mínimo Binance: 5.00 USDT';
+          }
+          if (depositBrlMain) {
+            depositBrlMain.style.color = '#ffd60a';
+            depositBrlMain.textContent = `R$ ${formatVbrBRL(binanceMinPix)}`;
+          }
+          const surplusZeroVnd = (BINANCE_MIN_USDT * vndPerUsdt) - totalVnd;
+          const surplusZeroUsdt = surplusZeroVnd / vndPerUsdt;
+          const surplusZeroBrl = surplusZeroUsdt * rate;
+          if (depositLine1) {
+            depositLine1.innerHTML = `⚠️ Pedido precisa de <b>${totalVnd.toLocaleString('pt-BR')} ₫ ($${formatVbrBRL(totalDepositUsdt)} USDT • R$ ${formatVbrBRL(totalDepositBrl)})</b>, mas a Binance exige saque mínimo de <b>5.00 USDT</b>.`;
+          }
+          if (depositLine2) {
+            depositLine2.innerHTML = `💡 Deposite <b style="color: #ffd60a;">R$ ${formatVbrBRL(binanceMinPix)} no Pix</b> ➔ Saca <b>5.00 USDT</b>. Compra o pedido e <b style="color: #30d158;">SOBRAM +${surplusZeroVnd.toLocaleString('pt-BR')} ₫ ($${formatVbrBRL(surplusZeroUsdt)} USDT • ~R$ ${formatVbrBRL(surplusZeroBrl)})</b> de saldo no site!`;
+          }
+        } else {
+          if (cardDeposit) {
+            cardDeposit.style.borderColor = '#fb923c';
+            cardDeposit.style.background = 'linear-gradient(135deg, rgba(249, 115, 22, 0.16) 0%, rgba(35, 18, 10, 0.95) 100%)';
+          }
+          if (depositCardLabel) {
+            depositCardLabel.innerHTML = '<span>🏦</span> DEPOSITAR NO PIX (BINANCE):';
+            depositCardLabel.style.color = '#fb923c';
+          }
+          if (depositUsdtBadge) {
+            depositUsdtBadge.style.borderColor = '#fb923c';
+            depositUsdtBadge.style.background = 'rgba(249, 115, 22, 0.25)';
+            depositUsdtBadge.style.color = '#ffffff';
+            depositUsdtBadge.textContent = `$${formatVbrBRL(totalDepositUsdt)} USDT`;
+          }
+          if (depositBrlMain) {
+            depositBrlMain.style.color = '#fb923c';
+            depositBrlMain.textContent = `R$ ${formatVbrBRL(suggestedPixDeposit)}`;
+          }
+          if (depositLine1) {
+            depositLine1.innerHTML = `💵 Custo exato: <span style="color: #fb923c;">$${formatVbrBRL(totalDepositUsdt)} USDT</span> (${totalVnd.toLocaleString('pt-BR')} ₫ • R$ ${formatVbrBRL(totalDepositBrl)})`;
+          }
+          if (depositLine2) {
+            depositLine2.innerHTML = `💡 Dica: Deposite <b style="color: #ffd60a;">R$ ${formatVbrBRL(suggestedPixDeposit)}</b> (+R$ 5 taxa de rede/Pix Binance)`;
+          }
+        }
+      } else if (isFullyCovered) {
+        if (cardDeposit) {
+          cardDeposit.style.borderColor = '#30d158';
+          cardDeposit.style.background = 'linear-gradient(135deg, rgba(48, 209, 88, 0.22) 0%, rgba(14, 30, 20, 0.96) 100%)';
+        }
+        if (depositCardLabel) {
+          depositCardLabel.innerHTML = '<span>🎉</span> A DEPOSITAR AGORA NO PIX:';
+          depositCardLabel.style.color = '#30d158';
+        }
+        if (depositUsdtBadge) {
+          depositUsdtBadge.style.borderColor = '#30d158';
+          depositUsdtBadge.style.background = 'rgba(48, 209, 88, 0.3)';
+          depositUsdtBadge.style.color = '#30d158';
+          depositUsdtBadge.textContent = '✅ 100% PAGO PELO SALDO';
+        }
+        if (depositBrlMain) {
+          depositBrlMain.style.color = '#30d158';
+          depositBrlMain.textContent = 'R$ 0,00';
+        }
+        if (depositLine1) {
+          depositLine1.innerHTML = `✅ <b style="color: #ffffff;">Seu saldo cobre tudo!</b> Usa <b style="color: #ffd60a;">${totalVnd.toLocaleString('pt-BR')} ₫</b> ($${formatVbrBRL(totalDepositUsdt)} USDT)`;
+        }
+        if (depositLine2) {
+          depositLine2.innerHTML = `💰 <b style="color: #30d158;">Saldo que SOBRA no VuaVia: ${remainingBalanceVnd.toLocaleString('pt-BR')} ₫</b> ($${formatVbrBRL(remainingBalanceUsdt)} USDT • ~R$ ${formatVbrBRL(remainingBalanceBrl)})`;
+        }
+      } else {
+        if (cardDeposit) {
+          cardDeposit.style.borderColor = '#ffd60a';
+          cardDeposit.style.background = 'linear-gradient(135deg, rgba(255, 214, 10, 0.16) 0%, rgba(35, 28, 15, 0.96) 100%)';
+        }
+        if (isMissingBelowBinanceMin) {
+          if (depositCardLabel) {
+            depositCardLabel.innerHTML = '<span>⚠️</span> DEPOSITAR NO PIX (MÍNIMO BINANCE):';
+            depositCardLabel.style.color = '#ffd60a';
+          }
+          if (depositUsdtBadge) {
+            depositUsdtBadge.style.borderColor = '#ffd60a';
+            depositUsdtBadge.style.background = 'rgba(255, 214, 10, 0.25)';
+            depositUsdtBadge.style.color = '#ffd60a';
+            depositUsdtBadge.textContent = 'Mínimo Binance: 5.00 USDT';
+          }
+          if (depositBrlMain) {
+            depositBrlMain.style.color = '#ffd60a';
+            depositBrlMain.textContent = `R$ ${formatVbrBRL(binanceMinPix)}`;
+          }
+          if (depositLine1) {
+            depositLine1.innerHTML = `⚠️ Faltam só <b style="color: #ffffff;">${missingVnd.toLocaleString('pt-BR')} ₫ ($${formatVbrBRL(missingUsdt)} USDT • R$ ${formatVbrBRL(missingPixBrl)})</b>, mas a Binance exige saque mínimo de <b style="color: #ffffff;">5.00 USDT</b>.`;
+          }
+          if (depositLine2) {
+            depositLine2.innerHTML = `💡 Deposite <b style="color: #ffd60a;">R$ ${formatVbrBRL(binanceMinPix)} no Pix</b> ➔ Saca <b>5.00 USDT</b>. Paga este pedido e <b style="color: #30d158;">SOBRAM +${surplusVndAfterMinDeposit.toLocaleString('pt-BR')} ₫ ($${formatVbrBRL(surplusUsdtAfterMinDeposit)} USDT • ~R$ ${formatVbrBRL(surplusBrlAfterMinDeposit)})</b> de saldo no site!`;
+          }
+        } else {
+          if (depositCardLabel) {
+            depositCardLabel.innerHTML = '<span>⚠️</span> DEPOSITAR NO PIX (COMPLETAR):';
+            depositCardLabel.style.color = '#ffd60a';
+          }
+          if (depositUsdtBadge) {
+            depositUsdtBadge.style.borderColor = '#ffd60a';
+            depositUsdtBadge.style.background = 'rgba(255, 214, 10, 0.25)';
+            depositUsdtBadge.style.color = '#ffd60a';
+            depositUsdtBadge.textContent = `Faltam $${formatVbrBRL(missingUsdt)} USDT`;
+          }
+          if (depositBrlMain) {
+            depositBrlMain.style.color = '#ffd60a';
+            depositBrlMain.textContent = `R$ ${formatVbrBRL(suggestedMissingPix)}`;
+          }
+          if (depositLine1) {
+            depositLine1.innerHTML = `⚠️ <b style="color: #ffffff;">Faltam ${missingVnd.toLocaleString('pt-BR')} ₫ ($${formatVbrBRL(missingUsdt)} USDT)</b> • Aproveita seus <b style="color: #30d158;">${userBalance.toLocaleString('pt-BR')} ₫</b>`;
+          }
+          if (depositLine2) {
+            depositLine2.innerHTML = `💡 <b>Valor Seguro Pix:</b> R$ ${formatVbrBRL(suggestedMissingPix)} (Custo seco: R$ ${formatVbrBRL(missingPixBrl)} + margem para taxa de saque Binance)`;
+          }
+        }
+      }
+
+      // CARD 2: CLIENTE PAGA
+      const badgeQty = document.getElementById('vua-badge-qty');
+      if (badgeQty) badgeQty.textContent = `${qty.toLocaleString('pt-BR')} ${qty === 1 ? 'perfil' : 'perfis'}`;
+
+      const clientTotalBrl = document.getElementById('vua-client-total-brl');
+      if (clientTotalBrl) clientTotalBrl.textContent = `R$ ${formatVbrBRL(totalRevenueBrl)}`;
+
+      const detailSubtext = document.getElementById('vua-detail-subtext');
+      if (detailSubtext) detailSubtext.textContent = `${qty.toLocaleString('pt-BR')} ${qty === 1 ? 'perfil' : 'perfis'} × R$ ${formatVbrBRL(sellPrice)} cada`;
+
+      // CARD 3: LUCRO LIMPO
+      const profitTotal = document.getElementById('vua-profit-total');
+      if (profitTotal) profitTotal.textContent = `${totalProfitBrl >= 0 ? '+ ' : ''}R$ ${formatVbrBRL(totalProfitBrl)}`;
+
+      const marginBadge = document.getElementById('vua-margin-badge');
+      if (marginBadge) marginBadge.textContent = `${marginPct >= 0 ? '+' : ''}${marginPct.toFixed(1)}%`;
+
+      const profitPerUnitSubtext = document.getElementById('vua-profit-per-unit-subtext');
+      if (profitPerUnitSubtext) profitPerUnitSubtext.textContent = `💰 R$ ${formatVbrBRL(profitPerUnit)} de lucro livre em cada perfil`;
+
+      const profitCashflowSubtext = document.getElementById('vua-profit-cashflow-subtext');
+      if (profitCashflowSubtext) {
+        if (userBalance > 0 && isFullyCovered) {
+          profitCashflowSubtext.innerHTML = `💵 <b style="color: #30d158;">Como já está pago no saldo, entra R$ ${formatVbrBRL(totalRevenueBrl)} limpo no bolso hoje!</b>`;
+        } else if (userBalance > 0 && !isFullyCovered) {
+          if (isMissingBelowBinanceMin) {
+            profitCashflowSubtext.innerHTML = `💵 <b style="color: #fed7aa;">Entra R$ ${formatVbrBRL(totalRevenueBrl)} do cliente! O pedido consome só R$ ${formatVbrBRL(missingPixBrl)} do Pix (o restante vira +${surplusVndAfterMinDeposit.toLocaleString('pt-BR')} ₫ de saldo livre no VuaVia).</b>`;
+          } else {
+            const cashInPocket = totalRevenueBrl - missingPixBrl;
+            profitCashflowSubtext.innerHTML = `💵 <b style="color: #fed7aa;">Entra R$ ${formatVbrBRL(totalRevenueBrl)} do cliente - R$ ${formatVbrBRL(missingPixBrl)} Pix = R$ ${formatVbrBRL(cashInPocket)} no bolso hoje!</b>`;
+          }
+        } else {
+          profitCashflowSubtext.innerHTML = `💵 Margem de retorno limpa de ${marginPct.toFixed(1)}% direto no seu bolso`;
+        }
+      }
+    }
+
+    function copyVuaQuote() {
+      const vndInput = document.getElementById('vua-input-vnd');
+      const vnd = parseVuaVnd(vndInput?.value);
+      const qtyInput = document.getElementById('vua-input-qty');
+      const qty = parseVuaQty(qtyInput?.value);
+      const sellPriceInput = document.getElementById('vua-sell-price');
+      const sellPriceStr = String(sellPriceInput?.value || '17').trim().replace('R$', '').trim().replace(',', '.');
+      const sellPrice = Math.max(0, parseFloat(sellPriceStr) || 17.00);
+      const total = qty * sellPrice;
+
+      const text = `📦 *ORÇAMENTO DE ATIVOS / PERFIS*
+➖➖➖➖➖➖➖➖➖➖
+🔹 *Item:* Perfil Verificado (${vnd.toLocaleString('pt-BR')} ₫)
+🔹 *Status:* Pronto para Anúncios / 2FA Ativo
+➖➖➖➖➖➖➖➖➖➖
+📦 *Quantidade:* ${qty.toLocaleString('pt-BR')} ${qty === 1 ? 'unidade' : 'unidades'}
+💵 *Valor unitário:* R$ ${formatVbrBRL(sellPrice)}
+💰 *VALOR TOTAL:* R$ ${formatVbrBRL(total)}
+➖➖➖➖➖➖➖➖➖➖
+🚀 *Entrega imediata após confirmação do Pix!*`;
+
+      navigator.clipboard.writeText(text)
+        .then(() => {
+          showToast('Orçamento copiado para o WhatsApp! 📋✓');
+          if (typeof playChime === 'function') playChime('success');
+        })
+        .catch(() => {
+          showToast('Erro ao copiar orçamento.');
+        });
+    }
+
+    window.stepVuaQty = stepVuaQty;
+    window.stepVuaVnd = stepVuaVnd;
+    window.setVuaVnd = setVuaVnd;
+    window.editVuaVndRate = editVuaVndRate;
+    window.promptSetVuaBalance = promptSetVuaBalance;
+    window.setVuaBalance = setVuaBalance;
+    window.syncVuaWithCleaned = syncVuaWithCleaned;
+    window.calculateVuavia = calculateVuavia;
+    window.copyVuaQuote = copyVuaQuote;
+    window.handleVuaPaste = handleVuaPaste;
+
     // --- SINCRONIZAÇÃO COM A API OFICIAL BUYVIAFB ---
     const DEFAULT_BUYVIAFB_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MjEyODkzMSwidXNlcm5hbWUiOiJpdG9vaCIsImNyZWF0ZWRfdGltZSI6bnVsbCwia2V5IjoiMTJkNjc5M2E4NWM1MzhjMGY1M2I3MThmMmExZmEwYzMiLCJkb21haW4iOiJidXl2aWFmYi5jb20iLCJtc2ciOiJjXHUwMGYzIGxcdTAwZTBtIHRoXHUwMGVjIG1cdTFlZGJpIGNcdTAwZjMgXHUwMTAzbiwga2hcdTAwZjRuZyBsXHUwMGUwbSBcdTAxMDNuIGNcdTFlZTl0LCBcdTAxMDNuIFx1MDExMVx1MWVhN3UgYnVcdTFlZDNpIG5oXHUwMGU5ID0pKSJ9.2xkCnkneO3rmr7mnBzohv9IkpG6d0sj5tDjnk1JM154';
 
@@ -8655,6 +9503,45 @@
     }
 
     calculateViaBrasil();
+
+    // Inicializa a Calculadora VuaVia (com persistência e padrões)
+    try {
+      const savedVuaBal = localStorage.getItem('vuavia_balance');
+      const vuaBalInput = document.getElementById('vua-input-balance');
+      if (vuaBalInput) {
+        vuaBalInput.value = savedVuaBal !== null ? parseVuaBalance(savedVuaBal) : 83660;
+      }
+
+      const savedVuaVnd = localStorage.getItem('vuavia_vnd');
+      const vuaVndInput = document.getElementById('vua-input-vnd');
+      if (vuaVndInput) {
+        const val = savedVuaVnd !== null ? parseVuaVnd(savedVuaVnd) : 30000;
+        vuaVndInput.value = val.toLocaleString('pt-BR');
+      }
+
+      const savedVuaQty = localStorage.getItem('vuavia_qty');
+      const vuaQtyInput = document.getElementById('vua-input-qty');
+      if (vuaQtyInput) {
+        const val = savedVuaQty !== null ? parseVuaQty(savedVuaQty) : 1;
+        vuaQtyInput.value = val.toLocaleString('pt-BR');
+      }
+
+      const savedVuaPrice = localStorage.getItem('vuavia_sell_price');
+      const vuaPriceInput = document.getElementById('vua-sell-price');
+      if (vuaPriceInput) {
+        vuaPriceInput.value = (savedVuaPrice !== null && !isNaN(parseFloat(savedVuaPrice))) ? parseFloat(savedVuaPrice) : '17';
+      }
+    } catch(e){}
+
+    const vuaQtyEl = document.getElementById('vua-input-qty');
+    if (vuaQtyEl) {
+      vuaQtyEl.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        stepVuaQty(e.deltaY < 0 ? 1 : -1);
+      }, { passive: false });
+    }
+
+    calculateVuavia();
 
     // Auto-sync contínuo em segundo plano para o BuyViaFB
     syncBuyViaFbApiBalance(true);
