@@ -7380,9 +7380,9 @@
     calculateVia902();
     if (typeof calculateViaBrasil === 'function') calculateViaBrasil();
     
-    // Auto-sync automático em segundo plano para o via902
+    // Auto-sync automático em segundo plano para o via902 a cada 5 segundos
     syncVia902ApiBalance(true);
-    setInterval(() => syncVia902ApiBalance(true), 30000);
+    setInterval(() => syncVia902ApiBalance(true), 5000);
 
     // Alias para compatibilidade
     function getDirectSupplierRate() {
@@ -9543,9 +9543,9 @@
 
     calculateVuavia();
 
-    // Auto-sync contínuo em segundo plano para o BuyViaFB
+    // Auto-sync contínuo em segundo plano para o BuyViaFB a cada 5 segundos
     syncBuyViaFbApiBalance(true);
-    setInterval(() => syncBuyViaFbApiBalance(true), 30000);
+    setInterval(() => syncBuyViaFbApiBalance(true), 5000);
 
     // --- INTEGRAÇÃO DIRETA COM MAXVIA88 (SALDO & PREÇOS) ---
     let currentMaxViaProducts = [];
@@ -9556,14 +9556,15 @@
 
       try {
         let data = null;
+        const syncParam = silent ? '' : '&sync=1';
         try {
-          const resLocal = await fetch('/maxvia_state.json?_=' + Date.now());
+          const resLocal = await fetch('/maxvia_state.json?_=' + Date.now() + syncParam);
           if (resLocal.ok) data = await resLocal.json();
         } catch(e) {}
 
         if (!data || typeof data.balance_usd !== 'number') {
           try {
-            const resCloud = await fetch('https://maxvia-monitor.onrender.com/maxvia_state.json?_=' + Date.now(), { mode: 'cors' });
+            const resCloud = await fetch('https://maxvia-monitor.onrender.com/maxvia_state.json?_=' + Date.now() + syncParam, { mode: 'cors' });
             if (resCloud.ok) data = await resCloud.json();
           } catch(e) {}
         }
@@ -9581,7 +9582,7 @@
           calculateFinance();
 
           if (!silent) {
-            showToast(`✅ Saldo MaxVia88 sincronizado: $${data.balance_usd.toFixed(2)} USD (${data.username})!`);
+            showToast(`⚡ Saldo MaxVia88 sincronizado em tempo real: $${data.balance_usd.toFixed(2)} USD (${data.username})!`);
             playChime('success');
           }
         }
@@ -10421,9 +10422,9 @@
     // Inicializa contador de lote e logs
     initLoteCounter();
 
-    // Sincroniza MaxVia silenciosamente na inicialização e a cada 30 segundos
+    // Sincroniza MaxVia silenciosamente na inicialização e a cada 5 segundos
     syncMaxViaLiveState(true);
-    setInterval(() => syncMaxViaLiveState(true), 30000);
+    setInterval(() => syncMaxViaLiveState(true), 5000);
 
     // Restaura o último modo ativo após recarregamento (F5 seguro)
     try {

@@ -636,6 +636,48 @@ def extract_maxvia_user_info(html: str) -> dict:
         return {}
 
 
+LAST_BALANCE_REFRESH_TIME = 0
+
+
+def refresh_maxvia_balance(force: bool = False) -> dict:
+    """Fast live balance refresh directly from MaxVia88 homepage (<1.5s)."""
+    global LAST_BALANCE_REFRESH_TIME, CURRENT_MAXVIA_USER_INFO, LATEST_WEB_STATE
+    now = time.time()
+    # Cache for 4s unless forced to avoid flooding MaxVia88 with rapid duplicate clicks
+    if not force and (now - LAST_BALANCE_REFRESH_TIME < 4) and CURRENT_MAXVIA_USER_INFO.get('balance_usd') is not None:
+        return CURRENT_MAXVIA_USER_INFO
+
+    try:
+        cookie_header = get_chrome_cookies()
+        html = fetch_page_html("https://maxvia88.com/", cookie_header)
+        if html:
+            u_info = extract_maxvia_user_info(html)
+            if u_info and u_info.get('balance_usd') is not None:
+                CURRENT_MAXVIA_USER_INFO.update(u_info)
+                LAST_BALANCE_REFRESH_TIME = now
+                if not isinstance(LATEST_WEB_STATE, dict):
+                    LATEST_WEB_STATE = {}
+                LATEST_WEB_STATE['balance_usd'] = u_info['balance_usd']
+                LATEST_WEB_STATE['balance_str'] = u_info.get('balance_str', f"${u_info['balance_usd']:.2f}")
+                if u_info.get('username'):
+                    LATEST_WEB_STATE['username'] = u_info['username']
+                LATEST_WEB_STATE['updated_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                # Save directly to disk for web server
+                web_state_path = os.path.join(WEB_DIR, "maxvia_state.json")
+                try:
+                    with open(web_state_path, "w", encoding="utf-8") as f:
+                        json.dump(LATEST_WEB_STATE, f, ensure_ascii=False, indent=2)
+                except Exception:
+                    pass
+
+                logging.info(f"[FAST SYNC] Saldo MaxVia88 sincronizado ao vivo: {u_info.get('balance_str')} ({u_info.get('username')})")
+    except Exception as e:
+        logging.warning(f"Erro no refresh_maxvia_balance: {e}")
+
+    return CURRENT_MAXVIA_USER_INFO
+
+
 def fetch_all_products() -> dict:
     """Fetch all products across main page and all dynamically discovered categories."""
     global CURRENT_MAXVIA_USER_INFO
@@ -1656,6 +1698,12 @@ def run_cycle(is_startup: bool = False):
         logging.warning(f"Erro ao verificar lembrete de fatura do servidor: {e}")
 
     logging.info("Iniciando verificação de estoque MaxVia88...")
+    # 0. Atualiza o saldo MaxVia88 imediatamente no início do ciclo
+    try:
+        refresh_maxvia_balance(force=True)
+    except Exception as e:
+        logging.debug(f"Erro no fast balance sync no início do ciclo: {e}")
+
     all_products = fetch_all_products()
 
     # Also fetch external stores (TheFBStores.com via Base44 API)
@@ -1747,7 +1795,16 @@ class WebAndHealthHandler(SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        if self.path.startswith('/maxvia_state.json') or self.path.startswith('/api/state'):
+        parsed = urllib.parse.urlparse(self.path)
+        req_path = parsed.path
+        query = urllib.parse.parse_qs(parsed.query)
+
+        if req_path.startswith('/maxvia_state.json') or req_path.startswith('/api/state') or req_path.startswith('/api/sync_maxvia'):
+            force_sync = ('sync' in query or 'refresh' in query or req_path.startswith('/api/sync_maxvia'))
+            # Se for force_sync ou o saldo não tiver sido checado há mais de 4s, faz a consulta ao vivo imediata (<1.5s)
+            if force_sync or (time.time() - LAST_BALANCE_REFRESH_TIME > 4):
+                refresh_maxvia_balance(force=force_sync)
+
             self.send_response(200)
             self.send_header('Content-type', 'application/json; charset=utf-8')
             self.send_header('Access-Control-Allow-Origin', '*')
