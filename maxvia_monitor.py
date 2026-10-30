@@ -226,7 +226,7 @@ def send_telegram_message(bot_token: str, chat_id: str, message: str) -> bool:
 
 
 def fetch_page_html(url: str, cookie_header: str) -> str:
-    """Fetch HTML content from specified URL."""
+    """Fetch HTML content from specified URL with retry."""
     headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -236,18 +236,21 @@ def fetch_page_html(url: str, cookie_header: str) -> str:
         headers['Cookie'] = cookie_header
 
     req = urllib.request.Request(url, headers=headers)
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            return resp.read().decode('utf-8', errors='ignore')
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            logging.debug(f"Page 404 (Not found): {url}")
-        else:
-            logging.warning(f"HTTP {e.code} for {url}")
-        return ""
-    except Exception as e:
-        logging.error(f"Failed to fetch {url}: {e}")
-        return ""
+    for attempt in range(2):
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                return resp.read().decode('utf-8', errors='ignore')
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                logging.debug(f"Page 404 (Not found): {url}")
+                return ""
+            else:
+                logging.warning(f"HTTP {e.code} for {url} (tentativa {attempt+1})")
+        except Exception as e:
+            logging.error(f"Failed to fetch {url} (tentativa {attempt+1}): {e}")
+        if attempt == 0:
+            time.sleep(1)
+    return ""
 
 
 def normalize_title(title: str) -> str:
@@ -815,20 +818,26 @@ def _parse_buyviafb_html(html: str, page_url: str, products: dict):
 
 
 def fetch_buyviafb_products() -> dict:
-    """Fetch products from BuyViaFB.com (homepage and category 186 VIA BRAZIL)."""
+    """Fetch products from BuyViaFB.com (homepage, category 186 VIA BRAZIL, and category 176 2FA)."""
     urls_to_scrape = [
         "https://buyviafb.com/",
-        "https://buyviafb.com/category/186"
+        "https://buyviafb.com/category/186",
+        "https://buyviafb.com/category/176"
     ]
     products = {}
     for url in urls_to_scrape:
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'})
-        try:
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                html = resp.read().decode('utf-8', errors='ignore')
-                _parse_buyviafb_html(html, url, products)
-        except Exception as e:
-            logging.error(f"Erro ao buscar produtos BuyViaFB ({url}): {e}")
+        for attempt in range(2):
+            try:
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    html = resp.read().decode('utf-8', errors='ignore')
+                    _parse_buyviafb_html(html, url, products)
+                    break
+            except Exception as e:
+                if attempt == 0:
+                    time.sleep(1)
+                else:
+                    logging.error(f"Erro ao buscar produtos BuyViaFB ({url}, tentativa 2): {e}")
 
     logging.info(f"[BuyViaFB] Coletados {len(products)} produtos com sucesso.")
     return products
@@ -1098,8 +1107,14 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
             if new_stock < old_stock:
                 # Caso BuyViaFB: Alerta compras apenas se o estoque estiver abaixo de 5.000 (ou se esgotar), ou em lotes configurados (ex: 10 em 10)
                 if is_buyviafb:
-                    # 1. Se o produto esgotou (bateu 0), notifica IMEDIATAMENTE
+                    # 1. Se o produto esgotou (bateu 0), notifica
                     if new_stock == 0:
+                        if old_stock > 30 and not old_item.get('zero_confirmed'):
+                            item['zero_confirmed'] = True
+                            item['last_notified_stock'] = baseline_stock
+                            logging.info(f"[BUYVIAFB ANTI-GLITCH] Estoque de '{clean_display_title}' caiu de {old_stock} para 0 abruptamente. Aguardando 1 ciclo de confirmação para evitar falso alarme.")
+                            continue
+
                         diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
                         item['last_notified_stock'] = 0
                         changes.append(
@@ -1189,6 +1204,12 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     drop_step_alert = rule.get("drop_step_alert") or 5  # Notifica a cada 5 compras ou se zerar
 
                     if new_stock == 0:
+                        if old_stock > 30 and not old_item.get('zero_confirmed'):
+                            item['zero_confirmed'] = True
+                            item['last_notified_stock'] = baseline_stock
+                            logging.info(f"[MAXVIA88 ANTI-GLITCH] Estoque de Brasil '{clean_display_title}' caiu de {old_stock} para 0 abruptamente. Aguardando 1 ciclo de confirmação para evitar falso alarme.")
+                            continue
+
                         diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
                         item['last_notified_stock'] = 0
                         changes.append(
@@ -1224,6 +1245,12 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
 
                     # Se esgotar completamente, sempre avisa com urgência máxima!
                     if new_stock == 0:
+                        if old_stock > 30 and not old_item.get('zero_confirmed'):
+                            item['zero_confirmed'] = True
+                            item['last_notified_stock'] = baseline_stock
+                            logging.info(f"[MAXVIA88 ANTI-GLITCH] Estoque de '{name}' caiu de {old_stock} para 0 abruptamente. Aguardando 1 ciclo de confirmação para evitar falso alarme.")
+                            continue
+
                         diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
                         item['last_notified_stock'] = 0
                         changes.append(
@@ -1456,6 +1483,13 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                 for it in new_state.values()
             )
             if not found and old_item.get('stock', 0) > 0:
+                missing_cycles = old_item.get('missing_cycles', 0) + 1
+                if missing_cycles < 2:
+                    logging.info(f"[ANTI-GLITCH] Item '{old_item.get('title')}' não veio na resposta desta rodada. Mantendo em cache e aguardando confirmação no próximo ciclo para evitar falso alarme.")
+                    old_item['missing_cycles'] = missing_cycles
+                    new_state[old_id] = old_item
+                    continue
+
                 clean_title = (old_item.get('raw_title') or old_item.get('title', '')).replace('⭐', '').replace('✅', '').strip()
                 old_st = old_item.get('stock', 0)
                 changes.append(
@@ -1623,6 +1657,24 @@ def run_cycle(is_startup: bool = False):
     old_state = load_state()
     is_first_run = (len(old_state) == 0) or is_startup
 
+    # Anti-Glitch: Preserva produtos com estoque que sumiram temporariamente nesta varredura (ex: oscilação de rede/timeout)
+    if not is_first_run:
+        for old_id, old_item in old_state.items():
+            if old_id not in all_products and old_item.get('stock', 0) > 0:
+                old_site = old_item.get('site', 'maxvia88')
+                old_title_clean = normalize_title(old_item.get('title', '')).lower()
+                already_in_new = any(
+                    normalize_title(it.get('title', '')).lower() == old_title_clean and it.get('site', 'maxvia88') == old_site
+                    for it in all_products.values()
+                )
+                if not already_in_new:
+                    missing_cycles = old_item.get('missing_cycles', 0) + 1
+                    if missing_cycles < 2:
+                        logging.info(f"[ANTI-GLITCH] '{old_item.get('title')}' não veio nesta varredura (possível oscilação de rede). Mantendo estoque {old_item.get('stock')} por 1 ciclo de confirmação.")
+                        preserved_item = dict(old_item)
+                        preserved_item['missing_cycles'] = missing_cycles
+                        all_products[old_id] = preserved_item
+
     # Ensure baseline last_notified_stock is carried over from old_state for all products
     old_by_title = {
         (normalize_title(v.get('title', '')).lower(), v.get('site', 'maxvia88')): v
@@ -1630,6 +1682,8 @@ def run_cycle(is_startup: bool = False):
     }
 
     for p_id, item in all_products.items():
+        if 'missing_cycles' not in item:
+            item['missing_cycles'] = 0
         title_key = (normalize_title(item.get('title', '')).lower(), item.get('site', 'maxvia88'))
         matching_old = old_state.get(p_id) or old_by_title.get(title_key)
         if matching_old and 'last_notified_stock' in matching_old:
