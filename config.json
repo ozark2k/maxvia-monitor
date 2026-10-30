@@ -17,7 +17,8 @@
     "(HOT) ACC OLD 1000x SOAK 9 MONTHS FULL 2FA 1 HOTMAIL TRUST 30 FRIEND",
     "Via Ramdom New (2FA)",
     "Via Ramdom (2FA)",
-    "Acc Farm 6 Month+ (2FA)"
+    "Acc Farm 6 Month+ (2FA)",
+    "BM3 Verified US (Created 3 ads account)"
   ],
   "product_rules": {
     "Acc Farmed 902": {
@@ -87,6 +88,11 @@
       "notify_restock": true,
       "notify_drop": true,
       "drop_step_alert": 1,
+      "is_highlight": true
+    },
+    "BM3 Verified US": {
+      "notify_restock": true,
+      "notify_drop": false,
       "is_highlight": true
     }
   },

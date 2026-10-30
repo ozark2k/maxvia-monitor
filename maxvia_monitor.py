@@ -972,9 +972,12 @@ def should_notify_product(item_or_title, target_keywords: list = None, site: str
     if get_cat219_info(item):
         return True
 
-    # Caso 4: BMs (Verificadas ou normais) desativadas a pedido do usuário
+    # Caso 4: BM3 Verificada US solicitada pelo usuário (alerta de reposição)
     is_bm = "bm" in title_clean or "business manager" in title_clean
     if is_bm:
+        is_bm3_us = ("bm3" in title_clean or ("bm" in title_clean and "3" in title_clean)) and any(term in title_clean for term in ["verified", "verificada", "verificado", "verif"]) and bool(re.search(r'\b(us|usa|eua)\b', title_clean))
+        if is_bm3_us:
+            return True
         return False
 
     return False
@@ -1414,12 +1417,23 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                         f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (+{diff})"
                     )
                 elif is_bm:
-                    changes.append(
-                        f"💼🎉 <b>[MAXVIA88 - BM VERIFICADA REABASTECIDA!] (+{diff})</b>\n"
-                        f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
-                        f"💵 <b>Preço:</b> {item['price']}\n"
-                        f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b>"
-                    )
+                    p_url = item.get('url') or 'https://maxvia88.com/categories/118'
+                    if old_stock == 0:
+                        changes.append(
+                            f"💼🚨 <b>[MAXVIA88 - BM VERIFICADA EM ESTOQUE!]</b> 🚨💼\n"
+                            f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
+                            f"💵 <b>Preço:</b> {item['price']}\n"
+                            f"📈 <b>Estoque:</b> 0 ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})\n"
+                            f"🔗 <b>Comprar agora:</b> {p_url}"
+                        )
+                    else:
+                        changes.append(
+                            f"💼🎉 <b>[MAXVIA88 - BM VERIFICADA REABASTECIDA!] (+{diff})</b>\n"
+                            f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
+                            f"💵 <b>Preço:</b> {item['price']}\n"
+                            f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})\n"
+                            f"🔗 <b>Comprar agora:</b> {p_url}"
+                        )
                 elif old_stock == 0:
                     changes.append(
                         f"🎉 <b>{tag_header} REPOSIÇÃO DE ESTOQUE (+{diff})!</b>\n"
@@ -1459,11 +1473,13 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                         f"🔗 <b>Comprar agora:</b> {p_url}"
                     )
                 elif is_bm:
+                    p_url = item.get('url') or 'https://maxvia88.com/categories/118'
                     changes.append(
-                        f"💼🎉 <b>[MAXVIA88 - BM VERIFICADA DISPONÍVEL!]</b>\n"
+                        f"💼🚨 <b>[MAXVIA88 - BM VERIFICADA EM ESTOQUE!]</b> 🚨💼\n"
                         f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
                         f"💵 <b>Preço:</b> {item['price']}\n"
-                        f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades</b>"
+                        f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades!</b>\n"
+                        f"🔗 <b>Comprar agora:</b> {p_url}"
                     )
                 else:
                     changes.append(
