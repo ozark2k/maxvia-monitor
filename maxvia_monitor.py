@@ -963,10 +963,10 @@ def should_notify_product(item_or_title, target_keywords: list = None, site: str
     if get_cat219_info(item):
         return True
 
-    # Caso 4: BM Verificada exclusivamente da MaxVia88
+    # Caso 4: BMs (Verificadas ou normais) desativadas a pedido do usuário
     is_bm = "bm" in title_clean or "business manager" in title_clean
     if is_bm:
-        return any(term in title_clean for term in ["verified", "verificada", "verificado", "verif"])
+        return False
 
     return False
 
