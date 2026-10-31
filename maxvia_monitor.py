@@ -1333,16 +1333,17 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                             )
                         continue
 
-                    # Acc Farm 6 Month+ (2FA) (V1 e V2): Avisar em lotes de compras (ex: 200 em 200)
+                    # Acc Farm 6 Month+ (2FA) (V1 e V2): Avisar em lotes de compras (ex: 200 em 200 para V2, 100 em 100 para V1)
                     if cat219['key'] in ['farm6m', 'farm6m_v2']:
-                        drop_step = rule.get("drop_step_alert") or 200
+                        default_step = 200 if cat219['key'] == 'farm6m_v2' else 100
+                        drop_step = rule.get("drop_step_alert") or default_step
                         accumulated_drop = baseline_stock - new_stock
                         if accumulated_drop < drop_step:
                             logging.info(f"[MAXVIA88] Queda parcial de estoque para '{name}': {baseline_stock} -> {new_stock} (-{accumulated_drop}). Aguardando lote de {drop_step} para notificar.")
                             item['last_notified_stock'] = baseline_stock
                             continue
 
-                        # Atingiu o lote de 200 (ou mais) compras acumuladas!
+                        # Atingiu o lote de compras acumuladas (ex: 100 ou 200)!
                         diff = accumulated_drop
                         from_stock = baseline_stock
                         item['last_notified_stock'] = new_stock

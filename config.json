@@ -72,7 +72,7 @@
     "Acc Farm 6 Month+ (2FA)": {
       "notify_restock": true,
       "notify_drop": true,
-      "drop_step_alert": 60,
+      "drop_step_alert": 100,
       "is_highlight": true
     },
     "Acc Farmed 2025": {
