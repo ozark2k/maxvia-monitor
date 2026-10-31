@@ -22,7 +22,10 @@
     "BM3 Verified US (Created 3 ads account)",
     "BM3 Verified Created 3 ads account (2 Active)",
     "BM3 Verified New (Created 3 ads account)",
-    "BM3 Verified (Created 3 ads account)"
+    "BM3 Verified (Created 3 ads account)",
+    "Via Brazil New (No2FA)",
+    "Via Brazil (No2FA)",
+    "Via Brazil Old (No2FA)"
   ],
   "product_rules": {
     "Acc Farmed 902": {
@@ -128,6 +131,26 @@
       "notify_restock": true,
       "notify_drop": true,
       "drop_step_alert": 10,
+      "is_highlight": true
+    },
+    "Via Brazil New (No2FA)": {
+      "notify_restock": true,
+      "notify_drop": false,
+      "is_highlight": true
+    },
+    "Via Brazil (No2FA)": {
+      "notify_restock": true,
+      "notify_drop": false,
+      "is_highlight": true
+    },
+    "Via Brazil Old (No2FA)": {
+      "notify_restock": true,
+      "notify_drop": false,
+      "is_highlight": true
+    },
+    "Via Brazil": {
+      "notify_restock": true,
+      "notify_drop": false,
       "is_highlight": true
     }
   },

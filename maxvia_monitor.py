@@ -360,8 +360,35 @@ def is_primary_084_profile(item: dict) -> bool:
 
 def is_brazil_profile(item: dict) -> bool:
     """
-    Perfis do Brasil desativados a pedido do usuário.
+    Retorna True para os 2 perfis do Brasil da MaxVia88 (Categoria 220):
+    1. Via Brazil New (No2FA) - $4.01
+    2. Via Brazil Old (No2FA) - $6.27
     """
+    if not item or not isinstance(item, dict):
+        return False
+    if item.get('site', 'maxvia88') != 'maxvia88':
+        return False
+
+    title = str(item.get('title', '')).lower()
+    raw_title = str(item.get('raw_title', '')).lower()
+    full_text = f"{title} {raw_title}"
+
+    # Ignorar TikTok e Clone
+    if "tiktok" in full_text or "clone" in full_text:
+        return False
+
+    # Deve ser perfil Via Brazil / Brasil
+    if not any(term in full_text for term in ["via brazil", "via brasil", "brazil", "brasil"]):
+        return False
+
+    # 1. Via Brazil New (No2FA)
+    if "new" in full_text or "(no2fa)" in full_text:
+        return True
+
+    # 2. Via Brazil Old (No2FA)
+    if "old" in full_text:
+        return True
+
     return False
 
 
@@ -1326,8 +1353,12 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                         )
                     continue
 
-                # Caso 2: Perfis do Brasil (NOVA REGRA: Compras SOMENTE do Brasil!)
+                # Caso 2: Perfis do Brasil
                 if is_brazil_profile(item):
+                    if not rule.get("notify_drop", False):
+                        item['last_notified_stock'] = new_stock
+                        continue
+
                     drop_step_alert = rule.get("drop_step_alert") or 5  # Notifica a cada 5 compras ou se zerar
 
                     if new_stock == 0:
@@ -1524,19 +1555,22 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                         )
                     continue
                 elif is_brazil_profile(item):
+                    p_url = item.get('url') or 'https://maxvia88.com/categories/220'
                     if old_stock == 0:
                         changes.append(
                             f"🎉🚨 <b>[MAXVIA88] REPOSIÇÃO DO BRASIL NO AR! (+{diff})</b> 🚨🎉\n"
                             f"📦 <b>Produto:</b> 🇧🇷 <b>{clean_display_title}</b> 🇧🇷\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📈 <b>Estoque:</b> 0 ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})"
+                            f"📈 <b>Estoque:</b> 0 ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})\n"
+                            f"🔗 <b>Comprar agora:</b> {p_url}"
                         )
                     else:
                         changes.append(
                             f"🟢🇧🇷 <b>[MAXVIA88] REABASTECIMENTO DO BRASIL! (+{diff})</b> 🇧🇷🟢\n"
                             f"📦 <b>Produto:</b> 🇧🇷 <b>{clean_display_title}</b> 🇧🇷\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (+{diff})"
+                            f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades</b> (+{diff})\n"
+                            f"🔗 <b>Comprar agora:</b> {p_url}"
                         )
                 elif is_budget_farmed_profile(item):
                     changes.append(
@@ -1625,6 +1659,15 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     changes.append(
                         f"💼🚨 <b>[MAXVIA88 - BM VERIFICADA EM ESTOQUE!]</b> 🚨💼\n"
                         f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
+                        f"💵 <b>Preço:</b> {item['price']}\n"
+                        f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades!</b>\n"
+                        f"🔗 <b>Comprar agora:</b> {p_url}"
+                    )
+                elif is_brazil_profile(item):
+                    p_url = item.get('url') or 'https://maxvia88.com/categories/220'
+                    changes.append(
+                        f"🎉🚨 <b>[MAXVIA88] PERFIL DO BRASIL EM ESTOQUE!</b> 🚨🎉\n"
+                        f"📦 <b>Produto:</b> 🇧🇷 <b>{clean_display_title}</b> 🇧🇷\n"
                         f"💵 <b>Preço:</b> {item['price']}\n"
                         f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades!</b>\n"
                         f"🔗 <b>Comprar agora:</b> {p_url}"
