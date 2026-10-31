@@ -976,6 +976,55 @@ def export_maxvia_web_state(all_products: dict):
         logging.error(f"Failed to export MaxVia web state: {e}")
 
 
+def is_target_bm(item_or_dict) -> bool:
+    """
+    Identifica as 3 BMs Verificadas solicitadas pelo usuário na Categoria 118 da MaxVia88:
+    1. BM3 Verified Created 3 ads account (2 Active) - $5.01 (de $5.27)
+    2. BM3 Verified US (Created 3 ads account) - $6.68 (de $7.03)
+    3. BM3 Verified New (Created 3 ads account) - $10.78 (de $11.34)
+    """
+    if not item_or_dict:
+        return False
+    if isinstance(item_or_dict, dict):
+        if item_or_dict.get('site', 'maxvia88') != 'maxvia88':
+            return False
+        title = str(item_or_dict.get('title', ''))
+        raw_title = str(item_or_dict.get('raw_title', ''))
+        price = str(item_or_dict.get('price', ''))
+    else:
+        title = str(item_or_dict)
+        raw_title = str(item_or_dict)
+        price = ''
+
+    full_text = f"{title} {raw_title}".lower()
+
+    is_bm = "bm" in full_text or "business manager" in full_text
+    is_bm3 = "bm3" in full_text or ("bm" in full_text and "3" in full_text)
+    is_verif = any(x in full_text for x in ["verified", "verificada", "verificado", "verif"])
+
+    if not (is_bm and is_bm3 and is_verif):
+        return False
+
+    # 1. BM3 Verified Created 3 ads account (2 Active)
+    if "2 active" in full_text:
+        return True
+
+    # 2. BM3 Verified US (Created 3 ads account)
+    if re.search(r'\b(us|usa|eua)\b', full_text):
+        return True
+
+    # 3. BM3 Verified New (Created 3 ads account)
+    if "new" in full_text and "3 ads" in full_text:
+        return True
+    if "3 ads" in full_text and any(p in price for p in ["10.78", "11.34"]):
+        return True
+    if "created 3 ads account" in full_text and not any(x in full_text for x in ["us", "usa", "eua", "2 active", "4 ads", "2 slot"]):
+        if "new" in raw_title.lower() or parse_price_val(price) <= 15.0:
+            return True
+
+    return False
+
+
 def should_notify_product(item_or_title, target_keywords: list = None, site: str = "maxvia88") -> bool:
     """
     Filtra rigorosamente os produtos monitorados:
@@ -1016,25 +1065,31 @@ def should_notify_product(item_or_title, target_keywords: list = None, site: str
     if get_cat219_info(item):
         return True
 
-    # Caso 4: BM3 Verificada US solicitada pelo usuário (alerta de reposição)
-    is_bm = "bm" in title_clean or "business manager" in title_clean
-    if is_bm:
-        is_bm3_us = ("bm3" in title_clean or ("bm" in title_clean and "3" in title_clean)) and any(term in title_clean for term in ["verified", "verificada", "verificado", "verif"]) and bool(re.search(r'\b(us|usa|eua)\b', title_clean))
-        if is_bm3_us:
-            return True
-        return False
+    # Caso 4: 3 BMs Verificadas solicitadas pelo usuário (alerta de reposição e compras de 10 em 10)
+    if is_target_bm(item):
+        return True
 
     return False
 
 
-def get_rule_for_product(item_title: str, product_rules: dict) -> dict:
-    """Retrieve custom monitoring rule for a product title if configured."""
+def get_rule_for_product(item_or_title, product_rules: dict) -> dict:
+    """Retrieve custom monitoring rule for a product title or item dict if configured."""
     if not product_rules:
         return {}
-    title_clean = normalize_title(item_title).lower()
+    if isinstance(item_or_title, dict):
+        title = item_or_title.get('title', '')
+        raw_title = item_or_title.get('raw_title', '')
+    else:
+        title = str(item_or_title)
+        raw_title = str(item_or_title)
+
+    title_clean = normalize_title(title).lower()
+    raw_clean = normalize_title(raw_title).lower()
+    full_clean = f"{title_clean} {raw_clean}"
+
     for kw, rule in sorted(product_rules.items(), key=lambda x: len(x[0]), reverse=True):
         kw_clean = normalize_title(kw).lower()
-        if kw_clean and kw_clean in title_clean:
+        if kw_clean and (kw_clean in title_clean or kw_clean in raw_clean or kw_clean in full_clean):
             return rule
     return {}
 
@@ -1060,13 +1115,13 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
         site_source = item.get('site', 'maxvia88')
         old_item = old_state.get(p_id) or old_by_title.get((title_clean, site_source))
 
-        rule = get_rule_for_product(item['title'], product_rules)
+        rule = get_rule_for_product(item, product_rules)
         threshold = rule.get("min_stock_alert_threshold")
         notify_restock = rule.get("notify_restock", True)
         drop_step_alert = rule.get("drop_step_alert")
 
         is_highlight = rule.get("is_highlight", False)
-        is_bm = "bm" in title_clean or "business manager" in title_clean
+        is_bm = is_target_bm(item) or ("bm" in title_clean or "business manager" in title_clean)
 
         url = item.get('url', '')
         is_new_supplier = (site_source == 'thefbstores')
@@ -1226,23 +1281,48 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                         logging.info(f"[BUYVIAFB] Compra em '{clean_display_title}' ({old_stock} -> {new_stock}, -{diff}) ignorada (estoque > 5.000).")
                     continue
 
-                # Caso 1: BMs verificadas (alertar a cada compra e quando zerar)
+                # Caso 1: BMs verificadas (alertar em lotes de 10 em 10 ou quando zerar)
                 if is_bm:
-                    diff = old_stock - new_stock
-                    item['last_notified_stock'] = new_stock
+                    if not rule.get("notify_drop", True):
+                        item['last_notified_stock'] = new_stock
+                        continue
+
+                    drop_step = rule.get("drop_step_alert") or 10
+
                     if new_stock == 0:
+                        if old_stock > 30 and not old_item.get('zero_confirmed'):
+                            item['zero_confirmed'] = True
+                            item['last_notified_stock'] = baseline_stock
+                            logging.info(f"[MAXVIA88 ANTI-GLITCH] Estoque de BM '{clean_display_title}' caiu de {old_stock} para 0 abruptamente. Aguardando 1 ciclo de confirmação para evitar falso alarme.")
+                            continue
+
+                        diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
+                        item['last_notified_stock'] = 0
                         changes.append(
                             f"💼🔴 <b>[MAXVIA88 - BM VERIFICADA ESGOTOU!]</b>\n"
                             f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>0 unidades</b> (-{diff})"
+                            f"📉 <b>Estoque:</b> {baseline_stock} ➔ <b>0 unidades</b> (-{diff})"
                         )
                     else:
+                        accumulated_drop = baseline_stock - new_stock
+                        if accumulated_drop < drop_step:
+                            logging.info(f"[MAXVIA88] Queda parcial de estoque para BM '{clean_display_title}': {baseline_stock} -> {new_stock} (-{accumulated_drop}). Aguardando lote de {drop_step} para notificar.")
+                            item['last_notified_stock'] = baseline_stock
+                            continue
+
+                        # Atingiu o lote de compras configurado (10 em 10)
+                        diff = accumulated_drop
+                        from_stock = baseline_stock
+                        item['last_notified_stock'] = new_stock
+                        from_stock_str = f"{from_stock:,}".replace(',', '.')
+                        new_stock_str = f"{new_stock:,}".replace(',', '.')
+                        diff_str = f"{diff:,}".replace(',', '.')
                         changes.append(
-                            f"💼🛒 <b>[MAXVIA88 - BM VERIFICADA COMPRADA!] (-{diff})</b>\n"
+                            f"💼🛒 <b>[MAXVIA88 - BM VERIFICADA COMPRADA!] (-{diff_str})</b>\n"
                             f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
                             f"💵 <b>Preço:</b> {item['price']}\n"
-                            f"📉 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades restantes</b> (-{diff})"
+                            f"📉 <b>Estoque:</b> {from_stock_str} ➔ <b>{new_stock_str} unidades restantes</b> (-{diff_str})"
                         )
                     continue
 
