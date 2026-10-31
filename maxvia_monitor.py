@@ -495,13 +495,15 @@ def get_cat219_info(item: dict):
             'url': item.get('url') or 'https://maxvia88.com/categories/219'
         }
 
-    # 2. Acc Farm 6 Month+ (2FA) ($1.04)
-    if 'acc farm 6 month+ (2fa)' in p_id or ('farm' in (raw_title + title) and '6 month' in (raw_title + title) and '2fa' in (raw_title + title)):
+    # 2. Acc Farm 6 Month+ (2FA) (V1 e V2)
+    if 'farm 6 month' in p_id or ('farm' in (raw_title + title) and '6 month' in (raw_title + title) and '2fa' in (raw_title + title)):
+        is_v2 = 'v2' in raw_title or 'v2' in title or 'v2' in p_id
+        c_name = 'V2| Acc Farm 6 Month+ (2FA)' if is_v2 else 'Acc Farm 6 Month+ (2FA)'
         return {
-            'key': 'farm6m',
+            'key': 'farm6m_v2' if is_v2 else 'farm6m',
             'badge': '🟢',
             'color': 'VERDE',
-            'clean_name': 'Acc Farm 6 Month+ (2FA)',
+            'clean_name': c_name,
             'url': item.get('url') or 'https://maxvia88.com/categories/219'
         }
     return None
@@ -927,8 +929,8 @@ def export_maxvia_web_state(all_products: dict):
                 if item.get('site') == 'maxvia88':
                     t = (item.get('raw_title') or item.get('title') or '').lower()
                     if kw in t:
-                        found = item
-                        break
+                        if not found or (item.get('stock', 0) > found.get('stock', 0)):
+                            found = item
             if found:
                 p_val = parse_price_val(found.get('price')) or fallback_price
                 featured.append({
@@ -1331,16 +1333,16 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                             )
                         continue
 
-                    # Acc Farm 6 Month+ (2FA): Avisar em lotes de 40 em 40 compras (ex: 3.949 -> 3.909)
-                    if cat219['key'] == 'farm6m':
-                        drop_step = rule.get("drop_step_alert") or 40
+                    # Acc Farm 6 Month+ (2FA) (V1 e V2): Avisar em lotes de compras (ex: 60 em 60)
+                    if cat219['key'] in ['farm6m', 'farm6m_v2']:
+                        drop_step = rule.get("drop_step_alert") or 60
                         accumulated_drop = baseline_stock - new_stock
                         if accumulated_drop < drop_step:
                             logging.info(f"[MAXVIA88] Queda parcial de estoque para '{name}': {baseline_stock} -> {new_stock} (-{accumulated_drop}). Aguardando lote de {drop_step} para notificar.")
                             item['last_notified_stock'] = baseline_stock
                             continue
 
-                        # Atingiu o lote de 40 (ou mais) compras acumuladas!
+                        # Atingiu o lote de 60 (ou mais) compras acumuladas!
                         diff = accumulated_drop
                         from_stock = baseline_stock
                         item['last_notified_stock'] = new_stock
@@ -1424,11 +1426,22 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     b = cat219['badge']
                     name = cat219['clean_name']
                     p_str = f"${parse_price_val(item['price']):.2f}"
-                    changes.append(
-                        f"🎉🟢 <b>[MAXVIA88] REABASTECIDO (+{diff})!</b> 🟢🎉\n"
-                        f"{b} <b>{name}</b> <code>[{p_str}]</code>\n"
-                        f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})"
-                    )
+                    p_url = item.get('url') or 'https://maxvia88.com/categories/219'
+                    if old_stock == 0:
+                        changes.append(
+                            f"🎉🚨 <b>[MAXVIA88] REPOSIÇÃO NO AR! (+{diff})</b> 🚨🎉\n"
+                            f"{b} <b>{name}</b> <code>[{p_str}]</code>\n"
+                            f"📈 <b>Estoque:</b> 0 ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})\n"
+                            f"🔗 <b>Comprar agora:</b> {p_url}"
+                        )
+                    else:
+                        changes.append(
+                            f"🎉🟢 <b>[MAXVIA88] REABASTECIDO (+{diff})!</b> 🟢🎉\n"
+                            f"{b} <b>{name}</b> <code>[{p_str}]</code>\n"
+                            f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})\n"
+                            f"🔗 <b>Comprar agora:</b> {p_url}"
+                        )
+                    continue
                 elif is_brazil_profile(item):
                     if old_stock == 0:
                         changes.append(
@@ -1511,6 +1524,18 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                         f"🔥🚨 <b>[MAXVIA88 - ENTROU EM ESTOQUE!]</b> 🚨🔥\n"
                         f"{p_icon} <b>Perfil:</b> <b>{p_name}</b>\n"
                         f"💵 <b>Preço:</b> <b>{p_price}</b>\n"
+                        f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades!</b>\n"
+                        f"🔗 <b>Comprar agora:</b> {p_url}"
+                    )
+                cat219 = get_cat219_info(item)
+                if cat219:
+                    b = cat219['badge']
+                    name = cat219['clean_name']
+                    p_str = f"${parse_price_val(item['price']):.2f}"
+                    p_url = item.get('url') or 'https://maxvia88.com/categories/219'
+                    changes.append(
+                        f"🎉🚨 <b>[MAXVIA88 - NOVO PRODUTO EM ESTOQUE!]</b> 🚨🎉\n"
+                        f"{b} <b>{name}</b> <code>[{p_str}]</code>\n"
                         f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades!</b>\n"
                         f"🔗 <b>Comprar agora:</b> {p_url}"
                     )

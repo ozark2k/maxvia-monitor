@@ -18,6 +18,7 @@
     "Via Ramdom New (2FA)",
     "Via Ramdom (2FA)",
     "Acc Farm 6 Month+ (2FA)",
+    "V2| Acc Farm 6 Month+ (2FA)",
     "BM3 Verified US (Created 3 ads account)"
   ],
   "product_rules": {
@@ -56,10 +57,22 @@
       "notify_drop": true,
       "is_highlight": true
     },
+    "V2| Acc Farm 6 Month+ (2FA)": {
+      "notify_restock": true,
+      "notify_drop": true,
+      "drop_step_alert": 60,
+      "is_highlight": true
+    },
+    "V2 Acc Farm 6 Month+ (2FA)": {
+      "notify_restock": true,
+      "notify_drop": true,
+      "drop_step_alert": 60,
+      "is_highlight": true
+    },
     "Acc Farm 6 Month+ (2FA)": {
       "notify_restock": true,
       "notify_drop": true,
-      "drop_step_alert": 40,
+      "drop_step_alert": 60,
       "is_highlight": true
     },
     "Acc Farmed 2025": {
