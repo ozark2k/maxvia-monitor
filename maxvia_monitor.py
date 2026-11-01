@@ -1648,6 +1648,7 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                 continue
             if new_stock > 0 and notify_restock:
                 hot_info = get_hot_item_info(item)
+                cat219 = get_cat219_info(item)
                 if hot_info:
                     p_name = hot_info['name']
                     p_price = item.get('price') or hot_info['price']
@@ -1660,8 +1661,7 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                         f"📈 <b>Estoque Disponível:</b> <b>{new_stock} unidades!</b>\n"
                         f"🔗 <b>Comprar agora:</b> {p_url}"
                     )
-                cat219 = get_cat219_info(item)
-                if cat219:
+                elif cat219:
                     b = cat219['badge']
                     name = cat219['clean_name']
                     p_str = f"${parse_price_val(item['price']):.2f}"
@@ -1730,8 +1730,9 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
         if not is_allowed_to_notify or "--no-telegram" in sys.argv or os.environ.get("NO_TELEGRAM") == "1":
             logging.info(f"[LOCAL SYNC] {len(changes)} alterações detectadas, mas alertas no Telegram são exclusivos da nuvem (Render 24/7).")
         else:
-            logging.info(f"Detectadas {len(changes)} alterações de estoque. Enviando alerta Telegram...")
-            send_telegram_message(bot_token, chat_id, "\n\n".join(changes))
+            unique_changes = list(dict.fromkeys(changes))
+            logging.info(f"Detectadas {len(unique_changes)} alterações de estoque únicas. Enviando alerta Telegram...")
+            send_telegram_message(bot_token, chat_id, "\n\n".join(unique_changes))
     else:
         logging.info("Nenhuma alteração de estoque nesta rodada. Nenhuma notificação enviada.")
 

@@ -1,6 +1,71 @@
 {
-  "balance_usd": 1.16,
-  "balance_str": "$1.16",
+  "updated_at": "2026-11-01 12:08:55",
   "username": "Itooh - ID: 4271",
-  "updated_at": "2026-10-30 18:24:30"
+  "balance_str": "$40.10",
+  "balance_usd": 40.1,
+  "products": [
+    {
+      "name": "Via Ramdom (2FA)",
+      "price": 1.22,
+      "price_str": "$1.22",
+      "stock": 16571,
+      "url": "https://maxvia88.com/categories/219"
+    },
+    {
+      "name": "V2 Acc Farm 6 Month+ (2FA)",
+      "price": 0.76,
+      "price_str": "$0.76",
+      "stock": 5863,
+      "url": "https://maxvia88.com/categories/219"
+    },
+    {
+      "name": "V3 Acc Scan 1 Year+ (2FA)",
+      "price": 1.77,
+      "price_str": "$1.77",
+      "stock": 4639,
+      "url": "https://maxvia88.com/categories/219"
+    },
+    {
+      "name": "Acc Farmed 2026 (2FA)",
+      "price": 0.83,
+      "price_str": "$0.83",
+      "stock": 0,
+      "url": "https://maxvia88.com/categories/1"
+    },
+    {
+      "name": "Via Switzerland Old 0-29 Friend (2FA)",
+      "price": 4.34,
+      "price_str": "$4.34",
+      "stock": 486,
+      "url": "https://maxvia88.com/categories/219"
+    },
+    {
+      "name": "Via Canada Old 0-29 Friend (2FA)",
+      "price": 4.34,
+      "price_str": "$4.34",
+      "stock": 0,
+      "url": "https://maxvia88.com/categories/219"
+    },
+    {
+      "name": "Via Austria Old (2FA)",
+      "price": 9.65,
+      "price_str": "$9.65",
+      "stock": 0,
+      "url": "https://maxvia88.com/categories/219"
+    },
+    {
+      "name": "Acc United States Old 902 (2FA)",
+      "price": 24.12,
+      "price_str": "$24.12",
+      "stock": 0,
+      "url": "https://maxvia88.com/categories/219"
+    },
+    {
+      "name": "Via United States Old (2FA)",
+      "price": 19.3,
+      "price_str": "$19.30",
+      "stock": 0,
+      "url": "https://maxvia88.com/categories/219"
+    }
+  ]
 }
