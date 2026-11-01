@@ -3548,12 +3548,13 @@
     "title": "V2 Acc Farm 6 Month+ (2FA)",
     "raw_title": "V2| Acc Farm 6 Month+ (2FA)",
     "desc": "V2| Acc Farm 6 Month+ (2FA) $0.79 »",
-    "stock": 5965,
+    "stock": 5962,
     "price": "$0.75",
     "site": "maxvia88",
     "url": "https://maxvia88.com/categories/219",
     "missing_cycles": 0,
-    "last_notified_stock": 5965
+    "last_notified_stock": 5962,
+    "zero_confirmed": false
   },
   "acc farm 6 month+ (2fa)_$1.09": {
     "id": "acc farm 6 month+ (2fa)_$1.09",

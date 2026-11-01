@@ -1240,12 +1240,14 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     if new_stock == 0:
                         if old_stock > 30 and not old_item.get('zero_confirmed'):
                             item['zero_confirmed'] = True
+                            item['stock'] = old_stock
                             item['last_notified_stock'] = baseline_stock
                             logging.info(f"[BUYVIAFB ANTI-GLITCH] Estoque de '{clean_display_title}' caiu de {old_stock} para 0 abruptamente. Aguardando 1 ciclo de confirmação para evitar falso alarme.")
                             continue
 
                         diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
                         item['last_notified_stock'] = 0
+                        item['zero_confirmed'] = False
                         changes.append(
                             f"🔥🔴 <b>[BUYVIAFB] PRODUTO ESGOTOU!</b> 🔴🔥\n"
                             f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
@@ -1319,12 +1321,14 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     if new_stock == 0:
                         if old_stock > 30 and not old_item.get('zero_confirmed'):
                             item['zero_confirmed'] = True
+                            item['stock'] = old_stock
                             item['last_notified_stock'] = baseline_stock
                             logging.info(f"[MAXVIA88 ANTI-GLITCH] Estoque de BM '{clean_display_title}' caiu de {old_stock} para 0 abruptamente. Aguardando 1 ciclo de confirmação para evitar falso alarme.")
                             continue
 
                         diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
                         item['last_notified_stock'] = 0
+                        item['zero_confirmed'] = False
                         changes.append(
                             f"💼🔴 <b>[MAXVIA88 - BM VERIFICADA ESGOTOU!]</b>\n"
                             f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
@@ -1364,12 +1368,14 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     if new_stock == 0:
                         if old_stock > 30 and not old_item.get('zero_confirmed'):
                             item['zero_confirmed'] = True
+                            item['stock'] = old_stock
                             item['last_notified_stock'] = baseline_stock
                             logging.info(f"[MAXVIA88 ANTI-GLITCH] Estoque de Brasil '{clean_display_title}' caiu de {old_stock} para 0 abruptamente. Aguardando 1 ciclo de confirmação para evitar falso alarme.")
                             continue
 
                         diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
                         item['last_notified_stock'] = 0
+                        item['zero_confirmed'] = False
                         changes.append(
                             f"🔥🔴 <b>[MAXVIA88] PERFIL DO BRASIL ESGOTOU!</b> 🔴🔥\n"
                             f"📦 <b>Produto:</b> 🇧🇷 <b>{clean_display_title}</b> ({item['price']}) 🇧🇷\n"
@@ -1405,12 +1411,14 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     if new_stock == 0:
                         if old_stock > 30 and not old_item.get('zero_confirmed'):
                             item['zero_confirmed'] = True
+                            item['stock'] = old_stock
                             item['last_notified_stock'] = baseline_stock
                             logging.info(f"[MAXVIA88 ANTI-GLITCH] Estoque de '{name}' caiu de {old_stock} para 0 abruptamente. Aguardando 1 ciclo de confirmação para evitar falso alarme.")
                             continue
 
                         diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
                         item['last_notified_stock'] = 0
+                        item['zero_confirmed'] = False
                         changes.append(
                             f"🔥🔴 <b>[MAXVIA88] PRODUTO ESGOTOU!</b> 🔴🔥\n"
                             f"{b} <b>{name}</b> <code>[{p_str}]</code>\n"
@@ -1487,12 +1495,21 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                 continue
 
             elif new_stock > old_stock:
+                # Anti-Duplicate: Se o novo estoque não ultrapassa o último estoque já notificado ao usuário,
+                # não reenvia alerta repetido (evita repetição causada por oscilações temporárias de rede/API).
+                if baseline_stock > 0 and new_stock <= baseline_stock:
+                    item['last_notified_stock'] = baseline_stock
+                    item['zero_confirmed'] = False
+                    logging.info(f"[ANTI-DUPLICATE] Restock de '{clean_display_title}' ({old_stock} -> {new_stock}) ignorado pois o usuário já foi notificado deste estoque ({baseline_stock}).")
+                    continue
+
                 item['last_notified_stock'] = new_stock
+                item['zero_confirmed'] = False
 
                 if not notify_restock:
                     continue
 
-                diff = new_stock - old_stock
+                diff = new_stock - (baseline_stock if (old_stock == 0 and baseline_stock > 0) else old_stock)
                 if is_buyviafb:
                     if old_stock == 0:
                         changes.append(
@@ -1539,7 +1556,7 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     name = cat219['clean_name']
                     p_str = f"${parse_price_val(item['price']):.2f}"
                     p_url = item.get('url') or 'https://maxvia88.com/categories/219'
-                    if old_stock == 0:
+                    if old_stock == 0 and baseline_stock == 0:
                         changes.append(
                             f"🎉🚨 <b>[MAXVIA88] REPOSIÇÃO NO AR! (+{diff})</b> 🚨🎉\n"
                             f"{b} <b>{name}</b> <code>[{p_str}]</code>\n"
@@ -1547,10 +1564,11 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                             f"🔗 <b>Comprar agora:</b> {p_url}"
                         )
                     else:
+                        from_st = baseline_stock if baseline_stock > 0 else old_stock
                         changes.append(
                             f"🎉🟢 <b>[MAXVIA88] REABASTECIDO (+{diff})!</b> 🟢🎉\n"
                             f"{b} <b>{name}</b> <code>[{p_str}]</code>\n"
-                            f"📈 <b>Estoque:</b> {old_stock} ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})\n"
+                            f"📈 <b>Estoque:</b> {from_st} ➔ <b>{new_stock} unidades disponíveis!</b> (+{diff})\n"
                             f"🔗 <b>Comprar agora:</b> {p_url}"
                         )
                     continue
@@ -1882,8 +1900,8 @@ def run_cycle(is_startup: bool = False):
                 )
                 if not already_in_new:
                     missing_cycles = old_item.get('missing_cycles', 0) + 1
-                    if missing_cycles < 2:
-                        logging.info(f"[ANTI-GLITCH] '{old_item.get('title')}' não veio nesta varredura (possível oscilação de rede). Mantendo estoque {old_item.get('stock')} por 1 ciclo de confirmação.")
+                    if missing_cycles < 4:
+                        logging.info(f"[ANTI-GLITCH] '{old_item.get('title')}' não veio nesta varredura (possível oscilação de rede). Mantendo estoque {old_item.get('stock')} por {missing_cycles}/3 ciclos de confirmação.")
                         preserved_item = dict(old_item)
                         preserved_item['missing_cycles'] = missing_cycles
                         all_products[old_id] = preserved_item
@@ -1992,11 +2010,12 @@ def keep_alive_ping():
     """Periodically ping self public URL to keep Render free web service awake."""
     while True:
         time.sleep(600)  # Every 10 minutes
-        render_url = os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("KEEP_ALIVE_URL")
+        render_url = os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("KEEP_ALIVE_URL") or "https://maxvia-monitor.onrender.com"
         if render_url:
             try:
-                urllib.request.urlopen(render_url, timeout=10)
-                logging.info(f"Keep-alive self-ping sent to {render_url}")
+                ping_target = f"{render_url.rstrip('/')}/health"
+                urllib.request.urlopen(ping_target, timeout=10)
+                logging.info(f"Keep-alive self-ping sent to {ping_target}")
             except Exception as e:
                 logging.debug(f"Keep-alive ping note: {e}")
 
