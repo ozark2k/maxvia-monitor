@@ -1238,16 +1238,20 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                 if is_buyviafb:
                     # 1. Se o produto esgotou (bateu 0), notifica
                     if new_stock == 0:
-                        if old_stock > 30 and not old_item.get('zero_confirmed'):
-                            item['zero_confirmed'] = True
+                        zero_cycles = old_item.get('zero_cycles', 0) + 1
+                        required_zero_cycles = 4 if old_stock > 200 else (3 if old_stock > 20 else 2)
+                        if old_stock > 10 and zero_cycles < required_zero_cycles:
+                            item['zero_cycles'] = zero_cycles
                             item['stock'] = old_stock
                             item['last_notified_stock'] = baseline_stock
-                            logging.info(f"[BUYVIAFB ANTI-GLITCH] Estoque de '{clean_display_title}' caiu de {old_stock} para 0 abruptamente. Aguardando 1 ciclo de confirmação para evitar falso alarme.")
+                            item['pre_zero_stock'] = old_item.get('pre_zero_stock') or baseline_stock
+                            logging.info(f"[BUYVIAFB ANTI-GLITCH] Estoque de '{clean_display_title}' caiu de {old_stock} para 0 abruptamente. Ciclo {zero_cycles}/{required_zero_cycles} de confirmação.")
                             continue
 
                         diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
                         item['last_notified_stock'] = 0
-                        item['zero_confirmed'] = False
+                        item['zero_cycles'] = 0
+                        item['pre_zero_stock'] = baseline_stock
                         changes.append(
                             f"🔥🔴 <b>[BUYVIAFB] PRODUTO ESGOTOU!</b> 🔴🔥\n"
                             f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
@@ -1319,16 +1323,20 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     drop_step = rule.get("drop_step_alert") or 10
 
                     if new_stock == 0:
-                        if old_stock > 30 and not old_item.get('zero_confirmed'):
-                            item['zero_confirmed'] = True
+                        zero_cycles = old_item.get('zero_cycles', 0) + 1
+                        required_zero_cycles = 4 if old_stock > 200 else (3 if old_stock > 20 else 2)
+                        if old_stock > 10 and zero_cycles < required_zero_cycles:
+                            item['zero_cycles'] = zero_cycles
                             item['stock'] = old_stock
                             item['last_notified_stock'] = baseline_stock
-                            logging.info(f"[MAXVIA88 ANTI-GLITCH] Estoque de BM '{clean_display_title}' caiu de {old_stock} para 0 abruptamente. Aguardando 1 ciclo de confirmação para evitar falso alarme.")
+                            item['pre_zero_stock'] = old_item.get('pre_zero_stock') or baseline_stock
+                            logging.info(f"[MAXVIA88 ANTI-GLITCH] Estoque de BM '{clean_display_title}' caiu de {old_stock} para 0 abruptamente. Ciclo {zero_cycles}/{required_zero_cycles} de confirmação.")
                             continue
 
                         diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
                         item['last_notified_stock'] = 0
-                        item['zero_confirmed'] = False
+                        item['zero_cycles'] = 0
+                        item['pre_zero_stock'] = baseline_stock
                         changes.append(
                             f"💼🔴 <b>[MAXVIA88 - BM VERIFICADA ESGOTOU!]</b>\n"
                             f"📦 <b>Produto:</b> <b>{clean_display_title}</b>\n"
@@ -1366,16 +1374,20 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     drop_step_alert = rule.get("drop_step_alert") or 5  # Notifica a cada 5 compras ou se zerar
 
                     if new_stock == 0:
-                        if old_stock > 30 and not old_item.get('zero_confirmed'):
-                            item['zero_confirmed'] = True
+                        zero_cycles = old_item.get('zero_cycles', 0) + 1
+                        required_zero_cycles = 4 if old_stock > 200 else (3 if old_stock > 20 else 2)
+                        if old_stock > 10 and zero_cycles < required_zero_cycles:
+                            item['zero_cycles'] = zero_cycles
                             item['stock'] = old_stock
                             item['last_notified_stock'] = baseline_stock
-                            logging.info(f"[MAXVIA88 ANTI-GLITCH] Estoque de Brasil '{clean_display_title}' caiu de {old_stock} para 0 abruptamente. Aguardando 1 ciclo de confirmação para evitar falso alarme.")
+                            item['pre_zero_stock'] = old_item.get('pre_zero_stock') or baseline_stock
+                            logging.info(f"[MAXVIA88 ANTI-GLITCH] Estoque de Brasil '{clean_display_title}' caiu de {old_stock} para 0 abruptamente. Ciclo {zero_cycles}/{required_zero_cycles} de confirmação.")
                             continue
 
                         diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
                         item['last_notified_stock'] = 0
-                        item['zero_confirmed'] = False
+                        item['zero_cycles'] = 0
+                        item['pre_zero_stock'] = baseline_stock
                         changes.append(
                             f"🔥🔴 <b>[MAXVIA88] PERFIL DO BRASIL ESGOTOU!</b> 🔴🔥\n"
                             f"📦 <b>Produto:</b> 🇧🇷 <b>{clean_display_title}</b> ({item['price']}) 🇧🇷\n"
@@ -1409,16 +1421,20 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
 
                     # Se esgotar completamente, sempre avisa com urgência máxima!
                     if new_stock == 0:
-                        if old_stock > 30 and not old_item.get('zero_confirmed'):
-                            item['zero_confirmed'] = True
+                        zero_cycles = old_item.get('zero_cycles', 0) + 1
+                        required_zero_cycles = 4 if old_stock > 200 else (3 if old_stock > 20 else 2)
+                        if old_stock > 10 and zero_cycles < required_zero_cycles:
+                            item['zero_cycles'] = zero_cycles
                             item['stock'] = old_stock
                             item['last_notified_stock'] = baseline_stock
-                            logging.info(f"[MAXVIA88 ANTI-GLITCH] Estoque de '{name}' caiu de {old_stock} para 0 abruptamente. Aguardando 1 ciclo de confirmação para evitar falso alarme.")
+                            item['pre_zero_stock'] = old_item.get('pre_zero_stock') or baseline_stock
+                            logging.info(f"[MAXVIA88 ANTI-GLITCH] Estoque de '{name}' caiu de {old_stock} para 0 abruptamente. Ciclo {zero_cycles}/{required_zero_cycles} de confirmação.")
                             continue
 
                         diff = baseline_stock if baseline_stock > 0 else (old_stock - new_stock)
                         item['last_notified_stock'] = 0
-                        item['zero_confirmed'] = False
+                        item['zero_cycles'] = 0
+                        item['pre_zero_stock'] = baseline_stock
                         changes.append(
                             f"🔥🔴 <b>[MAXVIA88] PRODUTO ESGOTOU!</b> 🔴🔥\n"
                             f"{b} <b>{name}</b> <code>[{p_str}]</code>\n"
@@ -1495,16 +1511,26 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                 continue
 
             elif new_stock > old_stock:
+                pre_zero = old_item.get('pre_zero_stock', 0)
+                # Anti-Glitch: Se o produto aparentemente zerou recentemente (glitch de API) e voltou com estoque <= estoque anterior:
+                if old_stock == 0 and pre_zero > 0 and new_stock <= pre_zero:
+                    item['last_notified_stock'] = new_stock
+                    item['pre_zero_stock'] = 0
+                    item['zero_cycles'] = 0
+                    logging.info(f"[ANTI-GLITCH] Retorno de estoque pós-glitch para '{clean_display_title}' ({old_stock} -> {new_stock} <= {pre_zero}). Alerta falso de reposição ignorado.")
+                    continue
+
                 # Anti-Duplicate: Se o novo estoque não ultrapassa o último estoque já notificado ao usuário,
                 # não reenvia alerta repetido (evita repetição causada por oscilações temporárias de rede/API).
                 if baseline_stock > 0 and new_stock <= baseline_stock:
                     item['last_notified_stock'] = baseline_stock
-                    item['zero_confirmed'] = False
+                    item['zero_cycles'] = 0
                     logging.info(f"[ANTI-DUPLICATE] Restock de '{clean_display_title}' ({old_stock} -> {new_stock}) ignorado pois o usuário já foi notificado deste estoque ({baseline_stock}).")
                     continue
 
                 item['last_notified_stock'] = new_stock
-                item['zero_confirmed'] = False
+                item['zero_cycles'] = 0
+                item['pre_zero_stock'] = 0
 
                 if not notify_restock:
                     continue
@@ -1918,10 +1944,14 @@ def run_cycle(is_startup: bool = False):
             item['missing_cycles'] = 0
         title_key = (normalize_title(item.get('title', '')).lower(), item.get('site', 'maxvia88'))
         matching_old = old_state.get(p_id) or old_by_title.get(title_key)
-        if matching_old and 'last_notified_stock' in matching_old:
-            item['last_notified_stock'] = matching_old['last_notified_stock']
+        if matching_old:
+            item['last_notified_stock'] = matching_old.get('last_notified_stock', item['stock'])
+            item['zero_cycles'] = matching_old.get('zero_cycles', 0)
+            item['pre_zero_stock'] = matching_old.get('pre_zero_stock', 0)
         else:
             item['last_notified_stock'] = item['stock']
+            item['zero_cycles'] = 0
+            item['pre_zero_stock'] = 0
 
     target_keywords = config.get("target_keywords") or config.get("target_products") or []
     if isinstance(target_keywords, str):
