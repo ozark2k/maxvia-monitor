@@ -2550,8 +2550,11 @@
             </span>
           </div>
 
-          <div style="min-width: 115px; display: flex; flex-direction: column; gap: 2px;">
-            <span style="font-size: 0.8rem; color: #38bdf8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;">Custo Fonte</span>
+          <div onclick="document.getElementById('via-item-price')?.focus(); document.getElementById('via-item-price')?.select();" style="min-width: 115px; display: flex; flex-direction: column; gap: 2px; cursor: pointer;" title="Alterar preço no campo abaixo">
+            <span style="font-size: 0.8rem; color: #38bdf8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; display: flex; align-items: center; gap: 4px;">
+              <span>Custo Fonte</span>
+              <span style="font-size: 0.7rem; opacity: 0.7;">✏️</span>
+            </span>
             <div id="via902-resale-cost-native" style="font-size: 1.35rem; font-weight: 900; color: #7dd3fc; line-height: 1.15; letter-spacing: -0.01em;">
               175.000 ₫
             </div>
@@ -2895,8 +2898,11 @@
             </span>
           </div>
 
-          <div style="min-width: 115px; display: flex; flex-direction: column; gap: 2px;">
-            <span style="font-size: 0.8rem; color: #ffd60a; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;">Custo Fonte</span>
+          <div onclick="document.getElementById('vbr-input-coins')?.focus(); document.getElementById('vbr-input-coins')?.select();" style="min-width: 115px; display: flex; flex-direction: column; gap: 2px; cursor: pointer;" title="Alterar moedas no campo abaixo">
+            <span style="font-size: 0.8rem; color: #ffd60a; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; display: flex; align-items: center; gap: 4px;">
+              <span>Custo Fonte</span>
+              <span style="font-size: 0.7rem; opacity: 0.7;">✏️</span>
+            </span>
             <div id="buyvia-resale-cost-native" style="font-size: 1.35rem; font-weight: 900; color: #fde047; line-height: 1.15; letter-spacing: -0.01em;">
               45.000 Coins
             </div>
@@ -3231,8 +3237,11 @@
             </span>
           </div>
 
-          <div style="min-width: 115px; display: flex; flex-direction: column; gap: 2px;">
-            <span style="font-size: 0.8rem; color: #fb923c; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;">Custo Fonte</span>
+          <div onclick="document.getElementById('vua-input-vnd')?.focus(); document.getElementById('vua-input-vnd')?.select();" style="min-width: 115px; display: flex; flex-direction: column; gap: 2px; cursor: pointer;" title="Alterar custo no campo abaixo">
+            <span style="font-size: 0.8rem; color: #fb923c; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; display: flex; align-items: center; gap: 4px;">
+              <span>Custo Fonte</span>
+              <span style="font-size: 0.7rem; opacity: 0.7;">✏️</span>
+            </span>
             <div id="vuavia-resale-cost-native" style="font-size: 1.35rem; font-weight: 900; color: #fdba74; line-height: 1.15; letter-spacing: -0.01em;">
               30.000 ₫
             </div>
@@ -8173,6 +8182,10 @@
       const num = parseFloat(val);
       if (!isNaN(num) && num > 0) {
         localStorage.setItem('via902_resale_sell_brl', String(num));
+        const calcSellInput = document.getElementById('via-sell-price');
+        if (calcSellInput && document.activeElement !== calcSellInput) {
+          calcSellInput.value = num;
+        }
       }
       updateVia902ResaleRowUI();
     }
@@ -8183,7 +8196,11 @@
       const rawBalance = document.getElementById('via-user-balance')?.value;
       const userBalanceVnd = (typeof parseDongValue === 'function') ? parseDongValue(rawBalance !== undefined ? rawBalance : 343480) : 343480;
 
-      const costVnd = 175000;
+      // Custo dinâmico vindo diretamente do input da calculadora via-item-price
+      const priceInput = document.getElementById('via-item-price');
+      const rawPrice = priceInput?.value;
+      const parsedPrice = (typeof parseDongValue === 'function') ? parseDongValue(rawPrice !== undefined ? rawPrice : 175000) : 175000;
+      const costVnd = Math.max(1, parsedPrice || 175000);
       const costUsdt = costVnd / rateVnd;
       const costBrl = costUsdt * rateBrl;
 
@@ -8196,15 +8213,29 @@
       const walletBrlEl = document.getElementById('via902-resale-wallet-brl');
       if (walletBrlEl) walletBrlEl.textContent = `~R$ ${balanceBrl.toFixed(2).replace('.', ',')}`;
 
-      // Custo Fonte
+      // Custo Fonte Atualizado Dinamicamente
+      const costNativeEl = document.getElementById('via902-resale-cost-native');
+      if (costNativeEl) costNativeEl.textContent = `${costVnd.toLocaleString('pt-BR')} ₫`;
+
       const costBrlEl = document.getElementById('via902-resale-cost-brl');
       if (costBrlEl) costBrlEl.textContent = `≈ R$ ${costBrl.toFixed(2).replace('.', ',')}`;
 
-      // Preço Venda e Lucro
+      // Preço Venda e Lucro com sincronização bidirecional
       const sellInput = document.getElementById('via902-resale-sell-input');
-      const sellBrl = parseFloat(sellInput?.value) || getVia902ResaleSellPrice();
-      if (sellInput && document.activeElement !== sellInput && sellInput.value != sellBrl) {
-        sellInput.value = sellBrl;
+      const calcSellInput = document.getElementById('via-sell-price');
+      let sellBrl;
+      if (document.activeElement === sellInput) {
+        sellBrl = parseFloat(sellInput.value) || 0;
+        if (calcSellInput && sellBrl > 0 && calcSellInput.value != sellBrl) {
+          calcSellInput.value = sellBrl;
+        }
+      } else if (document.activeElement === calcSellInput) {
+        sellBrl = parseFloat(calcSellInput.value) || 0;
+        if (sellInput && sellBrl > 0 && sellInput.value != sellBrl) {
+          sellInput.value = sellBrl;
+        }
+      } else {
+        sellBrl = parseFloat(sellInput?.value) || getVia902ResaleSellPrice();
       }
 
       const profitBrl = sellBrl - costBrl;
@@ -8222,8 +8253,8 @@
         marginEl.style.color = marginPct >= 0 ? '#34d399' : '#ff453a';
       }
 
-      // Poder de Saldo
-      const units = Math.floor(userBalanceVnd / costVnd);
+      // Poder de Saldo recalculado dinamicamente com o custo atual
+      const units = costVnd > 0 ? Math.floor(userBalanceVnd / costVnd) : 0;
       const unitsEl = document.getElementById('via902-resale-coverage-units');
       if (unitsEl) unitsEl.textContent = `${units} un`;
       const covBadge = document.getElementById('via902-resale-coverage');
@@ -8245,14 +8276,17 @@
     function simulateVia902Resale() {
       const sellBrl = getVia902ResaleSellPrice();
       const priceInput = document.getElementById('via-item-price');
-      if (priceInput) priceInput.value = '175.000';
+      const rawPrice = priceInput?.value;
+      const parsedPrice = (typeof parseDongValue === 'function') ? parseDongValue(rawPrice !== undefined ? rawPrice : 175000) : 175000;
+      const costVnd = Math.max(1, parsedPrice || 175000);
+      if (priceInput) priceInput.value = costVnd.toLocaleString('pt-BR');
       const qtyInput = document.getElementById('via-item-qty');
       if (qtyInput) qtyInput.value = '1';
       const sellPriceInput = document.getElementById('via-sell-price');
       if (sellPriceInput) sellPriceInput.value = sellBrl;
 
       if (typeof calculateVia902 === 'function') calculateVia902();
-      if (typeof showToast === 'function') showToast('⚡ Perfil Via 902 carregado na calculadora!');
+      if (typeof showToast === 'function') showToast(`⚡ Simulação Via 902: ${costVnd.toLocaleString('pt-BR')} ₫ @ R$ ${sellBrl.toFixed(2).replace('.', ',')}!`);
       if (typeof playChime === 'function') playChime('click');
     }
 
@@ -9725,6 +9759,10 @@
       const num = parseFloat(val);
       if (!isNaN(num) && num > 0) {
         localStorage.setItem('buyvia_resale_sell_brl', String(num));
+        const calcSellInput = document.getElementById('vbr-sell-price');
+        if (calcSellInput && document.activeElement !== calcSellInput) {
+          calcSellInput.value = (typeof formatVbrBRL === "function" ? formatVbrBRL(num) : num.toFixed(2));
+        }
       }
       updateBuyViaResaleRowUI();
     }
@@ -9733,7 +9771,10 @@
       const rate = (typeof getDirectSupplierRate === 'function' ? getDirectSupplierRate() : (typeof getDolarRate === 'function' ? getDolarRate() : 5.02)) || 5.02;
       const userBalance = (typeof getVbrBalance === 'function') ? getVbrBalance() : 82000;
 
-      const costCoins = 45000;
+      // Custo dinâmico vindo diretamente do input da calculadora vbr-input-coins
+      const coinsInput = document.getElementById('vbr-input-coins');
+      const parsedCoins = (typeof parseVbrCoins === 'function') ? parseVbrCoins(coinsInput?.value) : 45000;
+      const costCoins = Math.max(1, parsedCoins || 45000);
       const costUsdt = costCoins / 25000;
       const costBrl = costUsdt * rate;
 
@@ -9746,15 +9787,30 @@
       const walletBrlEl = document.getElementById('buyvia-resale-wallet-brl');
       if (walletBrlEl) walletBrlEl.textContent = `~R$ ${(typeof formatVbrBRL === "function" ? formatVbrBRL(balanceBrl) : balanceBrl.toFixed(2))}`;
 
-      // Custo Fonte
+      // Custo Fonte Atualizado Dinamicamente
+      const costNativeEl = document.getElementById('buyvia-resale-cost-native');
+      if (costNativeEl) costNativeEl.textContent = `${costCoins.toLocaleString('pt-BR')} Coins`;
+
       const costBrlEl = document.getElementById('buyvia-resale-cost-brl');
       if (costBrlEl) costBrlEl.textContent = `≈ R$ ${(typeof formatVbrBRL === "function" ? formatVbrBRL(costBrl) : costBrl.toFixed(2))}`;
 
-      // Preço Venda e Lucro
+      // Preço Venda e Lucro com sincronização bidirecional
       const sellInput = document.getElementById('buyvia-resale-sell-input');
-      const sellBrl = parseFloat(sellInput?.value) || getBuyViaResaleSellPrice();
-      if (sellInput && document.activeElement !== sellInput && sellInput.value != sellBrl) {
-        sellInput.value = sellBrl;
+      const calcSellInput = document.getElementById('vbr-sell-price');
+      let sellBrl;
+      if (document.activeElement === sellInput) {
+        sellBrl = parseFloat(sellInput.value) || 0;
+        if (calcSellInput && sellBrl > 0 && calcSellInput.value != sellBrl) {
+          calcSellInput.value = (typeof formatVbrBRL === "function" ? formatVbrBRL(sellBrl) : sellBrl.toFixed(2));
+        }
+      } else if (document.activeElement === calcSellInput) {
+        const str = String(calcSellInput.value || '25').trim().replace('R$', '').trim().replace(',', '.');
+        sellBrl = Math.max(0, parseFloat(str) || 25.0);
+        if (sellInput && sellBrl > 0 && sellInput.value != sellBrl) {
+          sellInput.value = sellBrl;
+        }
+      } else {
+        sellBrl = parseFloat(sellInput?.value) || getBuyViaResaleSellPrice();
       }
 
       const profitBrl = sellBrl - costBrl;
@@ -9772,8 +9828,8 @@
         marginEl.style.color = marginPct >= 0 ? '#34d399' : '#ff453a';
       }
 
-      // Poder de Saldo
-      const units = Math.floor(userBalance / costCoins);
+      // Poder de Saldo recalculado dinamicamente com o custo atual
+      const units = costCoins > 0 ? Math.floor(userBalance / costCoins) : 0;
       const unitsEl = document.getElementById('buyvia-resale-coverage-units');
       if (unitsEl) unitsEl.textContent = `${units} un`;
       const covBadge = document.getElementById('buyvia-resale-coverage');
@@ -9795,14 +9851,16 @@
     function simulateBuyViaResale() {
       const sellBrl = getBuyViaResaleSellPrice();
       const coinsInput = document.getElementById('vbr-input-coins');
-      if (coinsInput) coinsInput.value = '45.000';
+      const parsedCoins = (typeof parseVbrCoins === 'function') ? parseVbrCoins(coinsInput?.value) : 45000;
+      const costCoins = Math.max(1, parsedCoins || 45000);
+      if (coinsInput) coinsInput.value = costCoins.toLocaleString('pt-BR');
       const qtyInput = document.getElementById('vbr-input-qty');
       if (qtyInput) qtyInput.value = '1';
       const sellPriceInput = document.getElementById('vbr-sell-price');
       if (sellPriceInput) sellPriceInput.value = (typeof formatVbrBRL === "function" ? formatVbrBRL(sellBrl) : sellBrl.toFixed(2));
 
       if (typeof calculateViaBrasil === 'function') calculateViaBrasil();
-      if (typeof showToast === 'function') showToast('⚡ Perfil BuyViaFB carregado na calculadora!');
+      if (typeof showToast === 'function') showToast(`⚡ Simulação BuyViaFB: ${costCoins.toLocaleString('pt-BR')} Coins @ R$ ${(typeof formatVbrBRL === "function" ? formatVbrBRL(sellBrl) : sellBrl.toFixed(2))}!`);
       if (typeof playChime === 'function') playChime('click');
     }
 
@@ -10410,6 +10468,10 @@
       const num = parseFloat(val);
       if (!isNaN(num) && num > 0) {
         localStorage.setItem('vuavia_resale_sell_brl', String(num));
+        const calcSellInput = document.getElementById('vua-sell-price');
+        if (calcSellInput && document.activeElement !== calcSellInput) {
+          calcSellInput.value = (typeof formatVbrBRL === "function" ? formatVbrBRL(num) : num.toFixed(2));
+        }
       }
       updateVuaResaleRowUI();
     }
@@ -10419,7 +10481,10 @@
       const vndPerUsdt = (typeof getVuaVndRate === 'function') ? getVuaVndRate() : 25400;
       const userBalance = (typeof getVuaBalance === 'function') ? getVuaBalance() : 83660;
 
-      const costVnd = 30000;
+      // Custo dinâmico vindo diretamente do input da calculadora vua-input-vnd
+      const vndInput = document.getElementById('vua-input-vnd');
+      const parsedVnd = (typeof parseVuaVnd === 'function') ? parseVuaVnd(vndInput?.value) : 30000;
+      const costVnd = Math.max(1, parsedVnd || 30000);
       const costUsdt = costVnd / vndPerUsdt;
       const costBrl = costUsdt * rate;
 
@@ -10432,15 +10497,30 @@
       const walletBrlEl = document.getElementById('vuavia-resale-wallet-brl');
       if (walletBrlEl) walletBrlEl.textContent = `~R$ ${(typeof formatVbrBRL === "function" ? formatVbrBRL(balanceBrl) : balanceBrl.toFixed(2))}`;
 
-      // Custo Fonte
+      // Custo Fonte Atualizado Dinamicamente
+      const costNativeEl = document.getElementById('vuavia-resale-cost-native');
+      if (costNativeEl) costNativeEl.textContent = `${costVnd.toLocaleString('pt-BR')} ₫`;
+
       const costBrlEl = document.getElementById('vuavia-resale-cost-brl');
       if (costBrlEl) costBrlEl.textContent = `≈ R$ ${(typeof formatVbrBRL === "function" ? formatVbrBRL(costBrl) : costBrl.toFixed(2))}`;
 
-      // Preço Venda e Lucro
+      // Preço Venda e Lucro com sincronização bidirecional
       const sellInput = document.getElementById('vuavia-resale-sell-input');
-      const sellBrl = parseFloat(sellInput?.value) || getVuaResaleSellPrice();
-      if (sellInput && document.activeElement !== sellInput && sellInput.value != sellBrl) {
-        sellInput.value = sellBrl;
+      const calcSellInput = document.getElementById('vua-sell-price');
+      let sellBrl;
+      if (document.activeElement === sellInput) {
+        sellBrl = parseFloat(sellInput.value) || 0;
+        if (calcSellInput && sellBrl > 0 && calcSellInput.value != sellBrl) {
+          calcSellInput.value = (typeof formatVbrBRL === "function" ? formatVbrBRL(sellBrl) : sellBrl.toFixed(2));
+        }
+      } else if (document.activeElement === calcSellInput) {
+        const str = String(calcSellInput.value || '17').trim().replace('R$', '').trim().replace(',', '.');
+        sellBrl = Math.max(0, parseFloat(str) || 17.0);
+        if (sellInput && sellBrl > 0 && sellInput.value != sellBrl) {
+          sellInput.value = sellBrl;
+        }
+      } else {
+        sellBrl = parseFloat(sellInput?.value) || getVuaResaleSellPrice();
       }
 
       const profitBrl = sellBrl - costBrl;
@@ -10458,8 +10538,8 @@
         marginEl.style.color = marginPct >= 0 ? '#34d399' : '#ff453a';
       }
 
-      // Poder de Saldo
-      const units = Math.floor(userBalance / costVnd);
+      // Poder de Saldo recalculado dinamicamente com o custo atual
+      const units = costVnd > 0 ? Math.floor(userBalance / costVnd) : 0;
       const unitsEl = document.getElementById('vuavia-resale-coverage-units');
       if (unitsEl) unitsEl.textContent = `${units} un`;
       const covBadge = document.getElementById('vuavia-resale-coverage');
@@ -10481,14 +10561,16 @@
     function simulateVuaResale() {
       const sellBrl = getVuaResaleSellPrice();
       const vndInput = document.getElementById('vua-input-vnd');
-      if (vndInput) vndInput.value = '30.000';
+      const parsedVnd = (typeof parseVuaVnd === 'function') ? parseVuaVnd(vndInput?.value) : 30000;
+      const costVnd = Math.max(1, parsedVnd || 30000);
+      if (vndInput) vndInput.value = costVnd.toLocaleString('pt-BR');
       const qtyInput = document.getElementById('vua-input-qty');
       if (qtyInput) qtyInput.value = '1';
       const sellPriceInput = document.getElementById('vua-sell-price');
       if (sellPriceInput) sellPriceInput.value = (typeof formatVbrBRL === "function" ? formatVbrBRL(sellBrl) : sellBrl.toFixed(2));
 
       if (typeof calculateVuavia === 'function') calculateVuavia();
-      if (typeof showToast === 'function') showToast('⚡ Perfil VuaVia carregado na calculadora!');
+      if (typeof showToast === 'function') showToast(`⚡ Simulação VuaVia: ${costVnd.toLocaleString('pt-BR')} ₫ @ R$ ${(typeof formatVbrBRL === "function" ? formatVbrBRL(sellBrl) : sellBrl.toFixed(2))}!`);
       if (typeof playChime === 'function') playChime('click');
     }
 
