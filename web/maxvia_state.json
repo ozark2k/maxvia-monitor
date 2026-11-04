@@ -1,32 +1,53 @@
 {
-  "updated_at": "2026-11-01 12:08:55",
+  "updated_at": "2026-11-04 10:20:02",
   "username": "Itooh - ID: 4271",
-  "balance_str": "$40.10",
-  "balance_usd": 40.1,
+  "balance_str": "$211.08",
+  "balance_usd": 211.08,
   "products": [
     {
-      "name": "Via Ramdom (2FA)",
+      "name": "Via Ramdom New (2FA)",
       "price": 1.22,
       "price_str": "$1.22",
       "stock": 16571,
       "url": "https://maxvia88.com/categories/219"
     },
     {
-      "name": "V2 Acc Farm 6 Month+ (2FA)",
-      "price": 0.76,
-      "price_str": "$0.76",
-      "stock": 5863,
-      "url": "https://maxvia88.com/categories/219"
-    },
-    {
-      "name": "V3 Acc Scan 1 Year+ (2FA)",
+      "name": "V3| Acc Scan 1 Year+ (2FA)",
       "price": 1.77,
       "price_str": "$1.77",
       "stock": 4639,
       "url": "https://maxvia88.com/categories/219"
     },
     {
-      "name": "Acc Farmed 2026 (2FA)",
+      "name": "⭐ Acc Trusted Old Selfie Unlocked (2FA)",
+      "price": 3.03,
+      "price_str": "$3.03",
+      "stock": 6054,
+      "url": "https://maxvia88.com/categories/1"
+    },
+    {
+      "name": "V2| Acc Farm 6 Month+ (2FA)",
+      "price": 0.76,
+      "price_str": "$0.76",
+      "stock": 5863,
+      "url": "https://maxvia88.com/categories/219"
+    },
+    {
+      "name": "V2| Acc Farm 6 Month+ (2FA)",
+      "price": 0.76,
+      "price_str": "$0.76",
+      "stock": 5863,
+      "url": "https://maxvia88.com/categories/219"
+    },
+    {
+      "name": "V3| Acc Scan 1 Year+ (2FA)",
+      "price": 1.77,
+      "price_str": "$1.77",
+      "stock": 4639,
+      "url": "https://maxvia88.com/categories/219"
+    },
+    {
+      "name": "⭐Acc Farmed 2026 (2FA)",
       "price": 0.83,
       "price_str": "$0.83",
       "stock": 0,
@@ -40,7 +61,7 @@
       "url": "https://maxvia88.com/categories/219"
     },
     {
-      "name": "Via Canada Old 0-29 Friend (2FA)",
+      "name": "Via Canada Old 0-29 Friend  (2FA)",
       "price": 4.34,
       "price_str": "$4.34",
       "stock": 0,
@@ -66,6 +87,56 @@
       "price_str": "$19.30",
       "stock": 0,
       "url": "https://maxvia88.com/categories/219"
+    }
+  ],
+  "resale_profiles": [
+    {
+      "id": "v3_scan_1y",
+      "name": "V3| Acc Scan 1 Year+ (2FA)",
+      "subtitle": "PERFIL 1 ANO+",
+      "cost_usd": 1.77,
+      "cost_str": "$1.77",
+      "stock": 4639,
+      "default_sell_brl": 13.0,
+      "url": "https://maxvia88.com/categories/219",
+      "icon": "📅",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "selfie_unlocked",
+      "name": "⭐ Acc Trusted Old Selfie Unlocked (2FA)",
+      "subtitle": "PERFIL ANTIGO COM SELFIE OK",
+      "cost_usd": 3.03,
+      "cost_str": "$3.03",
+      "stock": 6054,
+      "default_sell_brl": 20.0,
+      "url": "https://maxvia88.com/categories/1",
+      "icon": "⭐",
+      "color": "#eab308"
+    },
+    {
+      "id": "farm_6m_friends",
+      "name": "Acc Farm 6 Month+ (2FA)",
+      "subtitle": "PERFIL COM 7 MESES COM AMIGOS",
+      "cost_usd": 1.09,
+      "cost_str": "$1.09",
+      "stock": 3566,
+      "default_sell_brl": 9.0,
+      "url": "https://maxvia88.com/categories/219",
+      "icon": "👥",
+      "color": "#10b981"
+    },
+    {
+      "id": "v2_farm_6m_no_friends",
+      "name": "V2| Acc Farm 6 Month+ (2FA)",
+      "subtitle": "PERFIL COM 7 MESES SEM AMIGOS",
+      "cost_usd": 0.76,
+      "cost_str": "$0.76",
+      "stock": 5863,
+      "default_sell_brl": 7.0,
+      "url": "https://maxvia88.com/categories/219",
+      "icon": "👤",
+      "color": "#06b6d4"
     }
   ]
 }

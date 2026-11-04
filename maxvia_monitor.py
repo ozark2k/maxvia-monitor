@@ -686,6 +686,18 @@ def refresh_maxvia_balance(force: bool = False) -> dict:
                 LAST_BALANCE_REFRESH_TIME = now
                 if not isinstance(LATEST_WEB_STATE, dict):
                     LATEST_WEB_STATE = {}
+                web_state_path = os.path.join(WEB_DIR, "maxvia_state.json")
+                if 'resale_profiles' not in LATEST_WEB_STATE:
+                    try:
+                        if os.path.exists(web_state_path):
+                            with open(web_state_path, "r", encoding="utf-8") as rf:
+                                disk_state = json.load(rf)
+                                if 'resale_profiles' in disk_state:
+                                    LATEST_WEB_STATE['resale_profiles'] = disk_state['resale_profiles']
+                                if 'products' in disk_state:
+                                    LATEST_WEB_STATE['products'] = disk_state['products']
+                    except Exception:
+                        pass
                 LATEST_WEB_STATE['balance_usd'] = u_info['balance_usd']
                 LATEST_WEB_STATE['balance_str'] = u_info.get('balance_str', f"${u_info['balance_usd']:.2f}")
                 if u_info.get('username'):
@@ -693,7 +705,6 @@ def refresh_maxvia_balance(force: bool = False) -> dict:
                 LATEST_WEB_STATE['updated_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
                 # Save directly to disk for web server
-                web_state_path = os.path.join(WEB_DIR, "maxvia_state.json")
                 try:
                     with open(web_state_path, "w", encoding="utf-8") as f:
                         json.dump(LATEST_WEB_STATE, f, ensure_ascii=False, indent=2)
@@ -935,12 +946,15 @@ def save_state(state: dict):
 
 
 def export_maxvia_web_state(all_products: dict):
-    """Export current MaxVia88 user balance and live product prices to limpador_contas/maxvia_state.json."""
+    """Export current MaxVia88 user balance, live product prices, and the 4 dedicated resale profiles."""
     try:
         priority_items = [
             ("ramdom", "Via Ramdom New (2FA)", 1.29),
-            ("farm 6 month", "Acc Farm 6 Month+ (2FA)", 1.04),
-            ("scan 1 year", "Acc Scan 1 Year+ (2FA)", 2.60),
+            ("v3 acc scan 1 year", "V3| Acc Scan 1 Year+ (2FA)", 1.77),
+            ("selfie unlocked", "⭐ Acc Trusted Old Selfie Unlocked (2FA)", 3.03),
+            ("farm 6 month", "Acc Farm 6 Month+ (2FA)", 1.09),
+            ("v2 acc farm 6 month", "V2| Acc Farm 6 Month+ (2FA)", 0.76),
+            ("scan 1 year", "Acc Scan 1 Year+ (2FA)", 2.47),
             ("farmed 2026", "Acc Farmed 2026 (2FA)", 0.88),
             ("switzerland", "Via Switzerland Old (2FA)", 4.57),
             ("canada old", "Via Canada Old (2FA)", 4.57),
@@ -955,13 +969,14 @@ def export_maxvia_web_state(all_products: dict):
             for p_id, item in all_products.items():
                 if item.get('site') == 'maxvia88':
                     t = (item.get('raw_title') or item.get('title') or '').lower()
-                    if kw in t:
+                    pid_l = p_id.lower()
+                    if kw in t or kw in pid_l:
                         if not found or (item.get('stock', 0) > found.get('stock', 0)):
                             found = item
             if found:
                 p_val = parse_price_val(found.get('price')) or fallback_price
                 featured.append({
-                    "name": found.get('title') or fallback_name,
+                    "name": found.get('raw_title') or found.get('title') or fallback_name,
                     "price": p_val,
                     "price_str": f"${p_val:.2f}",
                     "stock": found.get('stock', 0),
@@ -976,12 +991,103 @@ def export_maxvia_web_state(all_products: dict):
                     "url": "https://maxvia88.com/"
                 })
 
+        # Os 4 Perfis Oficiais de Revenda Solicitados pelo Usuário
+        resale_targets = [
+            {
+                "id": "v3_scan_1y",
+                "name": "V3| Acc Scan 1 Year+ (2FA)",
+                "subtitle": "PERFIL 1 ANO+",
+                "match_kw": "v3 acc scan 1 year",
+                "fallback_cost": 1.77,
+                "default_sell_brl": 13.0,
+                "url": "https://maxvia88.com/categories/219",
+                "icon": "📅",
+                "color": "#3b82f6"
+            },
+            {
+                "id": "selfie_unlocked",
+                "name": "⭐ Acc Trusted Old Selfie Unlocked (2FA)",
+                "subtitle": "PERFIL ANTIGO COM SELFIE OK",
+                "match_kw": "selfie unlocked",
+                "fallback_cost": 3.03,
+                "default_sell_brl": 20.0,
+                "url": "https://maxvia88.com/categories/1",
+                "icon": "⭐",
+                "color": "#eab308"
+            },
+            {
+                "id": "farm_6m_friends",
+                "name": "Acc Farm 6 Month+ (2FA)",
+                "subtitle": "PERFIL COM 7 MESES COM AMIGOS",
+                "match_kw": "acc farm 6 month+ (2fa)",
+                "fallback_cost": 1.09,
+                "default_sell_brl": 9.0,
+                "url": "https://maxvia88.com/categories/219",
+                "icon": "👥",
+                "color": "#10b981"
+            },
+            {
+                "id": "v2_farm_6m_no_friends",
+                "name": "V2| Acc Farm 6 Month+ (2FA)",
+                "subtitle": "PERFIL COM 7 MESES SEM AMIGOS",
+                "match_kw": "v2 acc farm 6 month",
+                "fallback_cost": 0.76,
+                "default_sell_brl": 7.0,
+                "url": "https://maxvia88.com/categories/219",
+                "icon": "👤",
+                "color": "#06b6d4"
+            }
+        ]
+
+        resale_profiles = []
+        for target in resale_targets:
+            found = None
+            for p_id, item in all_products.items():
+                if item.get('site') == 'maxvia88':
+                    t = (item.get('raw_title') or item.get('title') or '').lower()
+                    pid_l = p_id.lower()
+                    kw = target["match_kw"].lower()
+                    if kw in t or kw in pid_l:
+                        if target["id"] == "farm_6m_friends" and "v2" in (t + pid_l):
+                            continue
+                        if not found or item.get('stock', 0) > found.get('stock', 0):
+                            found = item
+            if found:
+                p_val = parse_price_val(found.get('price')) or target["fallback_cost"]
+                resale_profiles.append({
+                    "id": target["id"],
+                    "name": found.get('raw_title') or target["name"],
+                    "subtitle": target["subtitle"],
+                    "cost_usd": p_val,
+                    "cost_str": f"${p_val:.2f}",
+                    "stock": found.get('stock', 0),
+                    "default_sell_brl": target["default_sell_brl"],
+                    "url": found.get('url') or target["url"],
+                    "icon": target["icon"],
+                    "color": target["color"]
+                })
+            else:
+                fb_cost = target["fallback_cost"]
+                resale_profiles.append({
+                    "id": target["id"],
+                    "name": target["name"],
+                    "subtitle": target["subtitle"],
+                    "cost_usd": fb_cost,
+                    "cost_str": f"${fb_cost:.2f}",
+                    "stock": 0,
+                    "default_sell_brl": target["default_sell_brl"],
+                    "url": target["url"],
+                    "icon": target["icon"],
+                    "color": target["color"]
+                })
+
         web_state = {
             "updated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
             "username": CURRENT_MAXVIA_USER_INFO.get("username", "Itooh - ID: 4271"),
             "balance_str": CURRENT_MAXVIA_USER_INFO.get("balance_str", "$32.16"),
             "balance_usd": CURRENT_MAXVIA_USER_INFO.get("balance_usd", 32.16),
-            "products": featured
+            "products": featured,
+            "resale_profiles": resale_profiles
         }
 
         global LATEST_WEB_STATE
@@ -998,7 +1104,7 @@ def export_maxvia_web_state(all_products: dict):
                     json.dump(web_state, f, ensure_ascii=False, indent=2)
             except Exception:
                 pass
-        logging.info(f"Exported MaxVia web state (Balance: {web_state['balance_str']})")
+        logging.info(f"Exported MaxVia web state with 4 resale profiles (Balance: {web_state['balance_str']})")
     except Exception as e:
         logging.error(f"Failed to export MaxVia web state: {e}")
 
