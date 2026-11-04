@@ -1239,7 +1239,7 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     # 1. Se o produto esgotou (bateu 0), notifica
                     if new_stock == 0:
                         zero_cycles = old_item.get('zero_cycles', 0) + 1
-                        required_zero_cycles = 4 if old_stock > 200 else (3 if old_stock > 20 else 2)
+                        required_zero_cycles = 10 if old_stock > 1000 else (7 if old_stock > 200 else (4 if old_stock > 20 else 2))
                         if old_stock > 10 and zero_cycles < required_zero_cycles:
                             item['zero_cycles'] = zero_cycles
                             item['stock'] = old_stock
@@ -1324,7 +1324,7 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
 
                     if new_stock == 0:
                         zero_cycles = old_item.get('zero_cycles', 0) + 1
-                        required_zero_cycles = 4 if old_stock > 200 else (3 if old_stock > 20 else 2)
+                        required_zero_cycles = 10 if old_stock > 1000 else (7 if old_stock > 200 else (4 if old_stock > 20 else 2))
                         if old_stock > 10 and zero_cycles < required_zero_cycles:
                             item['zero_cycles'] = zero_cycles
                             item['stock'] = old_stock
@@ -1375,7 +1375,7 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
 
                     if new_stock == 0:
                         zero_cycles = old_item.get('zero_cycles', 0) + 1
-                        required_zero_cycles = 4 if old_stock > 200 else (3 if old_stock > 20 else 2)
+                        required_zero_cycles = 10 if old_stock > 1000 else (7 if old_stock > 200 else (4 if old_stock > 20 else 2))
                         if old_stock > 10 and zero_cycles < required_zero_cycles:
                             item['zero_cycles'] = zero_cycles
                             item['stock'] = old_stock
@@ -1422,7 +1422,7 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     # Se esgotar completamente, sempre avisa com urgência máxima!
                     if new_stock == 0:
                         zero_cycles = old_item.get('zero_cycles', 0) + 1
-                        required_zero_cycles = 4 if old_stock > 200 else (3 if old_stock > 20 else 2)
+                        required_zero_cycles = 10 if old_stock > 1000 else (7 if old_stock > 200 else (4 if old_stock > 20 else 2))
                         if old_stock > 10 and zero_cycles < required_zero_cycles:
                             item['zero_cycles'] = zero_cycles
                             item['stock'] = old_stock
@@ -1511,15 +1511,6 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                 continue
 
             elif new_stock > old_stock:
-                pre_zero = old_item.get('pre_zero_stock', 0)
-                # Anti-Glitch: Se o produto aparentemente zerou recentemente (glitch de API) e voltou com estoque <= estoque anterior:
-                if old_stock == 0 and pre_zero > 0 and new_stock <= pre_zero:
-                    item['last_notified_stock'] = new_stock
-                    item['pre_zero_stock'] = 0
-                    item['zero_cycles'] = 0
-                    logging.info(f"[ANTI-GLITCH] Retorno de estoque pós-glitch para '{clean_display_title}' ({old_stock} -> {new_stock} <= {pre_zero}). Alerta falso de reposição ignorado.")
-                    continue
-
                 # Anti-Duplicate: Se o novo estoque não ultrapassa o último estoque já notificado ao usuário,
                 # não reenvia alerta repetido (evita repetição causada por oscilações temporárias de rede/API).
                 if baseline_stock > 0 and new_stock <= baseline_stock:
