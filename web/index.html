@@ -2038,7 +2038,7 @@
 
         <!-- Lista dos 4 Perfis em Linhas Verticais (um embaixo do outro) -->
         <div id="maxvia-resale-rows-container" style="display: flex; flex-direction: column; gap: 10px;">
-          <div class="maxvia-resale-row" id="resale-row-v3_scan_1y" style="2px solid #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.35); background: rgba(20, 35, 60, 0.88); border-radius: 14px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; transition: all 0.2s ease;">
+          <div class="maxvia-resale-row" id="resale-row-v3_scan_1y" style="border: 2px solid #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.35); background: rgba(20, 35, 60, 0.88); border-radius: 14px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; transition: all 0.2s ease;">
             <div style="flex: 2; min-width: 230px; display: flex; align-items: center; gap: 12px;">
               <div style="background: rgba(255,255,255,0.06); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid rgba(255,255,255,0.12); flex-shrink: 0;">
                 📅
@@ -2107,7 +2107,7 @@
               </button>
             </div>
           </div>
-          <div class="maxvia-resale-row" id="resale-row-selfie_unlocked" style="1.5px solid rgba(255, 255, 255, 0.1); background: rgba(10, 16, 28, 0.72); border-radius: 14px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; transition: all 0.2s ease;">
+          <div class="maxvia-resale-row" id="resale-row-selfie_unlocked" style="border: 1.5px solid rgba(255, 255, 255, 0.1); background: rgba(10, 16, 28, 0.72); border-radius: 14px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; transition: all 0.2s ease;">
             <div style="flex: 2; min-width: 230px; display: flex; align-items: center; gap: 12px;">
               <div style="background: rgba(255,255,255,0.06); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid rgba(255,255,255,0.12); flex-shrink: 0;">
                 ⭐
@@ -2176,7 +2176,7 @@
               </button>
             </div>
           </div>
-          <div class="maxvia-resale-row" id="resale-row-farm_6m_friends" style="1.5px solid rgba(255, 255, 255, 0.1); background: rgba(10, 16, 28, 0.72); border-radius: 14px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; transition: all 0.2s ease;">
+          <div class="maxvia-resale-row" id="resale-row-farm_6m_friends" style="border: 1.5px solid rgba(255, 255, 255, 0.1); background: rgba(10, 16, 28, 0.72); border-radius: 14px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; transition: all 0.2s ease;">
             <div style="flex: 2; min-width: 230px; display: flex; align-items: center; gap: 12px;">
               <div style="background: rgba(255,255,255,0.06); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid rgba(255,255,255,0.12); flex-shrink: 0;">
                 👥
@@ -2245,7 +2245,7 @@
               </button>
             </div>
           </div>
-          <div class="maxvia-resale-row" id="resale-row-v2_farm_6m_no_friends" style="1.5px solid rgba(255, 255, 255, 0.1); background: rgba(10, 16, 28, 0.72); border-radius: 14px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; transition: all 0.2s ease;">
+          <div class="maxvia-resale-row" id="resale-row-v2_farm_6m_no_friends" style="border: 1.5px solid rgba(255, 255, 255, 0.1); background: rgba(10, 16, 28, 0.72); border-radius: 14px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; transition: all 0.2s ease;">
             <div style="flex: 2; min-width: 230px; display: flex; align-items: center; gap: 12px;">
               <div style="background: rgba(255,255,255,0.06); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid rgba(255,255,255,0.12); flex-shrink: 0;">
                 👤
@@ -6550,7 +6550,7 @@
 
         const rowBorder = isSelected
           ? '2px solid #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.35); background: rgba(20, 35, 60, 0.88);'
-          : '1.5px solid rgba(255, 255, 255, 0.1); background: rgba(10, 16, 28, 0.72);';
+          : 'border: 1.5px solid rgba(255, 255, 255, 0.1); background: rgba(10, 16, 28, 0.72);';
 
         return `
           <div class="maxvia-resale-row" style="${rowBorder} border-radius: 14px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; transition: all 0.2s ease;">
