@@ -1933,8 +1933,8 @@ def check_server_billing_reminder(config: dict, bot_token: str, chat_id: str, fo
 
     provider = billing_cfg.get("provider", "Render")
     amount_usd = float(billing_cfg.get("amount_usd", 7.00))
-    billing_day = int(billing_cfg.get("billing_day", 10))
-    days_before = int(billing_cfg.get("notify_days_before", 1))
+    billing_day = int(billing_cfg.get("billing_day", 6))
+    notify_days_before = billing_cfg.get("notify_days_before", 3)
 
     now = datetime.now()
     today_str = now.strftime("%Y-%m-%d")
@@ -1947,9 +1947,6 @@ def check_server_billing_reminder(config: dict, bot_token: str, chat_id: str, fo
                 billing_state = json.load(f)
         except Exception:
             billing_state = {}
-
-    if not force_test and billing_state.get("last_notified_date") == today_str:
-        return False
 
     current_year = now.year
     current_month = now.month
@@ -1971,6 +1968,11 @@ def check_server_billing_reminder(config: dict, bot_token: str, chat_id: str, fo
             target_billing_date = datetime(next_year, next_month, min(billing_day, last_day))
 
     diff_days = (target_billing_date.date() - now.date()).days
+    cycle_key = f"{target_billing_date.strftime('%Y-%m')}_{diff_days}"
+    notified_milestones = billing_state.get("notified_milestones", [])
+
+    if not force_test and cycle_key in notified_milestones:
+        return False
 
     # Obter cotação do dólar para conversão estimada em BRL
     dolar_brl = 5.40
@@ -1988,39 +1990,51 @@ def check_server_billing_reminder(config: dict, bot_token: str, chat_id: str, fo
     if force_test:
         msg = (
             f"🔔 <b>[TESTE] AVISO DE FATURA DO SERVIDOR ({provider.upper()})</b>\n\n"
-            f"⚠️ <b>Lembrete programado para avisar 1 dia antes da renovação!</b>\n\n"
+            f"⚠️ <b>Lembrete programado para avisar 3 dias e 1 dia antes da renovação!</b>\n\n"
             f"📅 <b>Dia do Vencimento:</b> Todo dia {billing_day}\n"
             f"💵 <b>Valor da Assinatura:</b> ${amount_usd:.2f} USD (~R$ {approx_brl:.2f})\n"
-            f"🌐 <b>Servidor Online:</b> Monitor 24/7 & Calculadora Universal\n"
+            f"🌐 <b>Servidor Online:</b> Sentinela 24/7 (MaxVia, BuyViaFB, OKX, Binance, Pix, Meta Ads & Extensões)\n"
             f"🔗 <b>Link do Sistema:</b> https://maxvia-monitor.onrender.com\n\n"
-            f"💡 <i>Você receberá este aviso automático no Telegram todo mês (no dia {billing_day - 1} e no dia {billing_day}) para nunca deixar o servidor offline!</i>\n\n"
+            f"💡 <i>Você receberá este aviso automático no Telegram no dia {billing_day - 3}, dia {billing_day - 1} e no dia {billing_day} para nunca deixar os bots caírem!</i>\n\n"
             f"👉 <b>Painel de Cobrança:</b> https://dashboard.render.com/billing"
         )
-    elif diff_days == days_before:
+    elif diff_days == 3:
         msg = (
-            f"🔔 <b>AVISO DE RENOVAÇÃO DO SERVIDOR ({provider.upper()})</b>\n\n"
-            f"⚠️ <b>Amanhã (Dia {billing_day}) vence a fatura do seu servidor na nuvem!</b>\n\n"
-            f"📅 <b>Vencimento:</b> Amanhã, dia {billing_day}\n"
+            f"🔔 <b>AVISO ANTECIPADO: FATURA DO SERVIDOR ({provider.upper()}) EM 3 DIAS!</b>\n\n"
+            f"⚠️ <b>Faltam 3 dias para a renovação da sua assinatura do servidor na nuvem!</b>\n\n"
+            f"📅 <b>Vencimento:</b> Dia {billing_day} ({target_billing_date.strftime('%d/%m/%Y')})\n"
             f"💵 <b>Valor:</b> ${amount_usd:.2f} USD (~R$ {approx_brl:.2f})\n"
-            f"🌐 <b>Serviço:</b> Monitor de Estoque 24/7 & Calculadora\n"
+            f"🌐 <b>Serviço:</b> Monitor de Estoque 24/7, OKX, Binance, Pix & Meta Ads\n"
             f"🔗 <b>Link do Servidor:</b> https://maxvia-monitor.onrender.com\n\n"
-            f"💡 <i>Lembrete com 1 dia de antecedência para você conferir o saldo/limite do seu cartão ou pagar no painel, garantindo que o bot do Telegram e a calculadora continuem 100% online sem interrupção!</i>\n\n"
+            f"💡 <i>Aviso antecipado de 3 dias para garantir que seu cartão tenha limite/saldo e evitar que o servidor seja pausado!</i>\n\n"
             f"👉 <b>Painel Render:</b> https://dashboard.render.com/billing"
+        )
+    elif diff_days == 1:
+        msg = (
+            f"⚠️ <b>LEMBRETE URGENTE: FATURA DO SERVIDOR ({provider.upper()}) VENCE AMANHÃ!</b>\n\n"
+            f"🚨 <b>Amanhã (Dia {billing_day}) vence a mensalidade do Render!</b>\n\n"
+            f"📅 <b>Vencimento:</b> Amanhã, dia {billing_day} ({target_billing_date.strftime('%d/%m/%Y')})\n"
+            f"💵 <b>Valor:</b> ${amount_usd:.2f} USD (~R$ {approx_brl:.2f})\n"
+            f"🌐 <b>Serviço:</b> Sentinela 24/7 Online\n"
+            f"🔗 <b>Link do Servidor:</b> https://maxvia-monitor.onrender.com\n\n"
+            f"👉 <b>Conferir ou Pagar Agora:</b> https://dashboard.render.com/billing"
         )
     elif diff_days == 0:
         msg = (
-            f"🚨 <b>HOJE É O DIA DE PAGAR O SERVIDOR ({provider.upper()})!</b>\n\n"
-            f"⚠️ <b>A fatura do seu servidor vence HOJE (Dia {billing_day})!</b>\n\n"
+            f"🚨 <b>HOJE É O DIA DO PAGAMENTO DO SERVIDOR ({provider.upper()})!</b>\n\n"
+            f"⚠️ <b>A fatura do seu servidor na nuvem vence HOJE (Dia {billing_day})!</b>\n\n"
             f"💵 <b>Valor:</b> ${amount_usd:.2f} USD (~R$ {approx_brl:.2f})\n"
-            f"🌐 <b>Serviço:</b> Monitor 24/7 & Calculadora Universal\n"
+            f"🌐 <b>Serviço:</b> Sentinela 24/7 Online (MaxVia, BuyVia, OKX, Binance, Pix, Meta)\n"
             f"🔗 <b>Link do Servidor:</b> https://maxvia-monitor.onrender.com\n\n"
-            f"👉 <b>Acessar Fatura e Pagar:</b> https://dashboard.render.com/billing"
+            f"👉 <b>Acessar Fatura e Pagar no Render:</b> https://dashboard.render.com/billing"
         )
 
     if msg:
         logging.info(f"Enviando lembrete de pagamento do servidor {provider} (diff_days={diff_days})...")
         if send_telegram_message(bot_token, chat_id, msg):
             if not force_test:
+                notified_milestones.append(cycle_key)
+                billing_state["notified_milestones"] = notified_milestones[-15:]
                 billing_state["last_notified_date"] = today_str
                 billing_state["last_diff_days"] = diff_days
                 try:
@@ -2227,6 +2241,23 @@ def main():
         t_srv.start()
         t_ping = threading.Thread(target=keep_alive_ping, daemon=True)
         t_ping.start()
+
+    # Start Cloud Sentinels (OKX, Binance BSC, Pix, Meta Ads & Chrome Extension Fast Invite BM)
+    try:
+        from okx_sentinel import run_okx_sentinel_loop
+        t_okx = threading.Thread(target=run_okx_sentinel_loop, daemon=True)
+        t_okx.start()
+        logging.info("[Render Cloud] Sentinel OKX & Binance BSC iniciado em 24/7 background thread.")
+    except Exception as e:
+        logging.error(f"Erro ao iniciar okx_sentinel: {e}")
+
+    try:
+        from pix_sentinel import run_pix_sentinel_loop
+        t_pix = threading.Thread(target=run_pix_sentinel_loop, daemon=True)
+        t_pix.start()
+        logging.info("[Render Cloud] Sentinel Pix, Meta Ads & Fast Invite BM iniciado em 24/7 background thread.")
+    except Exception as e:
+        logging.error(f"Erro ao iniciar pix_sentinel: {e}")
 
     config = load_config()
     interval_sec = int(config.get("check_interval_seconds") or os.environ.get("CHECK_INTERVAL", "60"))
