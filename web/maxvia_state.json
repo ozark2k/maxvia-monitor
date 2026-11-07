@@ -91,18 +91,6 @@
   ],
   "resale_profiles": [
     {
-      "id": "v3_scan_1y",
-      "name": "V3| Acc Scan 1 Year+ (2FA)",
-      "subtitle": "PERFIL 1 ANO+",
-      "cost_usd": 1.77,
-      "cost_str": "$1.77",
-      "stock": 4639,
-      "default_sell_brl": 13.0,
-      "url": "https://maxvia88.com/categories/219",
-      "icon": "📅",
-      "color": "#3b82f6"
-    },
-    {
       "id": "selfie_unlocked",
       "name": "⭐ Acc Trusted Old Selfie Unlocked (2FA)",
       "subtitle": "PERFIL ANTIGO COM SELFIE OK",

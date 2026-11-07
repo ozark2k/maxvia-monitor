@@ -307,14 +307,20 @@ def make_product_id(title: str, price: str) -> str:
 def is_buyviafb_target(item: dict) -> bool:
     """
     Retorna True para os produtos solicitados do BuyViaFB:
-    1. buyviafb_194: 1000x Brazil No2fa 0-30 Fr Live Ads (45.000 Coins)
-    2. buyviafb_195: 1000x Brazil No2fa 30+ Fr Live Ads (55.000 Coins)
-    3. buyviafb_133: (HOT) Acc Old 1000x Soak 9 Months Full 2fa 1 Hotmail Trust 30 Friend (80.000 Coins)
+    1. buyviafb_194: 1000x Brazil No2fa 0-30 Fr Live Ads
+    2. buyviafb_195: 1000x Brazil No2fa 30+ Fr Live Ads
+    3. Qualquer perfil da Categoria 186 (VIA BRAZIL) do BuyViaFB (https://buyviafb.com/category/186)
+    4. buyviafb_133: (HOT) Acc Old 1000x Soak 9 Months Full 2fa 1 Hotmail Trust 30 Friend
     """
     if not item or not isinstance(item, dict):
         return False
     if item.get('site') != 'buyviafb':
         return False
+    
+    url = item.get('url', '')
+    if 'category/186' in url or item.get('category_id') == '186' or item.get('is_via_brazil'):
+        return True
+
     b_id = str(item.get('buyviafb_id', ''))
     if b_id in ['194', '195', '133']:
         return True
@@ -809,6 +815,13 @@ KNOWN_BUYVIAFB_IDS = {
     '(hot) acc old 1000x soak 9 months full 2fa 1 hotmail trust 30 friend': '133',
 }
 
+IGNORED_BUYVIAFB_HEADERS = {
+    'via brazil', 'via random', 'categories', 'country', 'notice',
+    'login & register', 'purchase history', 'deposit history', 'language',
+    'system', 'products', 'via scan', 'clone', 'home', 'profile', 'deposit',
+    'purchased orders', 'transaction history', 'website integration', 'api documents'
+}
+
 
 def _parse_buyviafb_html(html: str, page_url: str, products: dict):
     """Parse BuyViaFB cards and buttons, including Sold Out items with 0 stock."""
@@ -816,11 +829,11 @@ def _parse_buyviafb_html(html: str, page_url: str, products: dict):
 
     # 1. Parse structured product cards (handles both in-stock and Sold Out items)
     for card in soup.find_all('div', class_='card'):
-        h1 = card.find('h1')
-        if not h1:
+        header_tag = card.find(['h1', 'h2', 'h3', 'h4', 'h5'])
+        if not header_tag:
             continue
-        raw_title = h1.get_text(strip=True)
-        if not raw_title or len(raw_title) < 3:
+        raw_title = header_tag.get_text(strip=True)
+        if not raw_title or len(raw_title) < 3 or raw_title.lower() in IGNORED_BUYVIAFB_HEADERS:
             continue
 
         btn = card.find('button')
@@ -861,6 +874,24 @@ def _parse_buyviafb_html(html: str, page_url: str, products: dict):
                 slug = re.sub(r'[^a-z0-9]+', '_', clean_key).strip('_')
                 prod_id = slug
 
+        # Extrair atributos (TIME REG, 2FA, FRIEND, INFOR, etc.) se existirem
+        attrs = []
+        for li in card.find_all('li', class_='list-group-item'):
+            span = li.find('span')
+            val = span.get_text(strip=True) if span else ''
+            key = li.get_text(strip=True)
+            if span:
+                key = key.replace(val, '').strip()
+            if key and val:
+                attrs.append(f"{key}: {val}")
+
+        agent_p = ''
+        agent_el = card.find(string=re.compile(r'Agent Price:', re.I))
+        if agent_el:
+            agent_p = agent_el.strip()
+
+        is_cat_186 = ('category/186' in page_url or 'brazil' in raw_title.lower())
+
         p_id = f"buyviafb_{prod_id}"
         price_str = f"{price_val:,} Coins".replace(',', '.')
         products[p_id] = {
@@ -870,9 +901,13 @@ def _parse_buyviafb_html(html: str, page_url: str, products: dict):
             'raw_title': raw_title,
             'price': price_str,
             'price_val': price_val,
+            'agent_price': agent_p,
+            'attributes': attrs,
             'stock': stock_val,
             'site': 'buyviafb',
-            'url': page_url
+            'url': page_url,
+            'category_id': '186' if is_cat_186 else '',
+            'is_via_brazil': is_cat_186
         }
 
     # 2. Parse any additional buttons with showPromptMessage not captured by card div
@@ -886,6 +921,7 @@ def _parse_buyviafb_html(html: str, page_url: str, products: dict):
                 price_int = int(price)
                 stock_int = int(stock)
                 price_str = f"{price_int:,} Coins".replace(',', '.')
+                is_cat_186 = ('category/186' in page_url or 'brazil' in title.lower())
                 products[p_id] = {
                     'id': p_id,
                     'buyviafb_id': prod_id,
@@ -895,7 +931,9 @@ def _parse_buyviafb_html(html: str, page_url: str, products: dict):
                     'price_val': price_int,
                     'stock': stock_int,
                     'site': 'buyviafb',
-                    'url': page_url
+                    'url': page_url,
+                    'category_id': '186' if is_cat_186 else '',
+                    'is_via_brazil': is_cat_186
                 }
 
 
@@ -991,19 +1029,8 @@ def export_maxvia_web_state(all_products: dict):
                     "url": "https://maxvia88.com/"
                 })
 
-        # Os 4 Perfis Oficiais de Revenda Solicitados pelo Usuário
+        # Perfis Oficiais de Revenda Solicitados pelo Usuário
         resale_targets = [
-            {
-                "id": "v3_scan_1y",
-                "name": "V3| Acc Scan 1 Year+ (2FA)",
-                "subtitle": "PERFIL 1 ANO+",
-                "match_kw": "v3 acc scan 1 year",
-                "fallback_cost": 1.77,
-                "default_sell_brl": 13.0,
-                "url": "https://maxvia88.com/categories/219",
-                "icon": "📅",
-                "color": "#3b82f6"
-            },
             {
                 "id": "selfie_unlocked",
                 "name": "⭐ Acc Trusted Old Selfie Unlocked (2FA)",
@@ -1763,9 +1790,40 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                 # new_stock == old_stock
                 item['last_notified_stock'] = baseline_stock
         else:
-            # Produto novo adicionado ou recém-surgido no monitor com estoque
+            # Produto novo adicionado ou recém-surgido no monitor
             new_stock = item['stock']
             item['last_notified_stock'] = new_stock
+
+            # Alerta imediato se for um NOVO PERFIL da categoria VIA BRAZIL no BuyViaFB
+            is_cat186_buyvia = is_buyviafb and (
+                item.get('category_id') == '186'
+                or 'category/186' in item.get('url', '')
+                or item.get('is_via_brazil')
+                or 'brazil' in (item.get('raw_title') or item.get('title', '')).lower()
+            )
+            if is_cat186_buyvia:
+                clean_t = item.get('raw_title') or item.get('title', '').replace('[BuyViaFB]', '').strip()
+                price_disp = item.get('price', 'Consulte no site')
+                agent_p = item.get('agent_price', '')
+                if agent_p:
+                    price_disp += f" ({agent_p})"
+
+                stock_disp = f"🟢 <b>{new_stock} unidades disponíveis!</b>" if new_stock > 0 else "🔴 <b>Sold Out (Esgotado)</b>"
+                attrs = item.get('attributes', [])
+                attr_text = f"\n📋 <b>Detalhes:</b> <i>{' | '.join(attrs[:4])}</i>" if attrs else ""
+                url_disp = item.get('url') or 'https://buyviafb.com/category/186'
+
+                changes.append(
+                    f"🎉🇧🇷 <b>[BUYVIAFB - NOVO PERFIL DETECTADO!]</b> 🇧🇷🎉\n"
+                    f"📢 <b>Novo perfil adicionado na categoria VIA BRAZIL!</b>\n\n"
+                    f"📦 <b>Perfil:</b> <b>{clean_t}</b>\n"
+                    f"💵 <b>Preço:</b> {price_disp}\n"
+                    f"📈 <b>Estoque Inicial:</b> {stock_disp}"
+                    f"{attr_text}\n"
+                    f"🔗 <b>Ver na Loja:</b> {url_disp}"
+                )
+                continue
+
             if is_buyviafb:
                 logging.info(f"[BuyViaFB] Produto '{item['title']}' registrado com estoque baseline {new_stock}.")
                 continue
