@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-07 09:04:39",
+  "updated_at": "2026-11-07 09:18:25",
   "username": "Itooh - ID: 4271",
   "balance_str": "$1.92",
   "balance_usd": 1.92,
@@ -8,14 +8,14 @@
       "name": "Via Ramdom New (2FA)",
       "price": 1.22,
       "price_str": "$1.22",
-      "stock": 15886,
+      "stock": 15875,
       "url": "https://maxvia88.com/categories/219"
     },
     {
       "name": "V3| Acc Scan 1 Year+ (2FA)",
       "price": 1.77,
       "price_str": "$1.77",
-      "stock": 3225,
+      "stock": 3224,
       "url": "https://maxvia88.com/categories/1"
     },
     {
@@ -43,7 +43,7 @@
       "name": "V3| Acc Scan 1 Year+ (2FA)",
       "price": 1.77,
       "price_str": "$1.77",
-      "stock": 3225,
+      "stock": 3224,
       "url": "https://maxvia88.com/categories/1"
     },
     {
@@ -108,7 +108,7 @@
       "subtitle": "PERFIL COM 7 MESES COM AMIGOS",
       "cost_usd": 1.09,
       "cost_str": "$1.09",
-      "stock": 4141,
+      "stock": 4138,
       "default_sell_brl": 9.0,
       "url": "https://maxvia88.com/categories/219",
       "icon": "👥",

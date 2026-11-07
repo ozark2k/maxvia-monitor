@@ -2060,6 +2060,14 @@ def run_cycle(is_startup: bool = False):
     except Exception as e:
         logging.warning(f"Erro ao verificar lembrete de fatura do servidor: {e}")
 
+    # 1.1 Verifica lembretes agendados na nuvem (Cloud Reminders)
+    try:
+        from cloud_reminders import check_and_dispatch_reminders
+        is_allowed_notify = IS_CLOUD_SERVER or ("--enable-local-telegram" in sys.argv)
+        check_and_dispatch_reminders(bot_token, chat_id, allow_telegram=is_allowed_notify)
+    except Exception as e:
+        logging.warning(f"Erro ao verificar lembretes customizados: {e}")
+
     logging.info("Iniciando verificação de estoque MaxVia88...")
     # 0. Atualiza o saldo MaxVia88 imediatamente no início do ciclo
     try:

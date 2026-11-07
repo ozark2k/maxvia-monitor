@@ -418,3 +418,4 @@ def run_pix_sentinel_loop():
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
     check_pix_sentinel_cycle(allow_telegram=True)
+
