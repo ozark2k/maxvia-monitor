@@ -6999,42 +6999,56 @@
       const profitPerProfileVal = accountsCount > 0 ? (profitBrlVal / accountsCount) : 0;
       const marginPct = receivedBrl > 0 ? ((profitBrlVal / receivedBrl) * 100) : 0;
 
-      // 4. Verificação de Cobertura do Saldo MaxVia88
+      // 4. Verificação de Cobertura do Saldo MaxVia88 e Margem de Segurança
       const isFullyCovered = userBalanceUsd >= totalCostUsd;
       const remainingUsd = Math.max(0, userBalanceUsd - totalCostUsd);
       const remainingBrl = remainingUsd * dolar;
-      const missingMaxviaUsd = Math.max(0, totalCostUsd - userBalanceUsd);
+
+      // Margem de segurança solicitada pelo usuário: +1 perfil a mais de folga
+      const profileMarginUsd = costUsd;
+      const targetCostWithMargin = totalCostUsd + profileMarginUsd;
+
+      // Se o saldo no MaxVia não cobre o pedido exato (userBalanceUsd < totalCostUsd),
+      // calculamos o valor a recarregar garantindo o pedido + 1 perfil inteiro de margem!
+      const missingMaxviaUsd = (!isFullyCovered)
+        ? Math.max(0, targetCostWithMargin - userBalanceUsd)
+        : 0;
 
       // Regras da OKX (Rede Polygon POS / USDT0):
       // Taxa fixa na rede Polygon da OKX é de apenas 0.0074 USDT (~R$ 0,04)
+      // Saque mínimo exigido pela OKX: 2.00 USDT
       const OKX_POLYGON_FEE = 0.0074;
-      const totalOkxDebitNeeded = missingMaxviaUsd > 0 ? (missingMaxviaUsd + OKX_POLYGON_FEE) : 0;
+      const OKX_MIN_WITHDRAWAL = 2.00;
 
-      // Verifica se o caixa sobrando na OKX cobre a falta no MaxVia:
-      const isOkxWalletCovered = missingMaxviaUsd > 0 && okxWalletUsd >= totalOkxDebitNeeded;
+      // Valor mínimo que precisa ser sacado na OKX para transferir pro MaxVia:
+      const okxWithdrawalNeeded = missingMaxviaUsd > 0
+        ? Math.max(OKX_MIN_WITHDRAWAL, missingMaxviaUsd)
+        : 0;
+
+      const totalOkxDebitNeeded = okxWithdrawalNeeded > 0
+        ? (okxWithdrawalNeeded + OKX_POLYGON_FEE)
+        : 0;
+
+      // O caixa sobrando na OKX SÓ cobre se tiver saldo suficiente E se atender ao saque mínimo da OKX:
+      const isOkxWalletCovered = !isFullyCovered && okxWalletUsd >= totalOkxDebitNeeded && okxWithdrawalNeeded >= OKX_MIN_WITHDRAWAL;
 
       // USDT adicional que precisa ser comprado via Pix na OKX:
-      const neededDepositUsd = (missingMaxviaUsd > 0 && !isOkxWalletCovered)
+      const neededDepositUsd = (!isFullyCovered && !isOkxWalletCovered)
         ? Math.max(0, totalOkxDebitNeeded - okxWalletUsd)
         : 0;
 
       const neededPixExactBrl = neededDepositUsd * dolar;
 
-      // Pix sugerido com margem segura inteligente (OKX mínimo de Pix é R$ 10):
+      // Pix sugerido com margem segura inteligente (OKX mínimo de Pix é R$ 10, com folga de R$ 1.50 para spread BRL/USDT):
       let suggestedPix = 0;
-      let safetyMarginBrl = 0;
       let trocoOkxUsd = 0;
 
       if (neededDepositUsd > 0) {
-        // Folga de segurança (+R$ 0.80) para cobrir variação de centavos na conversão BRL->USDT na OKX
-        suggestedPix = Math.max(10, Math.ceil(neededPixExactBrl + 0.80));
-        safetyMarginBrl = suggestedPix - neededPixExactBrl;
-        // O troco que vai sobrar na OKX após sacar missingMaxviaUsd (e pagar a taxa de 0.0074 USDT):
-        trocoOkxUsd = ((suggestedPix / dolar) + okxWalletUsd) - totalOkxDebitNeeded;
-        if (trocoOkxUsd < 0) trocoOkxUsd = 0;
+        suggestedPix = Math.max(10, Math.ceil(neededPixExactBrl + 1.50));
+        trocoOkxUsd = Math.max(0, ((suggestedPix / dolar) + okxWalletUsd) - totalOkxDebitNeeded);
       } else if (isOkxWalletCovered) {
         suggestedPix = 0;
-        trocoOkxUsd = okxWalletUsd - totalOkxDebitNeeded;
+        trocoOkxUsd = Math.max(0, okxWalletUsd - totalOkxDebitNeeded);
       } else {
         suggestedPix = 0;
         trocoOkxUsd = okxWalletUsd;
@@ -7082,16 +7096,16 @@
         } else if (isOkxWalletCovered) {
           statusBadge.style.background = 'rgba(168, 85, 247, 0.25)';
           statusBadge.style.borderColor = '#a855f7';
-          statusTitle.innerHTML = '<span>🟣</span> Caixa OKX Cobre!';
+          statusTitle.innerHTML = '<span>🟣</span> Caixa OKX Cobre (+1 Margem)!';
           statusTitle.style.color = '#d8b4fe';
-          statusDesc.textContent = `Sobra $${trocoOkxUsd.toFixed(2)} na OKX (sem novo Pix)`;
+          statusDesc.textContent = `Saca $${okxWithdrawalNeeded.toFixed(2)} na OKX ➔ Saldo no MaxVia fica em ~$${(userBalanceUsd + okxWithdrawalNeeded).toFixed(2)}`;
           statusDesc.style.color = '#f3e8ff';
         } else {
           statusBadge.style.background = 'rgba(255, 214, 10, 0.2)';
           statusBadge.style.borderColor = '#ffd60a';
           statusTitle.innerHTML = `<span>⚡</span> Pix OKX: R$ ${formatVbrBRL(suggestedPix)}`;
           statusTitle.style.color = '#ffd60a';
-          statusDesc.textContent = `Faltam $${missingMaxviaUsd.toFixed(2)} no MaxVia (Taxa 0,0074 USDT)`;
+          statusDesc.textContent = `Recarrega $${okxWithdrawalNeeded.toFixed(2)} no MaxVia (inclui +1 perfil de margem)`;
           statusDesc.style.color = '#ffffff';
         }
       }
@@ -7181,10 +7195,10 @@
           depositBrlMain.textContent = 'R$ 0,00';
         }
         if (depositLine1) {
-          depositLine1.innerHTML = `🟣 <b style="color: #ffffff;">Você já tem $${okxWalletUsd.toFixed(2)} USDT na OKX!</b> Faltam só <b>$${missingMaxviaUsd.toFixed(2)} USDT</b> no MaxVia.`;
+          depositLine1.innerHTML = `🟣 <b style="color: #ffffff;">Você tem $${okxWalletUsd.toFixed(2)} USDT na OKX!</b> Cobre a recarga no MaxVia com +1 perfil de margem.`;
         }
         if (depositLine2) {
-          depositLine2.innerHTML = `📲 <b>Sacar na OKX: $${missingMaxviaUsd.toFixed(2)} USDT</b> (Rede Polygon • Taxa 0,0074 USDT) • <b style="color: #30d158;">Sobra no Caixa OKX: $${trocoOkxUsd.toFixed(2)} USDT</b>`;
+          depositLine2.innerHTML = `📲 <b>Sacar na OKX: $${okxWithdrawalNeeded.toFixed(2)} USDT</b> (Rede Polygon • Taxa 0,0074) ➔ Saldo no MaxVia fica em ~$${(userBalanceUsd + okxWithdrawalNeeded).toFixed(2)} (Paga os ${accountsCount} perfis com folga!) • Sobra na OKX: $${trocoOkxUsd.toFixed(2)} USDT`;
         }
         if (depositBtnContainer) depositBtnContainer.style.display = 'none';
 
@@ -7195,14 +7209,14 @@
           cardDeposit.style.background = 'linear-gradient(135deg, rgba(168, 85, 247, 0.18) 0%, rgba(25, 12, 38, 0.96) 100%)';
         }
         if (depositCardLabel) {
-          depositCardLabel.innerHTML = '<span>🟣</span> DEPOSITAR NO PIX (PARA A OKX):';
+          depositCardLabel.innerHTML = '<span>🟣</span> DEPOSITAR NO PIX (COM MARGEM DE +1 PERFIL):';
           depositCardLabel.style.color = '#d8b4fe';
         }
         if (depositUsdtBadge) {
           depositUsdtBadge.style.borderColor = '#a855f7';
           depositUsdtBadge.style.background = 'rgba(168, 85, 247, 0.25)';
           depositUsdtBadge.style.color = '#f3e8ff';
-          depositUsdtBadge.textContent = `Faltam $${missingMaxviaUsd.toFixed(2)} USDT (Taxa OKX 0,0074)`;
+          depositUsdtBadge.textContent = `Faltam $${okxWithdrawalNeeded.toFixed(2)} USDT (Margem de +1 perfil)`;
         }
         if (depositBrlMain) {
           depositBrlMain.style.color = '#30d158';
@@ -7213,7 +7227,7 @@
           depositLine1.innerHTML = `🟣 <b>Fazer Pix de R$ ${formatVbrBRL(suggestedPix)} para a OKX</b>${okxMsg} ➔ Converter para USDT`;
         }
         if (depositLine2) {
-          depositLine2.innerHTML = `📲 <b>Sacar na OKX: $${missingMaxviaUsd.toFixed(2)} USDT</b> (Rede Polygon • Taxa 0,0074 USDT) • <b style="color: #34d399;">Troco estimado OKX: +$${trocoOkxUsd.toFixed(2)} USDT</b>`;
+          depositLine2.innerHTML = `📲 <b>Sacar na OKX: $${okxWithdrawalNeeded.toFixed(2)} USDT</b> (Rede Polygon) ➔ Saldo final no MaxVia: ~$${(userBalanceUsd + okxWithdrawalNeeded).toFixed(2)} USD (Paga os ${accountsCount} perfis com folga!) • Troco OKX: +$${trocoOkxUsd.toFixed(2)} USDT`;
         }
         if (depositBtnContainer) {
           depositBtnContainer.style.display = 'flex';
