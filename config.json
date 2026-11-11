@@ -9,7 +9,6 @@
     "★Acc Farmed XMDT (2FA)",
     "S1|Personal Ads – Limit $50",
     "Set 5-9 Ads Limit 50$",
-    "V1.0| Acc 902 OLD Loss Greentick (NO2FA)",
     "Acc Farmed 2025",
     "Acc Farmed 2026",
     "1000X BRAZIL NO2FA 30+ FR LIVE ADS",
@@ -44,11 +43,6 @@
       "is_highlight": true
     },
     "Set 5-9 Ads Limit 50$": {
-      "notify_restock": true,
-      "notify_drop": false,
-      "is_highlight": true
-    },
-    "902 OLD Loss Greentick": {
       "notify_restock": true,
       "notify_drop": false,
       "is_highlight": true

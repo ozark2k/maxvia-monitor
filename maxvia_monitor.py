@@ -401,17 +401,17 @@ def is_brazil_profile(item: dict) -> bool:
 
 def is_hot_item_target(item: dict) -> bool:
     """
-    Retorna True para os 7 perfis solicitados da categoria 'Hot Item (Recommended)':
+    Retorna True para os perfis solicitados da categoria 'Hot Item (Recommended)':
     1. ⭐Acc Farmed 902 New 2026 (2FA) ($0.74)
     2. ⭐Acc Farmed 2025 (2FA) ($1.11)
     3. ⭐Acc Farmed 2026 (2FA) ($0.88)
     4. ⭐Acc Farmed XMDT (2FA) ($0.70)
     5. S1|Personal Ads – Limit $50 ($3.13)
     6. Set 5-9 Ads Limit 50$ ($4.30)
-    7. V1.0| Acc 902 OLD Loss Greentick (NO2FA) ($2.15)
     
     EXCLUI TERMINANTEMENTE:
     - Combo 1 Account + 9 Ads limit 50$ (ou qualquer Combo 1 Account)
+    - V1.0| Acc 902 OLD Loss Greentick (NO2FA) (desativado a pedido do usuário)
     """
     if not item or not isinstance(item, dict):
         return False
@@ -423,8 +423,10 @@ def is_hot_item_target(item: dict) -> bool:
     p_id = str(item.get('id', '')).lower()
     full_text = f"{p_id} {title_clean} {raw_title}"
 
-    # Exclusão estrita solicitada pelo usuário: "Menos esse combo, tá? Combo 1 account"
+    # Exclusão estrita solicitada pelo usuário
     if "combo" in full_text and "1 account" in full_text:
+        return False
+    if "902 old loss" in full_text or "greentick" in full_text:
         return False
 
     # 1. Acc Farmed 902 New 2026 (2FA) ($0.74)
@@ -452,15 +454,11 @@ def is_hot_item_target(item: dict) -> bool:
     if "set 5-9" in full_text or ("set" in full_text and "5-9" in full_text and "limit" in full_text):
         return True
 
-    # 7. V1.0| Acc 902 OLD Loss Greentick (NO2FA) ($2.15)
-    if "902 old loss" in full_text or "greentick" in full_text or "902 old loss greentick" in full_text:
-        return True
-
     return False
 
 
 def get_hot_item_info(item: dict):
-    """Retorna metadados visuais e nome limpo para os 7 perfis Hot Items monitorados."""
+    """Retorna metadados visuais e nome limpo para os perfis Hot Items monitorados."""
     if not is_hot_item_target(item):
         return None
     title_clean = normalize_title(item.get('title', '')).lower()
@@ -480,8 +478,6 @@ def get_hot_item_info(item: dict):
         return {"name": "S1|Personal Ads – Limit $50", "price": "$3.13", "icon": "⚡"}
     if "set 5-9" in full_text or ("set" in full_text and "5-9" in full_text and "limit" in full_text):
         return {"name": "Set 5-9 Ads Limit 50$", "price": "$4.30", "icon": "⚡"}
-    if "902 old loss" in full_text or "greentick" in full_text:
-        return {"name": "V1.0| Acc 902 OLD Loss Greentick (NO2FA)", "price": "$2.15", "icon": "🛡️"}
     return {"name": item.get('raw_title') or item.get('title'), "price": item.get('price', ''), "icon": "🔥"}
 
 
@@ -1208,6 +1204,12 @@ def should_notify_product(item_or_title, target_keywords: list = None, site: str
         return False
 
     title_clean = normalize_title(title).lower()
+    raw_title = str(item.get('raw_title', '')).lower()
+    full_text = f"{title_clean} {raw_title}"
+
+    # Exclusões estritas
+    if "902 old loss" in full_text or "greentick" in full_text:
+        return False
 
     # Caso 0: Perfis Hot Item (Recommended) da MaxVia88 solicitados pelo usuário (7 perfis)
     if is_hot_item_target(item):
