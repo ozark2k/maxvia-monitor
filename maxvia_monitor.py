@@ -2269,6 +2269,14 @@ def main():
     except Exception as e:
         logging.error(f"Erro ao iniciar pix_sentinel: {e}")
 
+    try:
+        from microsoft_sentinel import run_microsoft_sentinel_loop
+        t_ms = threading.Thread(target=run_microsoft_sentinel_loop, daemon=True)
+        t_ms.start()
+        logging.info("[Render Cloud] Sentinel Microsoft Outlook & Exchange Online iniciado em 24/7 background thread.")
+    except Exception as e:
+        logging.error(f"Erro ao iniciar microsoft_sentinel: {e}")
+
     config = load_config()
     interval_sec = int(config.get("check_interval_seconds") or os.environ.get("CHECK_INTERVAL", "60"))
 
