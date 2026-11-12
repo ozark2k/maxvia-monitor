@@ -40,34 +40,10 @@ TARGET_SYMBOLS = {
         "query_sym": "USDT",
         "link": "https://www.okx.com/pt-br/status"
     },
-    "POL-Polygon": {
-        "exchange": "OKX",
-        "name": "POL (Polygon Nativo)",
-        "network": "Polygon",
-        "emoji": "🟣",
-        "query_sym": "POL",
-        "link": "https://www.okx.com/pt-br/status"
-    },
-    "TRX-TRC20": {
-        "exchange": "OKX",
-        "name": "TRX (TRON Nativo)",
-        "network": "TRON",
-        "emoji": "🔴",
-        "query_sym": "TRX",
-        "link": "https://www.okx.com/pt-br/status"
-    },
-    # BINANCE
-    "BINANCE-BSC-BNB": {
-        "exchange": "Binance",
-        "name": "BSC BNB Smart Chain (BEP20)",
-        "network": "BSC",
-        "emoji": "🟡",
-        "query_sym": "BNB",
-        "link": "https://www.binance.com/pt-BR/network"
-    },
+    # BINANCE (Unificado: apenas 1 alerta por rede/USDT, sem duplicar BNB e USDT)
     "BINANCE-BSC-USDT": {
         "exchange": "Binance",
-        "name": "USDT (BSC / BEP20)",
+        "name": "Rede BSC BNB Smart Chain (BEP20 / USDT)",
         "network": "BSC",
         "emoji": "🟡",
         "query_sym": "USDT",
@@ -146,12 +122,12 @@ def fetch_binance_symbols_status() -> dict:
             result = {}
             for item in data.get("data", []):
                 coin = item.get("coin")
-                if coin in ["BNB", "USDT"]:
+                if coin == "USDT":
                     for net in item.get("networkList", []):
                         network = net.get("network") or ""
                         net_name = net.get("name") or ""
                         if "BSC" in network or "BEP20" in net_name:
-                            key = f"BINANCE-BSC-{coin}"
+                            key = "BINANCE-BSC-USDT"
                             deposit_enable = bool(net.get("depositEnable"))
                             withdraw_enable = bool(net.get("withdrawEnable"))
                             d_desc = net.get("depositDesc") or net.get("depositMsgCategoryDesc") or "Indisponível no momento"
@@ -231,14 +207,10 @@ def check_networks_cycle(allow_telegram: bool = True):
     has_changes = False
 
     usdt_data = fetch_okx_symbol_status("USDT")
-    pol_data = fetch_okx_symbol_status("POL")
-    trx_data = fetch_okx_symbol_status("TRX")
     binance_data = fetch_binance_symbols_status()
 
     all_fetched = {}
     all_fetched.update(usdt_data)
-    all_fetched.update(pol_data)
-    all_fetched.update(trx_data)
     all_fetched.update(binance_data)
 
     current_statuses = {}
@@ -257,6 +229,7 @@ def check_networks_cycle(allow_telegram: bool = True):
         save_state(state)
         return
 
+    alerted_networks = set()
     for key, info in TARGET_SYMBOLS.items():
         curr = current_statuses.get(key)
         if not curr:
@@ -272,19 +245,23 @@ def check_networks_cycle(allow_telegram: bool = True):
         curr_w = curr.get("withdraw")
         curr_d = curr.get("deposit")
 
+        exchange_net_key = (info.get("exchange"), info.get("network"))
+
         # Suspensão detectada
         if (prev_w is True and curr_w is False) or (prev_d is True and curr_d is False):
             logging.warning(f"[Cloud {info.get('exchange', 'OKX')}] SUSPENSÃO: {key}")
-            if allow_telegram:
+            if allow_telegram and exchange_net_key not in alerted_networks:
                 send_telegram(format_suspension_alert(key, info, curr))
+                alerted_networks.add(exchange_net_key)
             state[key] = curr
             has_changes = True
 
         # Normalização detectada
         elif (prev_w is False and curr_w is True) or (prev_d is False and curr_d is True):
             logging.info(f"[Cloud {info.get('exchange', 'OKX')}] RECUPERAÇÃO: {key}")
-            if allow_telegram:
+            if allow_telegram and exchange_net_key not in alerted_networks:
                 send_telegram(format_recovery_alert(key, info, curr))
+                alerted_networks.add(exchange_net_key)
             state[key] = curr
             has_changes = True
         else:
