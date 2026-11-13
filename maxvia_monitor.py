@@ -524,9 +524,21 @@ def get_cat219_info(item: dict):
             'url': item.get('url') or 'https://maxvia88.com/categories/219'
         }
 
-    # 2. Acc Farm 6 Month+ (2FA) (V1 e V2)
-    if 'farm 6 month' in p_id or ('farm' in (raw_title + title) and '6 month' in (raw_title + title) and '2fa' in (raw_title + title)):
-        is_v2 = 'v2' in raw_title or 'v2' in title or 'v2' in p_id
+    full_text = f"{p_id} {title} {raw_title}"
+
+    # 2. V4| Acc Farm 12 Month+ (2FA) ($2.00)
+    if 'farm 12 month' in p_id or ('farm' in full_text and '12 month' in full_text and '2fa' in full_text):
+        return {
+            'key': 'farm12m_v4',
+            'badge': '🟢',
+            'color': 'VERDE',
+            'clean_name': 'V4| Acc Farm 12 Month+ (2FA)',
+            'url': item.get('url') or 'https://maxvia88.com/categories/219'
+        }
+
+    # 3. Acc Farm 6 Month+ (2FA) (V1 e V2)
+    if 'farm 6 month' in p_id or ('farm' in full_text and '6 month' in full_text and '2fa' in full_text):
+        is_v2 = 'v2' in full_text
         c_name = 'V2| Acc Farm 6 Month+ (2FA)' if is_v2 else 'Acc Farm 6 Month+ (2FA)'
         return {
             'key': 'farm6m_v2' if is_v2 else 'farm6m',
@@ -986,6 +998,7 @@ def export_maxvia_web_state(all_products: dict):
             ("ramdom", "Via Ramdom New (2FA)", 1.29),
             ("v3 acc scan 1 year", "V3| Acc Scan 1 Year+ (2FA)", 1.77),
             ("selfie unlocked", "⭐ Acc Trusted Old Selfie Unlocked (2FA)", 3.03),
+            ("farm 12 month", "V4| Acc Farm 12 Month+ (2FA)", 2.00),
             ("farm 6 month", "Acc Farm 6 Month+ (2FA)", 1.09),
             ("v2 acc farm 6 month", "V2| Acc Farm 6 Month+ (2FA)", 0.76),
             ("scan 1 year", "Acc Scan 1 Year+ (2FA)", 2.47),
@@ -1603,9 +1616,9 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                             )
                         continue
 
-                    # Acc Farm 6 Month+ (2FA) (V1 e V2): Avisar em lotes de compras (ex: 200 em 200 para V2, 100 em 100 para V1)
-                    if cat219['key'] in ['farm6m', 'farm6m_v2']:
-                        default_step = 200 if cat219['key'] == 'farm6m_v2' else 100
+                    # Acc Farm 6 Month+ (2FA) (V1 e V2) e V4| Acc Farm 12 Month+ (2FA): Avisar em lotes de compras de 300 em 300
+                    if cat219['key'] in ['farm6m', 'farm6m_v2', 'farm12m_v4']:
+                        default_step = 300
                         drop_step = rule.get("drop_step_alert") or default_step
                         accumulated_drop = baseline_stock - new_stock
                         if accumulated_drop < drop_step:
@@ -1613,7 +1626,7 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                             item['last_notified_stock'] = baseline_stock
                             continue
 
-                        # Atingiu o lote de compras acumuladas (ex: 100 ou 200)!
+                        # Atingiu o lote de compras acumuladas (300 em 300)!
                         diff = accumulated_drop
                         from_stock = baseline_stock
                         item['last_notified_stock'] = new_stock

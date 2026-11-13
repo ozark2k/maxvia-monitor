@@ -24,7 +24,10 @@
     "BM3 Verified (Created 3 ads account)",
     "Via Brazil New (No2FA)",
     "Via Brazil (No2FA)",
-    "Via Brazil Old (No2FA)"
+    "Via Brazil Old (No2FA)",
+    "V4| Acc Farm 12 Month+ (2FA)",
+    "V4 Acc Farm 12 Month+ (2FA)",
+    "Acc Farm 12 Month+ (2FA)"
   ],
   "product_rules": {
     "Acc Farmed 902": {
@@ -60,19 +63,19 @@
     "V2| Acc Farm 6 Month+ (2FA)": {
       "notify_restock": true,
       "notify_drop": true,
-      "drop_step_alert": 200,
+      "drop_step_alert": 300,
       "is_highlight": true
     },
     "V2 Acc Farm 6 Month+ (2FA)": {
       "notify_restock": true,
       "notify_drop": true,
-      "drop_step_alert": 200,
+      "drop_step_alert": 300,
       "is_highlight": true
     },
     "Acc Farm 6 Month+ (2FA)": {
       "notify_restock": true,
       "notify_drop": true,
-      "drop_step_alert": 100,
+      "drop_step_alert": 300,
       "is_highlight": true
     },
     "Acc Farmed 2025": {
@@ -145,6 +148,24 @@
     "Via Brazil": {
       "notify_restock": true,
       "notify_drop": false,
+      "is_highlight": true
+    },
+    "V4| Acc Farm 12 Month+ (2FA)": {
+      "notify_restock": true,
+      "notify_drop": true,
+      "drop_step_alert": 300,
+      "is_highlight": true
+    },
+    "V4 Acc Farm 12 Month+ (2FA)": {
+      "notify_restock": true,
+      "notify_drop": true,
+      "drop_step_alert": 300,
+      "is_highlight": true
+    },
+    "Acc Farm 12 Month+ (2FA)": {
+      "notify_restock": true,
+      "notify_drop": true,
+      "drop_step_alert": 300,
       "is_highlight": true
     }
   },
