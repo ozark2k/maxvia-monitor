@@ -617,20 +617,25 @@ def parse_products_from_html(html: str) -> dict:
         raw_price = price_elem.get_text(strip=True) if price_elem else ''
         clean_p = normalize_price(raw_price)
 
-        stock_elem = card.find(class_=lambda c: c and 'badge' in c)
+        # Obtenção de estoque robusta: prioridade absoluta para data-available do botão de compra
         stock = 0
-        if stock_elem:
+        buy_btn = card.find('button', class_=lambda c: c and 'buy-btn' in c)
+        if buy_btn and buy_btn.get('data-available') is not None:
             try:
-                stock = int(re.search(r'\d+', stock_elem.get_text(strip=True)).group())
-            except (ValueError, AttributeError):
+                stock = int(buy_btn.get('data-available'))
+            except (ValueError, TypeError):
                 stock = 0
         else:
-            buy_btn = card.find('button', class_=lambda c: c and 'buy-btn' in c)
-            if buy_btn and buy_btn.get('data-available'):
-                try:
-                    stock = int(buy_btn.get('data-available'))
-                except ValueError:
-                    stock = 0
+            # Fallback: busca pelo badge do estoque (ex: próximo a 'Remaning:' ou badge pill)
+            remaning_p = card.find(lambda el: el.name == 'p' and el.get_text() and any(k in el.get_text().lower() for k in ['remaning', 'remaining']))
+            stock_elem = (remaning_p.find(class_=lambda c: c and 'badge' in c) if remaning_p else None) or card.find(class_=lambda c: c and 'badge' in c)
+            if stock_elem:
+                m_stock = re.search(r'\d+', stock_elem.get_text(strip=True))
+                if m_stock:
+                    try:
+                        stock = int(m_stock.group())
+                    except ValueError:
+                        stock = 0
 
         prod_id = make_product_id(clean_t, clean_p)
         if prod_id and prod_id not in products:
@@ -1380,6 +1385,11 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
             old_stock = old_item['stock']
             new_stock = item['stock']
             baseline_stock = old_item.get('last_notified_stock', old_stock)
+
+            # Se o estoque atual é positivo, reseta imediatamente o contador de ciclos zerados para evitar acúmulo de falsos alarmes!
+            if new_stock > 0:
+                item['zero_cycles'] = 0
+                item['pre_zero_stock'] = 0
 
             if new_stock < old_stock:
                 # Caso BuyViaFB: Alerta compras apenas se o estoque estiver abaixo de 5.000 (ou se esgotar), ou em lotes configurados (ex: 10 em 10)
@@ -2138,8 +2148,8 @@ def run_cycle(is_startup: bool = False):
         matching_old = old_state.get(p_id) or old_by_title.get(title_key)
         if matching_old:
             item['last_notified_stock'] = matching_old.get('last_notified_stock', item['stock'])
-            item['zero_cycles'] = matching_old.get('zero_cycles', 0)
-            item['pre_zero_stock'] = matching_old.get('pre_zero_stock', 0)
+            item['zero_cycles'] = matching_old.get('zero_cycles', 0) if item['stock'] == 0 else 0
+            item['pre_zero_stock'] = matching_old.get('pre_zero_stock', 0) if item['stock'] == 0 else 0
         else:
             item['last_notified_stock'] = item['stock']
             item['zero_cycles'] = 0

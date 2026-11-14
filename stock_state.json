@@ -4939,5 +4939,47 @@
     "last_notified_stock": 4460,
     "zero_cycles": 0,
     "pre_zero_stock": 0
+  },
+  "v2 acc farm 6 month+ (2fa)_zsh.75": {
+    "id": "v2 acc farm 6 month+ (2fa)_zsh.75",
+    "title": "V2 Acc Farm 6 Month+ (2FA)",
+    "raw_title": "V2| Acc Farm 6 Month+ (2FA)",
+    "desc": "V2| Acc Farm 6 Month+ (2FA) zsh.79 »",
+    "stock": 2603,
+    "price": "zsh.75",
+    "site": "maxvia88",
+    "url": "https://maxvia88.com/categories/219",
+    "missing_cycles": 0,
+    "last_notified_stock": 2603,
+    "zero_cycles": 0,
+    "pre_zero_stock": 0
+  },
+  "v4 acc farm 12 month+ (2fa)_.00": {
+    "id": "v4 acc farm 12 month+ (2fa)_.00",
+    "title": "V4 Acc Farm 12 Month+ (2FA)",
+    "raw_title": "V4| Acc Farm 12 Month+ (2FA)",
+    "desc": "V4| Acc Farm 12 Month+ (2FA) .11 »",
+    "stock": 5362,
+    "price": ".00",
+    "site": "maxvia88",
+    "url": "https://maxvia88.com/categories/219",
+    "missing_cycles": 0,
+    "last_notified_stock": 5362,
+    "zero_cycles": 0,
+    "pre_zero_stock": 0
+  },
+  "acc farm 6 month+ (2fa)_.09": {
+    "id": "acc farm 6 month+ (2fa)_.09",
+    "title": "Acc Farm 6 Month+ (2FA)",
+    "raw_title": "Acc Farm 6 Month+ (2FA)",
+    "desc": "Acc Farm 6 Month+ (2FA) .14 »",
+    "stock": 4068,
+    "price": ".09",
+    "site": "maxvia88",
+    "url": "https://maxvia88.com/categories/219",
+    "missing_cycles": 0,
+    "last_notified_stock": 4068,
+    "zero_cycles": 0,
+    "pre_zero_stock": 0
   }
 }
