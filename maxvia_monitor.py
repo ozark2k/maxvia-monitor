@@ -307,9 +307,8 @@ def make_product_id(title: str, price: str) -> str:
 def is_buyviafb_target(item: dict) -> bool:
     """
     Retorna True para os produtos solicitados do BuyViaFB:
-    1. buyviafb_194: 1000x Brazil No2fa 0-30 Fr Live Ads
-    2. buyviafb_195: 1000x Brazil No2fa 30+ Fr Live Ads
-    3. Qualquer perfil da Categoria 186 (VIA BRAZIL) do BuyViaFB (https://buyviafb.com/category/186)
+    1. buyviafb_195: 1000x Brazil No2fa 30+ Fr Live Ads
+    2. Perfis da Categoria 186 (VIA BRAZIL) do BuyViaFB, exceto perfis excluídos pelo usuário.
     """
     if not item or not isinstance(item, dict):
         return False
@@ -320,17 +319,24 @@ def is_buyviafb_target(item: dict) -> bool:
     b_id = str(item.get('buyviafb_id', ''))
     p_id = str(item.get('id', ''))
 
-    # Exclusão explícita solicitada pelo usuário (perfil Soak 1000x)
+    # Exclusões explícitas solicitadas pelo usuário:
+    # 1. Perfil Soak 1000x (buyviafb_133)
     if 'soak' in title or b_id == '133' or p_id == 'buyviafb_133':
         return False
-    
+
+    # 2. Perfil 1000x Brazil No2fa 0-30 Fr Live Ads (buyviafb_194)
+    if b_id == '194' or p_id == 'buyviafb_194' or bool(re.search(r'0\s*-\s*30', title)):
+        return False
+
+    # 3. Perfil Acc Brazil 1000x No2fa Unlock Cpmail 0-10 Friend
+    if bool(re.search(r'0\s*-\s*10', title)) or p_id == 'buyviafb_acc_brazil_1000x_no2fa_unlock_cpmail_0_10_friend':
+        return False
+
     url = item.get('url', '')
     if 'category/186' in url or item.get('category_id') == '186' or item.get('is_via_brazil'):
         return True
 
-    if b_id in ['194', '195']:
-        return True
-    if p_id in ['buyviafb_194', 'buyviafb_195']:
+    if b_id == '195' or p_id == 'buyviafb_195':
         return True
     if 'brazil' in title:
         return True
@@ -826,7 +832,6 @@ def fetch_thefbstores_products() -> dict:
 
 KNOWN_BUYVIAFB_IDS = {
     '1000x brazil no2fa 30+ fr live ads': '195',
-    '1000x brazil no2fa 0-30 fr live ads': '194',
 }
 
 IGNORED_BUYVIAFB_HEADERS = {
