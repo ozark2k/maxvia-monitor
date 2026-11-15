@@ -8,10 +8,10 @@
   <meta http-equiv="Expires" content="0">
   <title>Limpador de Contas Premium</title>
   
-  <!-- Google Fonts: Outfit for display, Plus Jakarta Sans for body, JetBrains Mono for editor -->
+  <!-- Google Fonts: Inter for clean UI, JetBrains Mono for editor, Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
     @font-face {
@@ -27,25 +27,25 @@
     }
 
     :root {
-      --primary-dark: #000000;       /* Apple Deep Black */
-      --primary-medium: #18181b;     /* Apple System Gray 6 Dark */
-      --primary-light: #27272a;      /* Apple System Gray 5 */
-      --accent-blue: #0a84ff;        /* Apple Blue */
-      --accent-gold: #e5c158;        /* Luxury Apple Gold */
-      --accent-gold-hover: #ffd60a;  /* Bright Apple Gold */
-      --accent-gold-glow: rgba(229, 193, 88, 0.15);
-      --accent-green: #30d158;       /* Apple System Green */
-      --accent-red: #ff453a;         /* Apple System Red */
-      --accent-binance: #f3ba2f;     /* Binance Official Yellow */
-      --text-main: #ffffff;          /* Pure White */
-      --text-muted: #9ca3af;         /* Clean Slate Gray */
-      --glass-bg: rgba(24, 24, 27, 0.72);
-      --glass-border: rgba(255, 255, 255, 0.09);
-      --shadow-luxury: 0 20px 45px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-      --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-      --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --primary-dark: #09090b;       /* Zinc 950 deep canvas */
+      --primary-medium: #121215;     /* Zinc 900 panel surface */
+      --primary-light: #18181b;      /* Zinc 850 card surface */
+      --accent-blue: #3b82f6;        /* Modern clean Blue */
+      --accent-gold: #f4f4f5;        /* Crisp silver/white primary text */
+      --accent-gold-hover: #ffffff;  /* Hover state */
+      --accent-gold-glow: rgba(255, 255, 255, 0.05);
+      --accent-green: #34d399;       /* Modern soft Emerald */
+      --accent-red: #f87171;         /* Modern soft Red */
+      --accent-binance: #f59e0b;     /* Amber */
+      --text-main: #f4f4f5;          /* Crisp Off-White */
+      --text-muted: #71717a;         /* Clean Zinc 500 */
+      --glass-bg: #121215;
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --shadow-luxury: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+      --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-mono: 'JetBrains Mono', 'Fira Code', Courier, monospace;
-      --font-pricedown: 'Pricedown', 'Outfit', sans-serif;
+      --font-pricedown: 'Pricedown', 'Inter', sans-serif;
     }
 
     * {
@@ -56,13 +56,7 @@
 
     body {
       background-color: var(--primary-dark);
-      background-image: 
-        radial-gradient(circle at 10% 20%, rgba(229, 193, 88, 0.06) 0%, transparent 45%),
-        radial-gradient(circle at 90% 80%, rgba(48, 209, 88, 0.05) 0%, transparent 45%),
-        linear-gradient(180deg, #000000 0%, #0a0a0c 100%);
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
+      background-image: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
       color: var(--text-main);
       font-family: var(--font-body);
       min-height: 100vh;
@@ -300,43 +294,39 @@
       }
     }
 
-    /* Card Panels */
+    /* Card Panels - Modern Dark SaaS */
     .panel {
-      background: var(--glass-bg);
+      background: var(--primary-medium);
       border: 1px solid var(--glass-border);
-      border-radius: 18px;
-      padding: 1.2rem 1.4rem;
+      border-radius: 14px;
+      padding: 1.25rem 1.45rem;
       display: flex;
       flex-direction: column;
       gap: 0.85rem;
-      box-shadow: var(--shadow-luxury);
-      backdrop-filter: blur(30px) saturate(210%);
-      -webkit-backdrop-filter: blur(30px) saturate(210%);
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .panel:hover {
-      border-color: rgba(229, 193, 88, 0.15);
-      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
     }
 
     .panel:focus-within {
-      border-color: rgba(229, 193, 88, 0.35);
-      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.85), 0 0 25px rgba(229, 193, 88, 0.05);
+      border-color: rgba(255, 255, 255, 0.2);
     }
 
     .panel-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      padding-bottom: 0.65rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 0.75rem;
     }
 
     .panel-title {
       font-family: var(--font-display);
-      font-size: 1.25rem;
-      font-weight: 800;
+      font-size: 1.05rem;
+      font-weight: 600;
       color: var(--text-main);
       display: flex;
       align-items: center;
@@ -345,15 +335,15 @@
     }
 
     .panel-badge {
-      font-family: var(--font-display);
-      background: rgba(229, 193, 88, 0.08);
-      border: 1px solid rgba(229, 193, 88, 0.2);
-      border-radius: 8px;
-      padding: 4px 12px;
-      font-size: 0.85rem;
-      font-weight: 800;
-      color: var(--accent-gold);
-      letter-spacing: 0.02em;
+      font-family: var(--font-body);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.03em;
       text-transform: uppercase;
     }
 
@@ -369,49 +359,49 @@
     .editor {
       width: 100%;
       flex-grow: 1;
-      background: rgba(0, 0, 0, 0.55);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 14px;
-      padding: 1.1rem 1.25rem;
-      color: #f8fafc;
+      background: #0c0c0e;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 1rem 1.15rem;
+      color: #f4f4f5;
       font-family: var(--font-mono);
-      font-size: 1.1rem;
-      font-weight: 500;
+      font-size: 0.95rem;
+      font-weight: 400;
       line-height: 1.6;
-      letter-spacing: 0.35px;
+      letter-spacing: 0.2px;
       resize: vertical;
       outline: none;
-      transition: all 0.25s ease;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
       min-height: 220px;
     }
 
     #output-text {
-      color: #ffffff;
-      background: rgba(8, 8, 10, 0.7);
-      border: 1px solid rgba(229, 193, 88, 0.22);
+      color: #f4f4f5;
+      background: #0c0c0e;
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .editor:focus {
-      border-color: rgba(229, 193, 88, 0.5);
-      background: rgba(0, 0, 0, 0.65);
-      box-shadow: 0 0 0 4px rgba(229, 193, 88, 0.15);
+      border-color: rgba(255, 255, 255, 0.25);
+      background: #0e0e11;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
     }
 
     .editor.drag-over {
-      border-color: var(--accent-gold) !important;
-      background: rgba(229, 193, 88, 0.08) !important;
-      box-shadow: 0 0 0 4px rgba(229, 193, 88, 0.25) !important;
+      border-color: #3b82f6 !important;
+      background: rgba(59, 130, 246, 0.05) !important;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
     }
 
     .editor::placeholder {
-      color: rgba(255, 255, 255, 0.35);
-      font-size: 1rem;
+      color: #52525b;
+      font-size: 0.88rem;
     }
 
     /* Action Buttons Row */
     .actions-row {
       display: flex;
-      gap: 1.25rem;
+      gap: 1rem;
       flex-wrap: wrap;
     }
 
@@ -421,47 +411,47 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 0.9rem 1.75rem;
-      border-radius: 14px;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
       font-family: inherit;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
       border: 1px solid transparent;
       user-select: none;
     }
 
     .btn-primary {
-      background: var(--accent-gold);
-      color: #000000;
-      box-shadow: 0 4px 14px rgba(229, 193, 88, 0.25);
+      background: #f4f4f5;
+      color: #09090b;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     .btn-primary:hover:not(:disabled) {
-      background: var(--accent-gold-hover);
-      transform: scale(1.02);
-      box-shadow: 0 6px 20px rgba(229, 193, 88, 0.35);
+      background: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     }
 
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #f4f4f5;
     }
 
     .btn-secondary:hover:not(:disabled) {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.15);
-      transform: scale(1.02);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.14);
+      transform: translateY(-1px);
     }
 
     .btn:active:not(:disabled) {
-      transform: scale(0.98);
+      transform: translateY(0);
     }
 
     .btn:disabled {
-      opacity: 0.25;
+      opacity: 0.3;
       cursor: not-allowed;
       transform: none !important;
       box-shadow: none !important;
@@ -476,60 +466,33 @@
     }
 
     .stat-card {
-      background: rgba(255, 255, 255, 0.03);
+      background: var(--primary-light);
       border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 14px;
+      border-radius: 10px;
       padding: 0.85rem 1rem;
       display: flex;
       flex-direction: column;
       gap: 0.35rem;
       position: relative;
       overflow: hidden;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: border-color 0.15s ease, background 0.15s ease;
     }
 
     .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 3px;
-      height: 100%;
-      background: var(--accent-gold);
-      opacity: 0.3;
-      transition: opacity 0.25s ease;
+      display: none;
     }
 
     .stat-card:hover {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.04);
       border-color: rgba(255, 255, 255, 0.12);
-      transform: scale(1.02);
     }
 
-    .stat-card:hover::before {
-      opacity: 1;
-    }
-
-    .stat-card.valid::before {
-      background: var(--accent-green);
-    }
-    .stat-card.valid:hover {
-      background: rgba(48, 209, 88, 0.03);
-      border-color: rgba(48, 209, 88, 0.15);
-    }
     .stat-card.valid .stat-value {
-      color: var(--accent-green);
+      color: #34d399;
     }
 
-    .stat-card.removed::before {
-      background: #0a84ff; /* Apple Blue */
-    }
-    .stat-card.removed:hover {
-      background: rgba(10, 132, 255, 0.03);
-      border-color: rgba(10, 132, 255, 0.15);
-    }
     .stat-card.removed .stat-value {
-      color: #0a84ff;
+      color: #60a5fa;
     }
 
     .stat-header {
@@ -540,32 +503,31 @@
     }
 
     .stat-icon {
-      opacity: 0.5;
-      transition: transform 0.25s ease, opacity 0.25s ease;
+      opacity: 0.6;
+      transition: opacity 0.15s ease;
     }
 
     .stat-card:hover .stat-icon {
       opacity: 1;
-      transform: scale(1.1);
     }
 
     .stat-value {
       font-family: var(--font-display);
       font-variant-numeric: tabular-nums;
-      font-size: 2.2rem;
-      font-weight: 800;
-      color: var(--accent-gold);
-      line-height: 1.2;
+      font-size: 1.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.15;
       letter-spacing: -0.02em;
     }
 
     .stat-label {
-      font-family: var(--font-display);
-      font-size: 1.15rem;
-      color: rgba(255, 255, 255, 0.9);
-      font-weight: 800;
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
     }
 
     /* Footer */
@@ -1110,10 +1072,10 @@
     .calc-result-value {
       font-family: var(--font-display);
       font-variant-numeric: tabular-nums;
-      font-size: 3rem;
-      font-weight: 900;
+      font-size: 2.4rem;
+      font-weight: 700;
       color: var(--text-main);
-      letter-spacing: -0.03em;
+      letter-spacing: -0.02em;
       line-height: 1.1;
       transition: all 0.2s ease;
     }
@@ -1121,11 +1083,10 @@
     .calc-hero-price {
       font-family: var(--font-display);
       font-variant-numeric: tabular-nums;
-      font-size: 3.6rem;
-      font-weight: 900;
+      font-size: 2.8rem;
+      font-weight: 700;
       color: #ffffff;
-      text-shadow: 0 0 25px rgba(229, 193, 88, 0.35), 0 2px 8px rgba(0,0,0,0.5);
-      letter-spacing: -0.03em;
+      letter-spacing: -0.02em;
       line-height: 1.1;
       transition: font-size 0.2s ease;
     }
@@ -1198,39 +1159,39 @@
 
 
     <!-- Barra Superior: Abas Centrais + Relógio do Fornecedor Compacto no Canto -->
-    <div class="top-nav-bar" style="position: relative; display: flex; align-items: center; justify-content: center; margin-top: -0.5rem; margin-bottom: 0.25rem; min-height: 56px;">
+    <div class="top-nav-bar" style="position: relative; display: flex; align-items: center; justify-content: center; margin-top: -0.25rem; margin-bottom: 0.5rem; min-height: 50px;">
       
-      <!-- Seletor de Modo Principal (Centralizado) -->
+      <!-- Seletor de Modo Principal (Segmented Capsule) -->
       <div class="mode-nav-container" style="display: flex; justify-content: center;">
-        <div style="background: rgba(24, 24, 27, 0.85); border: 1.5px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 6px; display: inline-flex; gap: 8px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); backdrop-filter: blur(12px);">
-          <button type="button" id="btn-mode-profiles" onclick="switchAppMode('profiles')" class="mode-tab active" style="background: linear-gradient(135deg, rgba(229, 193, 88, 0.22) 0%, rgba(229, 193, 88, 0.08) 100%); border: 1.5px solid rgba(229, 193, 88, 0.55); color: var(--accent-gold); font-family: var(--font-display); font-weight: 800; font-size: 1rem; padding: 10px 24px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.25s ease;">
-            <span style="font-size: 1.2rem;">👤</span>
+        <div class="mode-nav-track" style="background: #141417; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 4px; display: inline-flex; gap: 4px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);">
+          <button type="button" id="btn-mode-profiles" onclick="switchAppMode('profiles')" class="mode-tab active" style="background: #27272a; border: 1px solid rgba(255, 255, 255, 0.12); color: #f4f4f5; font-family: var(--font-body); font-weight: 600; font-size: 0.88rem; padding: 7px 18px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: all 0.15s ease;">
+            <span style="font-size: 1rem;">👤</span>
             <span>Perfis Facebook (2FA & Emails)</span>
           </button>
-          <button type="button" id="btn-mode-bm" onclick="switchAppMode('bm')" class="mode-tab" style="background: transparent; border: 1.5px solid transparent; color: var(--text-muted); font-family: var(--font-display); font-weight: 800; font-size: 1rem; padding: 10px 24px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.25s ease;">
-            <span style="font-size: 1.2rem;">🏢</span>
+          <button type="button" id="btn-mode-bm" onclick="switchAppMode('bm')" class="mode-tab" style="background: transparent; border: 1px solid transparent; color: #a1a1aa; font-family: var(--font-body); font-weight: 500; font-size: 0.88rem; padding: 7px 18px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.15s ease;">
+            <span style="font-size: 1rem;">🏢</span>
             <span>Limpador de BMs (BM 1, BM 2...)</span>
-            <span id="bm-badge-count" style="font-size: 0.75rem; background: rgba(56, 189, 248, 0.2); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; padding: 2px 8px; border-radius: 6px; font-weight: 900; display: none;">0</span>
+            <span id="bm-badge-count" style="font-size: 0.72rem; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; padding: 1px 6px; border-radius: 6px; font-weight: 700; display: none;">0</span>
           </button>
-          <button type="button" id="btn-mode-cnpj" onclick="switchAppMode('cnpj')" class="mode-tab" style="background: transparent; border: 1.5px solid transparent; color: var(--text-muted); font-family: var(--font-display); font-weight: 800; font-size: 1rem; padding: 10px 24px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.25s ease;">
-            <span style="font-size: 1.2rem;">📑</span>
+          <button type="button" id="btn-mode-cnpj" onclick="switchAppMode('cnpj')" class="mode-tab" style="background: transparent; border: 1px solid transparent; color: #a1a1aa; font-family: var(--font-body); font-weight: 500; font-size: 0.88rem; padding: 7px 18px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.15s ease;">
+            <span style="font-size: 1rem;">📑</span>
             <span>Gerador CNPJ (BMs)</span>
-            <span style="font-size: 0.72rem; background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.5); color: #10b981; padding: 2px 8px; border-radius: 6px; font-weight: 900; letter-spacing: 0.04em;">NOVO</span>
+            <span style="font-size: 0.68rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #34d399; padding: 1px 6px; border-radius: 6px; font-weight: 700; letter-spacing: 0.04em;">NOVO</span>
           </button>
         </div>
       </div>
 
       <!-- Relógio Compacto do Fornecedor MaxVia (Cantinho Direito) -->
-      <div class="maxvia-clock-container" onclick="toggleMaxviaHoursModal()" title="Clique para ver os horários de atendimento do fornecedor" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%);">
-        <div class="maxvia-clock-header">
-          <span class="maxvia-clock-title">⚡ BENJAMIN (GMT+7)</span>
+      <div class="maxvia-clock-container" onclick="toggleMaxviaHoursModal()" title="Clique para ver os horários de atendimento do fornecedor" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: #141417; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 6px 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); cursor: pointer; transition: all 0.2s ease;">
+        <div class="maxvia-clock-header" style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+          <span class="maxvia-clock-title" style="font-size: 0.68rem; font-weight: 600; color: #a1a1aa; letter-spacing: 0.05em; text-transform: uppercase;">⚡ BENJAMIN (GMT+7)</span>
           <span id="maxvia-clock-status" class="maxvia-clock-status offline">Carregando...</span>
         </div>
-        <div class="maxvia-clock-time-row">
-          <span id="maxvia-clock-digits" class="maxvia-clock-digits">--:--:--</span>
-          <span id="maxvia-clock-date" class="maxvia-clock-date">-- (+11h)</span>
+        <div class="maxvia-clock-time-row" style="display: flex; align-items: baseline; gap: 8px; margin: 1px 0;">
+          <span id="maxvia-clock-digits" class="maxvia-clock-digits" style="font-family: var(--font-mono); font-size: 1.15rem; font-weight: 700; color: #f4f4f5; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; line-height: 1.2;">--:--:--</span>
+          <span id="maxvia-clock-date" class="maxvia-clock-date" style="font-size: 0.72rem; font-weight: 500; color: #71717a;">-- (+11h)</span>
         </div>
-        <div id="maxvia-clock-hint" class="maxvia-clock-hint">⏱️ Ver horários ▾</div>
+        <div id="maxvia-clock-hint" class="maxvia-clock-hint" style="font-size: 0.68rem; color: #71717a; display: flex; align-items: center; gap: 4px; font-weight: 500;">⏱️ Ver horários ▾</div>
       </div>
 
     </div>
@@ -1264,8 +1225,8 @@
         </div>
         
         <div class="actions-row" style="display: flex; justify-content: center; align-items: center; margin-top: 0.65rem;">
-          <button type="button" class="btn" style="background: rgba(255, 69, 58, 0.12); border: 1px solid rgba(255, 69, 58, 0.35); color: #ff453a; font-weight: 800; font-size: 1rem; padding: 10px 24px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 8px;" onclick="clearInput()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <button type="button" class="btn" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: #a1a1aa; font-weight: 500; font-size: 0.88rem; padding: 8px 22px; border-radius: 8px; cursor: pointer; transition: all 0.15s ease; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='rgba(239, 68, 68, 0.08)'; this.style.borderColor='rgba(239, 68, 68, 0.25)'; this.style.color='#f87171';" onmouseout="this.style.background='rgba(255, 255, 255, 0.04)'; this.style.borderColor='rgba(255, 255, 255, 0.08)'; this.style.color='#a1a1aa';" onclick="clearInput()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 6h18"></path>
               <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
               <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
@@ -1279,7 +1240,7 @@
       <div class="panel">
         <div class="panel-header">
           <h2 class="panel-title">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-gold)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #a1a1aa;">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
               <polyline points="22 4 12 14.01 9 11.01"></polyline>
             </svg>
@@ -1292,18 +1253,18 @@
         <div class="stats-container">
           <div class="stat-card valid">
             <div class="stat-header">
-              <span class="stat-label" style="font-size: 0.95rem; font-weight: 800;">Contas Válidas</span>
-              <svg class="stat-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <span class="stat-label">Contas Válidas</span>
+              <svg class="stat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
               </svg>
             </div>
-            <span class="stat-value" id="stat-valid" style="font-size: 2.5rem; font-weight: 900;">0</span>
+            <span class="stat-value" id="stat-valid">0</span>
           </div>
           <div class="stat-card removed" id="card-removed-cookies">
             <div class="stat-header">
-              <span class="stat-label" style="font-size: 0.95rem; font-weight: 800;">Cookies (Sessão)</span>
-              <svg class="stat-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <span class="stat-label">Cookies (Sessão)</span>
+              <svg class="stat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5Z"/>
                 <path d="M8.5 14.5v.01"/>
                 <path d="M16 15.5v.01"/>
@@ -1312,69 +1273,69 @@
                 <path d="M13 17v.01"/>
               </svg>
             </div>
-            <span class="stat-value" id="stat-removed" style="font-size: 2.5rem; font-weight: 900;">0</span>
+            <span class="stat-value" id="stat-removed">0</span>
           </div>
-          <div class="stat-card" id="card-duplicates" style="transition: all 0.3s ease;">
+          <div class="stat-card" id="card-duplicates" style="transition: all 0.2s ease;">
             <div class="stat-header">
-              <span class="stat-label" id="label-duplicates" style="font-size: 0.95rem; font-weight: 800;">Duplicados</span>
-              <svg class="stat-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <span class="stat-label" id="label-duplicates">Duplicados</span>
+              <svg class="stat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
               </svg>
             </div>
-            <span class="stat-value" id="stat-duplicates" style="font-size: 2.5rem; font-weight: 900;">0</span>
-            <span id="dup-details" style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 8px; font-weight: 600;">IDs: 0 | Emails: 0 | Linhas: 0</span>
-            <button id="btn-remove-dup" onclick="removeDuplicates()" style="display: none; background: linear-gradient(135deg, var(--accent-gold) 0%, #9c7b3c 100%); color: #000; border: none; border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; font-weight: 800; cursor: pointer; width: 100%; text-align: center; transition: all 0.2s ease; box-shadow: 0 4px 14px rgba(197, 160, 89, 0.3);">Limpar Todos</button>
+            <span class="stat-value" id="stat-duplicates">0</span>
+            <span id="dup-details" style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 4px; font-weight: 500;">IDs: 0 | Emails: 0 | Linhas: 0</span>
+            <button id="btn-remove-dup" onclick="removeDuplicates()" style="display: none; background: #27272a; color: #f4f4f5; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 6px 10px; font-size: 0.78rem; font-weight: 600; cursor: pointer; width: 100%; text-align: center; transition: all 0.15s ease;">Limpar Todos</button>
           </div>
-          <div class="stat-card" id="card-integrity" style="transition: all 0.3s ease;">
+          <div class="stat-card" id="card-integrity" style="transition: all 0.2s ease;">
             <div class="stat-header">
-              <span class="stat-label" id="label-integrity" style="font-size: 0.95rem; font-weight: 800;">Email Backup / Dados</span>
-              <svg class="stat-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <span class="stat-label" id="label-integrity">Email Backup / Dados</span>
+              <svg class="stat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                 <path d="m9 12 2 2 4-4"/>
               </svg>
             </div>
-            <span class="stat-value" id="stat-integrity" style="font-size: 2.2rem; font-weight: 900; color: var(--accent-green);">100% OK</span>
-            <span id="integrity-details" style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 8px; font-weight: 600;">Todos os 6 campos OK</span>
-            <button id="btn-fix-integrity" onclick="switchOutputTab('missing-backup')" style="display: none; background: rgba(229, 193, 88, 0.2); border: 1px solid rgba(229, 193, 88, 0.45); color: var(--accent-gold); border-radius: 8px; padding: 7px 10px; font-size: 0.82rem; font-weight: 800; cursor: pointer; width: 100%; text-align: center; transition: all 0.2s ease;">Ver Sem Backup</button>
+            <span class="stat-value" id="stat-integrity" style="color: var(--accent-green);">100% OK</span>
+            <span id="integrity-details" style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 4px; font-weight: 500;">Todos os 6 campos OK</span>
+            <button id="btn-fix-integrity" onclick="switchOutputTab('missing-backup')" style="display: none; background: #27272a; border: 1px solid rgba(255, 255, 255, 0.1); color: #fbbf24; border-radius: 6px; padding: 6px 10px; font-size: 0.78rem; font-weight: 600; cursor: pointer; width: 100%; text-align: center; transition: all 0.15s ease;">Ver Sem Backup</button>
           </div>
         </div>
 
         <!-- Facebook Live/Die Checker Module -->
-        <div id="fb-checker-box" style="margin-top: 0.75rem; margin-bottom: 0.75rem; background: linear-gradient(180deg, rgba(24, 119, 242, 0.08) 0%, rgba(20, 20, 24, 0.75) 100%); border: 1px solid rgba(24, 119, 242, 0.3); border-radius: 14px; padding: 0.85rem 1.1rem; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); transition: all 0.3s ease;">
+        <div id="fb-checker-box" style="margin-top: 0.75rem; margin-bottom: 0.75rem; background: #16161a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 0.95rem 1.2rem; box-shadow: 0 1px 2px rgba(0,0,0,0.3); transition: all 0.2s ease;">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
             <div style="display: flex; align-items: center; gap: 12px;">
-              <div style="background: rgba(24, 119, 242, 0.2); width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(24, 119, 242, 0.4); flex-shrink: 0;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="#1877F2">
+              <div style="background: rgba(24, 119, 242, 0.12); width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(24, 119, 242, 0.3); flex-shrink: 0;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                 </svg>
               </div>
               <div>
-                <div style="font-weight: 800; font-size: 1.1rem; color: #ffffff; display: flex; align-items: center; gap: 10px;">
+                <div style="font-weight: 600; font-size: 0.98rem; color: #f4f4f5; display: flex; align-items: center; gap: 8px;">
                   Status Facebook (Ativas / Inativas)
-                  <span id="fb-status-pill" style="font-size: 0.78rem; padding: 3px 10px; border-radius: 12px; background: rgba(255,255,255,0.08); color: var(--text-muted); font-weight: 700;">Aguardando Checagem</span>
+                  <span id="fb-status-pill" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 6px; background: rgba(255,255,255,0.06); color: #a1a1aa; font-weight: 500;">Aguardando Checagem</span>
                 </div>
-                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">Verificação direta e ultrarrápida via API oficial da Meta</div>
+                <div style="font-size: 0.78rem; color: #71717a; margin-top: 1px;">Verificação direta e ultrarrápida via API oficial da Meta</div>
               </div>
             </div>
 
             <!-- Action buttons in header -->
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-              <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: #ffffff; font-weight: 700; cursor: pointer; user-select: none; background: rgba(255, 255, 255, 0.05); padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.12); transition: all 0.2s ease;" title="Verificar status dos perfis automaticamente sempre que colar novos dados">
-                <input type="checkbox" id="toggle-auto-check" checked onchange="saveAutoCheckPreference()" style="accent-color: #1877F2; cursor: pointer; width: 16px; height: 16px;">
-                <span>⚡ Auto-checar ao colar</span>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: #a1a1aa; font-weight: 500; cursor: pointer; user-select: none; background: rgba(255, 255, 255, 0.04); padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08); transition: all 0.2s ease;" title="Verificar status dos perfis automaticamente sempre que colar novos dados">
+                <input type="checkbox" id="toggle-auto-check" checked onchange="saveAutoCheckPreference()" style="accent-color: #1877F2; cursor: pointer; width: 14px; height: 14px;">
+                <span>Auto-checar ao colar</span>
               </label>
 
-              <button id="btn-check-fb" type="button" onclick="checkFacebookLiveStatus()" style="background: linear-gradient(135deg, #1877F2 0%, #0a56be 100%); color: #fff; border: none; font-weight: 800; font-size: 0.95rem; padding: 10px 20px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(24, 119, 242, 0.4); transition: all 0.2s ease;">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <button id="btn-check-fb" type="button" onclick="checkFacebookLiveStatus()" style="background: #1877F2; color: #ffffff; border: 1px solid transparent; font-weight: 600; font-size: 0.88rem; padding: 7px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: all 0.15s ease;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="11" cy="11" r="8"></circle>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
                 <span id="btn-check-fb-text">Verificar UIDs ao Vivo</span>
               </button>
 
-              <button id="btn-remove-die" type="button" onclick="removeDeadAccounts()" style="display: none; background: rgba(255, 69, 58, 0.18); border: 1px solid rgba(255, 69, 58, 0.45); color: #ff453a; font-weight: 800; font-size: 0.95rem; padding: 10px 18px; border-radius: 10px; cursor: pointer; align-items: center; gap: 8px; transition: all 0.2s ease;">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <button id="btn-remove-die" type="button" onclick="removeDeadAccounts()" style="display: none; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; font-weight: 600; font-size: 0.88rem; padding: 7px 14px; border-radius: 8px; cursor: pointer; align-items: center; gap: 8px; transition: all 0.15s ease;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="3 6 5 6 21 6"></polyline>
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                 </svg>
@@ -1502,32 +1463,32 @@
         </div>
 
         <!-- Header dos Controles do Resultado -->
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 0.85rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 0.75rem;">
           <!-- Tabs de Exibição do Resultado (Status & Integridade) -->
-          <div id="output-filter-tabs" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-            <span style="font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Status:</span>
+          <div id="output-filter-tabs" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+            <span style="font-size: 0.72rem; font-weight: 600; color: #71717a; text-transform: uppercase; letter-spacing: 0.04em;">Status:</span>
             
-            <button type="button" id="tab-btn-live" onclick="switchOutputTab('live')" style="background: rgba(48, 209, 88, 0.2); border: 1px solid rgba(48, 209, 88, 0.45); color: var(--accent-green); font-weight: 800; font-size: 0.88rem; padding: 7px 16px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
-              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green);"></span>
+            <button type="button" id="tab-btn-live" onclick="switchOutputTab('live')" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.25); color: #34d399; font-weight: 600; font-size: 0.8rem; padding: 5px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s ease;">
+              <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #34d399;"></span>
               Contas Vivas (<span id="tab-count-live">0</span>)
             </button>
 
-            <button type="button" id="tab-btn-complete" onclick="switchOutputTab('complete')" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-muted); font-weight: 800; font-size: 0.88rem; padding: 7px 16px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
-              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #60a5fa;"></span>
+            <button type="button" id="tab-btn-complete" onclick="switchOutputTab('complete')" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: #a1a1aa; font-weight: 500; font-size: 0.8rem; padding: 5px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s ease;">
+              <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #60a5fa;"></span>
               100% Completas (<span id="tab-count-complete">0</span>)
             </button>
 
-            <button type="button" id="tab-btn-missing-backup" onclick="switchOutputTab('missing-backup')" style="display: none; background: rgba(229, 193, 88, 0.15); border: 1px solid rgba(229, 193, 88, 0.45); color: var(--accent-gold); font-weight: 800; font-size: 0.88rem; padding: 7px 16px; border-radius: 10px; cursor: pointer; align-items: center; gap: 6px; transition: all 0.2s ease;">
-              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-gold);"></span>
+            <button type="button" id="tab-btn-missing-backup" onclick="switchOutputTab('missing-backup')" style="display: none; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.25); color: #fbbf24; font-weight: 600; font-size: 0.8rem; padding: 5px 12px; border-radius: 6px; cursor: pointer; align-items: center; gap: 6px; transition: all 0.15s ease;">
+              <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #fbbf24;"></span>
               ⚠️ Sem Backup (<span id="tab-count-missing-backup">0</span>)
             </button>
 
-            <button type="button" id="tab-btn-dead" onclick="switchOutputTab('dead')" style="display: none; background: rgba(255, 69, 58, 0.15); border: 1px solid rgba(255, 69, 58, 0.35); color: #ff453a; font-weight: 800; font-size: 0.88rem; padding: 7px 16px; border-radius: 10px; cursor: pointer; align-items: center; gap: 6px; transition: all 0.2s ease;">
-              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ff453a;"></span>
+            <button type="button" id="tab-btn-dead" onclick="switchOutputTab('dead')" style="display: none; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); color: #f87171; font-weight: 600; font-size: 0.8rem; padding: 5px 12px; border-radius: 6px; cursor: pointer; align-items: center; gap: 6px; transition: all 0.15s ease;">
+              <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #f87171;"></span>
               Contas Inativas (<span id="tab-count-dead">0</span>)
             </button>
 
-            <button type="button" id="tab-btn-all" onclick="switchOutputTab('all')" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-muted); font-weight: 700; font-size: 0.88rem; padding: 7px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease;">
+            <button type="button" id="tab-btn-all" onclick="switchOutputTab('all')" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: #a1a1aa; font-weight: 500; font-size: 0.8rem; padding: 5px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s ease;">
               Todas (<span id="tab-count-all">0</span>)
             </button>
           </div>
@@ -1535,33 +1496,33 @@
 
 
         <!-- Barra de Ferramentas Exclusiva para Modo BM -->
-        <div id="bm-toolbar" style="display: none; margin-bottom: 0.85rem; padding: 12px 18px; background: linear-gradient(90deg, rgba(56, 189, 248, 0.1) 0%, rgba(20, 20, 24, 0.75) 100%); border: 1.5px solid rgba(56, 189, 248, 0.4); border-radius: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 4px 18px rgba(0,0,0,0.3);">
-          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <span style="font-size: 0.85rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+        <div id="bm-toolbar" style="display: none; margin-bottom: 0.85rem; padding: 10px 14px; background: #16161a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.3);">
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <span style="font-size: 0.75rem; font-weight: 600; color: #38bdf8; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
               <span>🏢</span> Formato:
             </span>
             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-              <button type="button" id="btn-bm-format-spaced" onclick="setBmFormat('spaced')" style="background: rgba(56, 189, 248, 0.22); border: 1.5px solid rgba(56, 189, 248, 0.55); color: #38bdf8; font-weight: 800; font-size: 0.84rem; padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s;" title="BM 1 - Link com uma linha de espaço antes da BM 2 (Padrão)">
+              <button type="button" id="btn-bm-format-spaced" onclick="setBmFormat('spaced')" style="background: #27272a; border: 1px solid rgba(255, 255, 255, 0.12); color: #f4f4f5; font-weight: 600; font-size: 0.8rem; padding: 5px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s;" title="BM 1 - Link com uma linha de espaço antes da BM 2 (Padrão)">
                 BM 1 - Link (com espaço)
               </button>
-              <button type="button" id="btn-bm-format-pad" onclick="setBmFormat('pad')" style="background: rgba(255, 255, 255, 0.05); border: 1.5px solid rgba(255, 255, 255, 0.1); color: var(--text-muted); font-weight: 700; font-size: 0.84rem; padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s;" title="BM 01, BM 02 com zero na frente">
+              <button type="button" id="btn-bm-format-pad" onclick="setBmFormat('pad')" style="background: transparent; border: 1px solid rgba(255, 255, 255, 0.08); color: #a1a1aa; font-weight: 500; font-size: 0.8rem; padding: 5px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s;" title="BM 01, BM 02 com zero na frente">
                 BM 01, BM 02...
               </button>
-              <button type="button" id="btn-bm-format-compact" onclick="setBmFormat('compact')" style="background: rgba(255, 255, 255, 0.05); border: 1.5px solid rgba(255, 255, 255, 0.1); color: var(--text-muted); font-weight: 700; font-size: 0.84rem; padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s;" title="BM 1, BM 2 em linhas consecutivas sem espaço">
+              <button type="button" id="btn-bm-format-compact" onclick="setBmFormat('compact')" style="background: transparent; border: 1px solid rgba(255, 255, 255, 0.08); color: #a1a1aa; font-weight: 500; font-size: 0.8rem; padding: 5px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s;" title="BM 1, BM 2 em linhas consecutivas sem espaço">
                 BM 1, BM 2 (sem espaço)
               </button>
-              <button type="button" id="btn-bm-format-links" onclick="setBmFormat('links_only')" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-muted); font-weight: 700; font-size: 0.84rem; padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s;" title="Apenas os links limpos, 1 por linha">
+              <button type="button" id="btn-bm-format-links" onclick="setBmFormat('links_only')" style="background: transparent; border: 1px solid rgba(255, 255, 255, 0.08); color: #a1a1aa; font-weight: 500; font-size: 0.8rem; padding: 5px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s;" title="Apenas os links limpos, 1 por linha">
                 Somente Links
               </button>
             </div>
           </div>
 
           <div style="display: flex; align-items: center; gap: 8px;">
-            <button type="button" onclick="copyBmResult()" style="background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color: #000; border: none; font-weight: 900; font-size: 0.85rem; padding: 7px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35); transition: all 0.2s;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <button type="button" onclick="copyBmResult()" style="background: #38bdf8; color: #09090b; border: none; font-weight: 700; font-size: 0.82rem; padding: 6px 14px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
               Copiar BMs Formatadas
             </button>
-            <button type="button" onclick="openFirstBmLink()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; font-weight: 700; font-size: 0.82rem; padding: 7px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s;" title="Abrir o primeiro link de convite em uma nova aba para testar">
+            <button type="button" onclick="openFirstBmLink()" style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: #f4f4f5; font-weight: 500; font-size: 0.8rem; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s;" title="Abrir o primeiro link de convite em uma nova aba para testar">
               🔗 Testar 1º Link
             </button>
           </div>
@@ -1578,13 +1539,14 @@
         </div>
         
         <div class="actions-row" style="display: flex; justify-content: center; align-items: center; margin-top: 0.65rem; gap: 12px; flex-wrap: wrap;">
-          <button class="btn" id="btn-download" onclick="downloadResult()" disabled style="background: linear-gradient(135deg, #e5c158 0%, #b8860b 100%); color: #000000; border: none; font-weight: 900; font-size: 1.05rem; padding: 10px 32px; border-radius: 12px; cursor: pointer; box-shadow: 0 6px 20px rgba(229, 193, 88, 0.35); transition: all 0.25s ease; display: flex; align-items: center; gap: 10px;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <button class="btn" id="btn-download" onclick="downloadResult()" disabled style="background: #f4f4f5; color: #09090b; border: none; font-weight: 600; font-size: 0.95rem; padding: 10px 30px; border-radius: 8px; cursor: pointer; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transition: all 0.15s ease; display: flex; align-items: center; gap: 10px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
             <span id="btn-download-text">Baixar como .txt</span>
+          </button>
         </div>
       </div>
 
@@ -1928,28 +1890,32 @@
 
 
     <!-- Bloco 1: Calculadora Universal MaxVia88 (Dólar ⇄ Pix ⇄ Simulador de Venda/Lucro) -->
-    <div id="sec-orcamento-cliente" class="panel" style="margin-top: 0; padding: 1.4rem 1.6rem; border: 2px solid rgba(59, 130, 246, 0.6); background: linear-gradient(180deg, rgba(14, 22, 36, 0.98) 0%, rgba(10, 15, 26, 0.99) 100%); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.12); border-radius: 22px;">
+    <div id="sec-orcamento-cliente" class="panel" style="margin-top: 0; padding: 1.25rem 1.45rem; border: 1px solid rgba(255, 255, 255, 0.08); background: #121215; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35); border-radius: 14px;">
       
       <!-- Header Universal MaxVia88 -->
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 1.2rem; border-bottom: 1.5px solid rgba(59, 130, 246, 0.25); padding-bottom: 0.85rem;">
-        <div style="display: flex; align-items: center; gap: 14px;">
-          <div style="background: rgba(59, 130, 246, 0.2); width: 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border: 1.5px solid rgba(59, 130, 246, 0.5);">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding-bottom: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="background: rgba(59, 130, 246, 0.15); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; border: 1px solid rgba(59, 130, 246, 0.35);">
             🌐
           </div>
           <div>
-            <h2 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 900; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 10px; letter-spacing: 0.02em;">
+            <h2 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: #f4f4f5; margin: 0; display: flex; align-items: center; gap: 10px; letter-spacing: -0.01em;">
               <span>CALCULADORA UNIVERSAL MAXVIA88</span>
-              <span style="font-size: 0.8rem; background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.45); padding: 3px 10px; border-radius: 20px; font-weight: 900;">DÓLAR ⇄ PIX ⇄ LUCRO</span>
+              <span style="font-size: 0.72rem; background: rgba(59, 130, 246, 0.12); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.25); padding: 2px 8px; border-radius: 6px; font-weight: 600;">DÓLAR ⇄ PIX ⇄ LUCRO</span>
             </h2>
           </div>
         </div>
 
         <!-- Cotação Atual USDT / Dólar -->
-        <div style="display: flex; align-items: center; gap: 10px; background: rgba(0, 0, 0, 0.5); border: 1.5px solid rgba(59, 130, 246, 0.4); border-radius: 12px; padding: 6px 14px;">
-          <div style="font-size: 0.95rem; color: rgba(255, 255, 255, 0.9); font-weight: 800;">
-            1 USDT = <b id="maxvia-dolar-rate-display" style="color: #60a5fa; font-size: 1.25rem;">R$ 5,03</b>
+        <div style="display: flex; align-items: center; gap: 8px; background: #18181b; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 4px 12px;">
+          <div style="font-size: 0.85rem; color: #a1a1aa; font-weight: 600;">
+            1 USDT = <b id="maxvia-dolar-rate-display" style="color: #60a5fa; font-size: 1.05rem; font-family: var(--font-mono); font-variant-numeric: tabular-nums;">R$ 5,03</b>
           </div>
-          <button type="button" onclick="updateDolarFromAPI()" style="background: rgba(59, 130, 246, 0.22); border: 1.5px solid rgba(59, 130, 246, 0.5); color: #93c5fd; padding: 4px 10px; border-radius: 8px; font-size: 0.85rem; font-weight: 900; cursor: pointer; transition: all 0.2s;" title="Atualizar cotação do dólar em tempo real">
+          <button type="button" onclick="updateDolarFromAPI()" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #93c5fd; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.15s;" title="Atualizar cotação do dólar em tempo real">
+            🔄 Dólar
+          </button>
+        </div>
+      </div>
             🔄 Dólar
           </button>
         </div>
@@ -1959,21 +1925,21 @@
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 14px; margin-bottom: 1.35rem;">
         
         <!-- CARD 1: SALDO ATUAL NO MAXVIA88 (BALANCE) -->
-        <div style="background: linear-gradient(135deg, rgba(20, 35, 60, 0.95) 0%, rgba(12, 18, 30, 0.98) 100%); border: 2px solid #3b82f6; border-radius: 18px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);">
+        <div style="background: #16161a; border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 12px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.3);">
           <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="background: rgba(59, 130, 246, 0.25); width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border: 1.5px solid #3b82f6; flex-shrink: 0;">
+            <div style="background: rgba(59, 130, 246, 0.15); width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; border: 1px solid rgba(59, 130, 246, 0.35); flex-shrink: 0;">
               💳
             </div>
             <div>
-              <div style="font-size: 0.85rem; font-weight: 800; color: #93c5fd; letter-spacing: 0.05em; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+              <div style="font-size: 0.75rem; font-weight: 600; color: #93c5fd; letter-spacing: 0.05em; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
                 <span>SALDO NO MAXVIA88</span>
-                <span id="maxvia-user-badge" style="font-size: 0.7rem; background: rgba(59, 130, 246, 0.3); color: #bfdbfe; padding: 2px 7px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.6); font-weight: 800;">🟢 Itooh - ID: 4271</span>
+                <span id="maxvia-user-badge" style="font-size: 0.68rem; background: rgba(59, 130, 246, 0.2); color: #bfdbfe; padding: 1px 6px; border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.4); font-weight: 700;">🟢 Itooh - ID: 4271</span>
               </div>
               <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 2px; flex-wrap: wrap;">
-                <span id="maxvia-balance-val" style="font-family: var(--font-display); font-size: 2rem; font-weight: 900; color: #ffffff; text-shadow: 0 0 15px rgba(59, 130, 246, 0.7); line-height: 1; cursor: pointer;" onclick="editMaxViaBalanceManually()" title="Clique para editar o saldo manualmente">
+                <span id="maxvia-balance-val" style="font-family: var(--font-display); font-size: 1.75rem; font-weight: 700; color: #ffffff; line-height: 1.1; cursor: pointer; font-variant-numeric: tabular-nums;" onclick="editMaxViaBalanceManually()" title="Clique para editar o saldo manualmente">
                   $1.08 USDT
                 </span>
-                <span id="maxvia-balance-subtext" style="font-size: 0.95rem; font-weight: 800; color: #34d399;">
+                <span id="maxvia-balance-subtext" style="font-size: 0.85rem; font-weight: 600; color: #34d399;">
                   = ~R$ 5,94 no Pix
                 </span>
               </div>
@@ -1981,31 +1947,31 @@
           </div>
 
           <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-            <button type="button" onclick="syncMaxViaLiveState(false)" id="btn-sync-maxvia" style="background: rgba(59, 130, 246, 0.25); border: 1.5px solid #3b82f6; color: #93c5fd; padding: 6px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;" title="Atualizar saldo ao vivo da MaxVia88">
+            <button type="button" onclick="syncMaxViaLiveState(false)" id="btn-sync-maxvia" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.15s;" title="Atualizar saldo ao vivo da MaxVia88">
               <span id="btn-sync-maxvia-icon">🔄</span> Sincronizar
             </button>
-            <button type="button" onclick="editMaxViaBalanceManually()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; padding: 6px 9px; border-radius: 8px; font-size: 0.8rem; font-weight: 800; cursor: pointer; transition: all 0.2s;" title="Editar saldo manualmente">
+            <button type="button" onclick="editMaxViaBalanceManually()" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); color: #f4f4f5; padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s;" title="Editar saldo manualmente">
               ✏️ Editar
             </button>
           </div>
         </div>
 
         <!-- CARD 2: SEU CAIXA SOBRANDO NA OKX (POLYGON) -->
-        <div style="background: linear-gradient(135deg, rgba(35, 18, 55, 0.95) 0%, rgba(18, 10, 32, 0.98) 100%); border: 2px solid #a855f7; border-radius: 18px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);">
+        <div style="background: #16161a; border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 12px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.3);">
           <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="background: rgba(168, 85, 247, 0.25); width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border: 1.5px solid #a855f7; flex-shrink: 0;">
+            <div style="background: rgba(168, 85, 247, 0.15); width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; border: 1px solid rgba(168, 85, 247, 0.35); flex-shrink: 0;">
               🟣
             </div>
             <div>
-              <div style="font-size: 0.85rem; font-weight: 800; color: #d8b4fe; letter-spacing: 0.05em; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+              <div style="font-size: 0.75rem; font-weight: 600; color: #d8b4fe; letter-spacing: 0.05em; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
                 <span>CAIXA SOBRANDO NA OKX</span>
-                <span style="font-size: 0.7rem; background: rgba(168, 85, 247, 0.3); color: #f3e8ff; padding: 2px 7px; border-radius: 8px; border: 1px solid rgba(168, 85, 247, 0.6); font-weight: 800;">Taxa: 0,0074 USDT</span>
+                <span style="font-size: 0.68rem; background: rgba(168, 85, 247, 0.2); color: #f3e8ff; padding: 1px 6px; border-radius: 6px; border: 1px solid rgba(168, 85, 247, 0.4); font-weight: 700;">Taxa: 0,0074 USDT</span>
               </div>
               <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 2px; flex-wrap: wrap;">
-                <span id="okx-balance-val" style="font-family: var(--font-display); font-size: 2rem; font-weight: 900; color: #ffffff; text-shadow: 0 0 15px rgba(168, 85, 247, 0.7); line-height: 1; cursor: pointer;" onclick="editOkxBalanceManually()" title="Clique para editar o saldo em caixa da OKX">
+                <span id="okx-balance-val" style="font-family: var(--font-display); font-size: 1.75rem; font-weight: 700; color: #ffffff; line-height: 1.1; cursor: pointer; font-variant-numeric: tabular-nums;" onclick="editOkxBalanceManually()" title="Clique para editar o saldo em caixa da OKX">
                   $0.40 USDT
                 </span>
-                <span id="okx-balance-subtext" style="font-size: 0.95rem; font-weight: 800; color: #c084fc;">
+                <span id="okx-balance-subtext" style="font-size: 0.85rem; font-weight: 600; color: #c084fc;">
                   = ~R$ 2,20 de troco
                 </span>
               </div>
@@ -2013,18 +1979,18 @@
           </div>
 
           <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-            <div id="maxvia-balance-status-badge" style="background: rgba(16, 185, 129, 0.25); border: 1.5px solid #10b981; border-radius: 10px; padding: 4px 10px; display: flex; flex-direction: column; align-items: flex-end;">
-              <div id="maxvia-balance-status-title" style="font-size: 0.85rem; font-weight: 900; color: #ffffff; display: flex; align-items: center; gap: 4px;">
+            <div id="maxvia-balance-status-badge" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 4px 10px; display: flex; flex-direction: column; align-items: flex-end;">
+              <div id="maxvia-balance-status-title" style="font-size: 0.8rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 4px;">
                 <span>✅</span> Saldo Cobre 100%!
               </div>
-              <div id="maxvia-balance-status-desc" style="font-size: 0.72rem; font-weight: 700; color: #a7f3d0;">
+              <div id="maxvia-balance-status-desc" style="font-size: 0.68rem; font-weight: 600; color: #a7f3d0;">
                 Sobra saldo no site
               </div>
             </div>
-            <button type="button" onclick="editOkxBalanceManually()" style="background: rgba(168, 85, 247, 0.25); border: 1.5px solid #a855f7; color: #d8b4fe; padding: 6px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 800; cursor: pointer; transition: all 0.2s;" title="Editar saldo sobrando na OKX">
+            <button type="button" onclick="editOkxBalanceManually()" style="background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.4); color: #d8b4fe; padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s;" title="Editar saldo sobrando na OKX">
               ✏️ Caixa OKX
             </button>
-            <button type="button" onclick="resetOkxBalance()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; padding: 6px 8px; border-radius: 8px; font-size: 0.8rem; font-weight: 800; cursor: pointer; transition: all 0.2s;" title="Zerar caixa OKX">
+            <button type="button" onclick="resetOkxBalance()" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15); color: #f4f4f5; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s;" title="Zerar caixa OKX">
               0️⃣
             </button>
           </div>
@@ -3089,17 +3055,20 @@
         if (btnProfiles) {
           btnProfiles.style.background = 'transparent';
           btnProfiles.style.borderColor = 'transparent';
-          btnProfiles.style.color = 'var(--text-muted)';
+          btnProfiles.style.color = '#a1a1aa';
+          btnProfiles.style.boxShadow = 'none';
         }
         if (btnBm) {
           btnBm.style.background = 'transparent';
           btnBm.style.borderColor = 'transparent';
-          btnBm.style.color = 'var(--text-muted)';
+          btnBm.style.color = '#a1a1aa';
+          btnBm.style.boxShadow = 'none';
         }
         if (btnCnpj) {
-          btnCnpj.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0.1) 100%)';
-          btnCnpj.style.borderColor = '#10b981';
-          btnCnpj.style.color = '#34d399';
+          btnCnpj.style.background = '#27272a';
+          btnCnpj.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+          btnCnpj.style.color = '#f4f4f5';
+          btnCnpj.style.boxShadow = '0 1px 3px rgba(0,0,0,0.3)';
         }
 
         if (headerTitle) headerTitle.textContent = 'GERADOR DE CNPJ & EMPRESAS';
@@ -3124,19 +3093,22 @@
       if (btnCnpj) {
         btnCnpj.style.background = 'transparent';
         btnCnpj.style.borderColor = 'transparent';
-        btnCnpj.style.color = 'var(--text-muted)';
+        btnCnpj.style.color = '#a1a1aa';
+        btnCnpj.style.boxShadow = 'none';
       }
 
       if (mode === 'bm') {
         if (btnProfiles) {
           btnProfiles.style.background = 'transparent';
           btnProfiles.style.borderColor = 'transparent';
-          btnProfiles.style.color = 'var(--text-muted)';
+          btnProfiles.style.color = '#a1a1aa';
+          btnProfiles.style.boxShadow = 'none';
         }
         if (btnBm) {
-          btnBm.style.background = 'linear-gradient(135deg, rgba(56, 189, 248, 0.22) 0%, rgba(56, 189, 248, 0.08) 100%)';
-          btnBm.style.borderColor = 'rgba(56, 189, 248, 0.55)';
-          btnBm.style.color = '#38bdf8';
+          btnBm.style.background = '#27272a';
+          btnBm.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+          btnBm.style.color = '#f4f4f5';
+          btnBm.style.boxShadow = '0 1px 3px rgba(0,0,0,0.3)';
         }
 
         if (headerTitle) headerTitle.textContent = 'LIMPADOR DE BMS';
@@ -3161,14 +3133,16 @@
         }
       } else {
         if (btnProfiles) {
-          btnProfiles.style.background = 'linear-gradient(135deg, rgba(229, 193, 88, 0.22) 0%, rgba(229, 193, 88, 0.08) 100%)';
-          btnProfiles.style.borderColor = 'rgba(229, 193, 88, 0.55)';
-          btnProfiles.style.color = 'var(--accent-gold)';
+          btnProfiles.style.background = '#27272a';
+          btnProfiles.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+          btnProfiles.style.color = '#f4f4f5';
+          btnProfiles.style.boxShadow = '0 1px 3px rgba(0,0,0,0.3)';
         }
         if (btnBm) {
           btnBm.style.background = 'transparent';
           btnBm.style.borderColor = 'transparent';
-          btnBm.style.color = 'var(--text-muted)';
+          btnBm.style.color = '#a1a1aa';
+          btnBm.style.boxShadow = 'none';
         }
 
         if (headerTitle) headerTitle.textContent = 'LIMPADOR DE CONTAS';
