@@ -310,27 +310,29 @@ def is_buyviafb_target(item: dict) -> bool:
     1. buyviafb_194: 1000x Brazil No2fa 0-30 Fr Live Ads
     2. buyviafb_195: 1000x Brazil No2fa 30+ Fr Live Ads
     3. Qualquer perfil da Categoria 186 (VIA BRAZIL) do BuyViaFB (https://buyviafb.com/category/186)
-    4. buyviafb_133: (HOT) Acc Old 1000x Soak 9 Months Full 2fa 1 Hotmail Trust 30 Friend
     """
     if not item or not isinstance(item, dict):
         return False
     if item.get('site') != 'buyviafb':
+        return False
+
+    title = (item.get('raw_title') or item.get('title') or '').lower()
+    b_id = str(item.get('buyviafb_id', ''))
+    p_id = str(item.get('id', ''))
+
+    # Exclusão explícita solicitada pelo usuário (perfil Soak 1000x)
+    if 'soak' in title or b_id == '133' or p_id == 'buyviafb_133':
         return False
     
     url = item.get('url', '')
     if 'category/186' in url or item.get('category_id') == '186' or item.get('is_via_brazil'):
         return True
 
-    b_id = str(item.get('buyviafb_id', ''))
-    if b_id in ['194', '195', '133']:
+    if b_id in ['194', '195']:
         return True
-    p_id = str(item.get('id', ''))
-    if p_id in ['buyviafb_194', 'buyviafb_195', 'buyviafb_133']:
+    if p_id in ['buyviafb_194', 'buyviafb_195']:
         return True
-    title = (item.get('raw_title') or item.get('title') or '').lower()
     if 'brazil' in title:
-        return True
-    if 'soak 9 months' in title or ('soak' in title and '9 month' in title):
         return True
     return False
 
@@ -825,7 +827,6 @@ def fetch_thefbstores_products() -> dict:
 KNOWN_BUYVIAFB_IDS = {
     '1000x brazil no2fa 30+ fr live ads': '195',
     '1000x brazil no2fa 0-30 fr live ads': '194',
-    '(hot) acc old 1000x soak 9 months full 2fa 1 hotmail trust 30 friend': '133',
 }
 
 IGNORED_BUYVIAFB_HEADERS = {
