@@ -1,8 +1,42 @@
 {
-  "updated_at": "2026-11-16 15:54:41",
-  "username": "Itooh - ID: 4271",
-  "balance_str": "$7.47",
-  "balance_usd": 7.47,
+  "resale_profiles": [
+    {
+      "id": "selfie_unlocked",
+      "name": "⭐ Acc Trusted Old Selfie Unlocked (2FA)",
+      "subtitle": "PERFIL ANTIGO COM SELFIE OK",
+      "cost_usd": 3.01,
+      "cost_str": "$3.01",
+      "stock": 4847,
+      "default_sell_brl": 20.0,
+      "url": "https://maxvia88.com/categories/1",
+      "icon": "⭐",
+      "color": "#eab308"
+    },
+    {
+      "id": "farm_6m_friends",
+      "name": "Acc Farm 6 Month+ (2FA)",
+      "subtitle": "PERFIL COM 7 MESES COM AMIGOS",
+      "cost_usd": 1.09,
+      "cost_str": "$1.09",
+      "stock": 6658,
+      "default_sell_brl": 9.0,
+      "url": "https://maxvia88.com/categories/219",
+      "icon": "👥",
+      "color": "#10b981"
+    },
+    {
+      "id": "v2_farm_6m_no_friends",
+      "name": "V2| Acc Farm 6 Month+ (2FA)",
+      "subtitle": "PERFIL COM 7 MESES SEM AMIGOS",
+      "cost_usd": 0.75,
+      "cost_str": "$0.75",
+      "stock": 1744,
+      "default_sell_brl": 7.0,
+      "url": "https://maxvia88.com/categories/219",
+      "icon": "👤",
+      "color": "#06b6d4"
+    }
+  ],
   "products": [
     {
       "name": "Via Ramdom New (2FA)",
@@ -96,42 +130,8 @@
       "url": "https://maxvia88.com/categories/219"
     }
   ],
-  "resale_profiles": [
-    {
-      "id": "selfie_unlocked",
-      "name": "⭐ Acc Trusted Old Selfie Unlocked (2FA)",
-      "subtitle": "PERFIL ANTIGO COM SELFIE OK",
-      "cost_usd": 3.01,
-      "cost_str": "$3.01",
-      "stock": 4847,
-      "default_sell_brl": 20.0,
-      "url": "https://maxvia88.com/categories/1",
-      "icon": "⭐",
-      "color": "#eab308"
-    },
-    {
-      "id": "farm_6m_friends",
-      "name": "Acc Farm 6 Month+ (2FA)",
-      "subtitle": "PERFIL COM 7 MESES COM AMIGOS",
-      "cost_usd": 1.09,
-      "cost_str": "$1.09",
-      "stock": 6658,
-      "default_sell_brl": 9.0,
-      "url": "https://maxvia88.com/categories/219",
-      "icon": "👥",
-      "color": "#10b981"
-    },
-    {
-      "id": "v2_farm_6m_no_friends",
-      "name": "V2| Acc Farm 6 Month+ (2FA)",
-      "subtitle": "PERFIL COM 7 MESES SEM AMIGOS",
-      "cost_usd": 0.75,
-      "cost_str": "$0.75",
-      "stock": 1744,
-      "default_sell_brl": 7.0,
-      "url": "https://maxvia88.com/categories/219",
-      "icon": "👤",
-      "color": "#06b6d4"
-    }
-  ]
+  "balance_usd": 7.47,
+  "balance_str": "$7.47",
+  "username": "Itooh - ID: 4271",
+  "updated_at": "2026-11-16 16:18:13"
 }

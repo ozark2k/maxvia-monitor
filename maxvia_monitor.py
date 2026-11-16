@@ -832,7 +832,38 @@ def fetch_thefbstores_products() -> dict:
 
 
 KNOWN_BUYVIAFB_IDS = {
+    '1000x brazil no2fa 0-30 fr live ads': '194',
     '1000x brazil no2fa 30+ fr live ads': '195',
+    'acc brazil 1000x no2fa unlock cpmail 25+ friend': 'acc_brazil_1000x_no2fa_unlock_cpmail_25_friend',
+    'acc brazil 1000x no2fa unlock cpmail 0-10 friend': 'acc_brazil_1000x_no2fa_unlock_cpmail_0_10_friend',
+    'acc old 1000x full 2fa cpmail': '23',
+    '(hot) acc old 1000x soak 12 months full 2fa one hotmail trust 30 friend': '133',
+    'acc old (1-9) full 2fa hotmail (can get page- change pass code mail)': '186',
+    'acc old random (1-9) full 2fa cpmail (soak 6 months)': '188',
+    'acc old 1000x 2fa hotmail 400+ friend': '215',
+    'acc old 1000x no2fa hotmail soak 6 months': '185',
+    'acc eu old 1000x no2fa soak over 6 months': '189',
+    '1000x indonesia no2fa 0-30 fr live ads': '202',
+    '1000x indonesia no2fa 30+ fr live ads': '203',
+    '1000x malaysia no2fa 0-30 fr live ads': '206',
+    '1000x malaysia no2fa 30+ fr live ads': '207',
+    '1000x philippine no2fa 0-30 fr live ads': '190',
+    '615x philippine no2fa 0-30 fr live ads': '192',
+    '1000x philippine no2fa 30+ fr live ads': '191',
+    'acc indian scan new full 2fa hotmail soak 3 months': '4',
+    'acc indian old (uid 1000x) no2fa 0 friend': '7',
+    'acc indian old (uid 1000x) no2fa 1-30 friend': '8',
+    'acc indian old (uid 1000x) no2fa 30+ friend': '10',
+    'acc indian (uid 6155-6156) no2fa 30+ friend': '14',
+    'acc indian new scan 30+ friend full 2fa + hotmail': '17',
+    'acc indian old (uid 1000x) no2fa 100+ friend': '120',
+    'acc indian (uid 6157-6158) no2fa 1-30 friend': '220',
+    'clone old 1000x 2fa hotmail live ads': '6',
+    'clone indian 2fa no mail passed cp 282': '26',
+    'clone random 6157x zin ads mail domain': '173',
+    'clone random 2fa hotmail passed cp 282': '217',
+    'clone usa 2fa mail domain': '20',
+    'acc us new 2fa hotmail (exactly location usa) 0 friend': '121'
 }
 
 IGNORED_BUYVIAFB_HEADERS = {
@@ -872,6 +903,9 @@ def _parse_buyviafb_html(html: str, page_url: str, products: dict):
             price_val = int(price)
             stock_val = int(stock)
             raw_title = t
+            # Registra no mapa dinâmico para garantir ID consistente mesmo se zerar depois
+            clean_k = re.sub(r'\s+', ' ', t.strip().lower())
+            KNOWN_BUYVIAFB_IDS[clean_k] = pid
         else:
             # Caso Sold Out ou sem onclick
             if 'sold out' in btn_text.lower():
@@ -890,6 +924,11 @@ def _parse_buyviafb_html(html: str, page_url: str, products: dict):
 
             clean_key = re.sub(r'\s+', ' ', raw_title.strip().lower())
             prod_id = KNOWN_BUYVIAFB_IDS.get(clean_key)
+            if not prod_id:
+                for k_cand, v_cand in KNOWN_BUYVIAFB_IDS.items():
+                    if k_cand in clean_key or clean_key in k_cand:
+                        prod_id = v_cand
+                        break
             if not prod_id:
                 slug = re.sub(r'[^a-z0-9]+', '_', clean_key).strip('_')
                 prod_id = slug
@@ -1404,8 +1443,8 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     # 1. Se o produto esgotou (bateu 0), notifica
                     if new_stock == 0:
                         zero_cycles = old_item.get('zero_cycles', 0) + 1
-                        required_zero_cycles = 10 if old_stock > 1000 else (7 if old_stock > 200 else (4 if old_stock > 20 else 2))
-                        if old_stock > 10 and zero_cycles < required_zero_cycles:
+                        required_zero_cycles = 10 if old_stock > 1000 else (7 if old_stock > 200 else (5 if old_stock > 20 else 3))
+                        if zero_cycles < required_zero_cycles:
                             item['zero_cycles'] = zero_cycles
                             item['stock'] = old_stock
                             item['last_notified_stock'] = baseline_stock
@@ -1489,8 +1528,8 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
 
                     if new_stock == 0:
                         zero_cycles = old_item.get('zero_cycles', 0) + 1
-                        required_zero_cycles = 10 if old_stock > 1000 else (7 if old_stock > 200 else (4 if old_stock > 20 else 2))
-                        if old_stock > 10 and zero_cycles < required_zero_cycles:
+                        required_zero_cycles = 10 if old_stock > 1000 else (7 if old_stock > 200 else (5 if old_stock > 20 else 3))
+                        if zero_cycles < required_zero_cycles:
                             item['zero_cycles'] = zero_cycles
                             item['stock'] = old_stock
                             item['last_notified_stock'] = baseline_stock
@@ -1540,8 +1579,8 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
 
                     if new_stock == 0:
                         zero_cycles = old_item.get('zero_cycles', 0) + 1
-                        required_zero_cycles = 10 if old_stock > 1000 else (7 if old_stock > 200 else (4 if old_stock > 20 else 2))
-                        if old_stock > 10 and zero_cycles < required_zero_cycles:
+                        required_zero_cycles = 10 if old_stock > 1000 else (7 if old_stock > 200 else (5 if old_stock > 20 else 3))
+                        if zero_cycles < required_zero_cycles:
                             item['zero_cycles'] = zero_cycles
                             item['stock'] = old_stock
                             item['last_notified_stock'] = baseline_stock
@@ -1587,8 +1626,8 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     # Se esgotar completamente, sempre avisa com urgência máxima!
                     if new_stock == 0:
                         zero_cycles = old_item.get('zero_cycles', 0) + 1
-                        required_zero_cycles = 10 if old_stock > 1000 else (7 if old_stock > 200 else (4 if old_stock > 20 else 2))
-                        if old_stock > 10 and zero_cycles < required_zero_cycles:
+                        required_zero_cycles = 10 if old_stock > 1000 else (7 if old_stock > 200 else (5 if old_stock > 20 else 3))
+                        if zero_cycles < required_zero_cycles:
                             item['zero_cycles'] = zero_cycles
                             item['stock'] = old_stock
                             item['last_notified_stock'] = baseline_stock
@@ -1682,6 +1721,16 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                     item['last_notified_stock'] = baseline_stock
                     item['zero_cycles'] = 0
                     logging.info(f"[ANTI-DUPLICATE] Restock de '{clean_display_title}' ({old_stock} -> {new_stock}) ignorado pois o usuário já foi notificado deste estoque ({baseline_stock}).")
+                    continue
+
+                # Se o item estava com estoque 0 mas o novo estoque é igual ou inferior ao estoque antes do glitch (pre_zero_stock),
+                # trata como recuperação de oscilação momentânea e silencia o alerta repetido de reposição.
+                pre_zero = old_item.get('pre_zero_stock', 0)
+                if old_stock == 0 and pre_zero > 0 and new_stock <= pre_zero:
+                    item['last_notified_stock'] = pre_zero
+                    item['zero_cycles'] = 0
+                    item['pre_zero_stock'] = 0
+                    logging.info(f"[ANTI-GLITCH RECOVERY] Item '{clean_display_title}' recuperou de oscilação momentânea ({old_stock} -> {new_stock}, anterior: {pre_zero}). Alerta de reposição silenciado.")
                     continue
 
                 item['last_notified_stock'] = new_stock
@@ -1834,6 +1883,11 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
                 or 'brazil' in (item.get('raw_title') or item.get('title', '')).lower()
             )
             if is_cat186_buyvia:
+                # Se o perfil novo já aparece com estoque ZERO (Sold Out), cadastra silenciosamente para evitar falso alarme
+                if new_stock == 0:
+                    logging.info(f"[BuyViaFB] Perfil '{item['title']}' registrado com estoque 0 (Sold Out). Alerta de novo perfil silenciado.")
+                    continue
+
                 clean_t = item.get('raw_title') or item.get('title', '').replace('[BuyViaFB]', '').strip()
                 price_disp = item.get('price', 'Consulte no site')
                 agent_p = item.get('agent_price', '')
@@ -1922,8 +1976,8 @@ def compare_and_notify(old_state: dict, new_state: dict, bot_token: str, chat_id
             )
             if not found and old_item.get('stock', 0) > 0:
                 missing_cycles = old_item.get('missing_cycles', 0) + 1
-                if missing_cycles < 2:
-                    logging.info(f"[ANTI-GLITCH] Item '{old_item.get('title')}' não veio na resposta desta rodada. Mantendo em cache e aguardando confirmação no próximo ciclo para evitar falso alarme.")
+                if missing_cycles < 8:
+                    logging.info(f"[ANTI-GLITCH] Item '{old_item.get('title')}' não veio na resposta desta rodada. Mantendo em cache e aguardando confirmação (ciclo {missing_cycles}/8) para evitar falso alarme.")
                     old_item['missing_cycles'] = missing_cycles
                     new_state[old_id] = old_item
                     continue
@@ -2126,6 +2180,15 @@ def run_cycle(is_startup: bool = False):
 
     # Anti-Glitch: Preserva produtos com estoque que sumiram temporariamente nesta varredura (ex: oscilação de rede/timeout)
     if not is_first_run:
+        # Se a raspagem da MaxVia88 retornou menos de 15 produtos (provável timeout de categorias na rede),
+        # retém os produtos da rodada anterior para prevenir falsos alertas de "esgotou/saiu do ar".
+        maxvia_count = sum(1 for it in all_products.values() if it.get('site') == 'maxvia88')
+        if maxvia_count < 15 and old_state:
+            logging.warning(f"[RECOVERY RESILIENCE] Apenas {maxvia_count} produtos obtidos da MaxVia88. Retendo produtos da rodada anterior.")
+            for old_id, old_it in old_state.items():
+                if old_it.get('site') == 'maxvia88' and old_id not in all_products:
+                    all_products[old_id] = dict(old_it)
+
         for old_id, old_item in old_state.items():
             if old_id not in all_products and old_item.get('stock', 0) > 0:
                 old_site = old_item.get('site', 'maxvia88')
@@ -2136,8 +2199,8 @@ def run_cycle(is_startup: bool = False):
                 )
                 if not already_in_new:
                     missing_cycles = old_item.get('missing_cycles', 0) + 1
-                    if missing_cycles < 4:
-                        logging.info(f"[ANTI-GLITCH] '{old_item.get('title')}' não veio nesta varredura (possível oscilação de rede). Mantendo estoque {old_item.get('stock')} por {missing_cycles}/3 ciclos de confirmação.")
+                    if missing_cycles < 8:
+                        logging.info(f"[ANTI-GLITCH] '{old_item.get('title')}' não veio nesta varredura (possível oscilação de rede). Mantendo estoque {old_item.get('stock')} por {missing_cycles}/8 ciclos de confirmação.")
                         preserved_item = dict(old_item)
                         preserved_item['missing_cycles'] = missing_cycles
                         all_products[old_id] = preserved_item
@@ -2282,30 +2345,31 @@ def main():
         t_ping = threading.Thread(target=keep_alive_ping, daemon=True)
         t_ping.start()
 
-    # Start Cloud Sentinels (OKX, Binance BSC, Pix, Meta Ads & Chrome Extension Fast Invite BM)
-    try:
-        from okx_sentinel import run_okx_sentinel_loop
-        t_okx = threading.Thread(target=run_okx_sentinel_loop, daemon=True)
-        t_okx.start()
-        logging.info("[Render Cloud] Sentinel OKX & Binance BSC iniciado em 24/7 background thread.")
-    except Exception as e:
-        logging.error(f"Erro ao iniciar okx_sentinel: {e}")
+    # Start Cloud Sentinels (OKX, Binance BSC, Pix, Meta Ads & Chrome Extension Fast Invite BM) - Apenas na Nuvem ou com flag de Telegram
+    if IS_CLOUD_SERVER or ("--enable-local-telegram" in sys.argv):
+        try:
+            from okx_sentinel import run_okx_sentinel_loop
+            t_okx = threading.Thread(target=run_okx_sentinel_loop, daemon=True)
+            t_okx.start()
+            logging.info("[Render Cloud] Sentinel OKX & Binance BSC iniciado em 24/7 background thread.")
+        except Exception as e:
+            logging.error(f"Erro ao iniciar okx_sentinel: {e}")
 
-    try:
-        from pix_sentinel import run_pix_sentinel_loop
-        t_pix = threading.Thread(target=run_pix_sentinel_loop, daemon=True)
-        t_pix.start()
-        logging.info("[Render Cloud] Sentinel Pix, Meta Ads & Fast Invite BM iniciado em 24/7 background thread.")
-    except Exception as e:
-        logging.error(f"Erro ao iniciar pix_sentinel: {e}")
+        try:
+            from pix_sentinel import run_pix_sentinel_loop
+            t_pix = threading.Thread(target=run_pix_sentinel_loop, daemon=True)
+            t_pix.start()
+            logging.info("[Render Cloud] Sentinel Pix, Meta Ads & Fast Invite BM iniciado em 24/7 background thread.")
+        except Exception as e:
+            logging.error(f"Erro ao iniciar pix_sentinel: {e}")
 
-    try:
-        from microsoft_sentinel import run_microsoft_sentinel_loop
-        t_ms = threading.Thread(target=run_microsoft_sentinel_loop, daemon=True)
-        t_ms.start()
-        logging.info("[Render Cloud] Sentinel Microsoft Outlook & Exchange Online iniciado em 24/7 background thread.")
-    except Exception as e:
-        logging.error(f"Erro ao iniciar microsoft_sentinel: {e}")
+        try:
+            from microsoft_sentinel import run_microsoft_sentinel_loop
+            t_ms = threading.Thread(target=run_microsoft_sentinel_loop, daemon=True)
+            t_ms.start()
+            logging.info("[Render Cloud] Sentinel Microsoft Outlook & Exchange Online iniciado em 24/7 background thread.")
+        except Exception as e:
+            logging.error(f"Erro ao iniciar microsoft_sentinel: {e}")
 
     config = load_config()
     interval_sec = int(config.get("check_interval_seconds") or os.environ.get("CHECK_INTERVAL", "60"))

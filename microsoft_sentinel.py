@@ -93,10 +93,11 @@ def check_microsoft_feed() -> dict:
         return {"success": False, "has_degradation": None, "error": str(e)}
 
 def check_outlook_live_connection() -> dict:
-    """Testa resposta HTTP direta do Outlook e Login Microsoft."""
+    """Testa resposta HTTP direta de endpoints confiáveis da Microsoft."""
     endpoints = [
-        ("Login Microsoft", "https://login.live.com/"),
-        ("Outlook Web", "https://outlook.live.com/owa/")
+        ("Login Microsoft Live", "https://login.live.com/"),
+        ("Microsoft Online Auth", "https://login.microsoftonline.com/"),
+        ("Microsoft Cloud Status", "https://status.cloud.microsoft/")
     ]
     all_ok = True
     details = {}
@@ -104,11 +105,11 @@ def check_outlook_live_connection() -> dict:
     for name, url in endpoints:
         req = urllib.request.Request(
             url,
-            headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
+            headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
         )
         try:
             t0 = time.time()
-            with urllib.request.urlopen(req, timeout=8) as r:
+            with urllib.request.urlopen(req, timeout=10) as r:
                 latency_ms = round((time.time() - t0) * 1000)
                 details[name] = {"ok": True, "status": r.status, "latency_ms": latency_ms}
         except Exception as e:
@@ -164,7 +165,7 @@ def check_microsoft_cycle(allow_telegram: bool = True):
     
     # Determina se os serviços estão 100% saudáveis:
     # 1. O feed oficial não pode acusar degradação ativa (ou deve estar acessível e limpo)
-    # 2. As conexões diretas do Outlook devem responder sem timeout
+    # 2. As conexões diretas de autenticação da Microsoft devem responder normalmente
     feed_clean = (feed_res.get("success") is True and feed_res.get("has_degradation") is False)
     live_healthy = (live_res.get("all_ok") is True)
     
@@ -173,11 +174,12 @@ def check_microsoft_cycle(allow_telegram: bool = True):
     logging.info(f"[Cloud Microsoft Sentinel] Check: Feed clean={feed_clean}, Live healthy={live_healthy} (Degraded state: {state.get('is_degraded')})")
     
     if is_healthy:
+        state["degraded_consecutive_cycles"] = 0
         consecutive = state.get("healthy_consecutive_cycles", 0) + 1
         state["healthy_consecutive_cycles"] = consecutive
         
-        # Exige 2 ciclos consecutivos saudáveis (2 minutos) para garantir estabilidade real
-        if state.get("is_degraded", True) and consecutive >= 2:
+        # Exige 3 ciclos consecutivos saudáveis (3 minutos) para garantir estabilidade real
+        if state.get("is_degraded", True) and consecutive >= 3:
             logging.info("[Cloud Microsoft Sentinel] 🔥 RECUPERAÇÃO DETECTADA! Enviando alerta Telegram...")
             if allow_telegram:
                 send_telegram(format_recovery_alert(now_str, feed_res, live_res))
@@ -185,7 +187,13 @@ def check_microsoft_cycle(allow_telegram: bool = True):
             state["recovered_at"] = now_dt.isoformat()
     else:
         state["healthy_consecutive_cycles"] = 0
-        state["is_degraded"] = True
+        degraded_consecutive = state.get("degraded_consecutive_cycles", 0) + 1
+        state["degraded_consecutive_cycles"] = degraded_consecutive
+        
+        # Só marca como degradado se falhar por pelo menos 3 ciclos consecutivos (3 minutos)
+        # Isso impede que uma oscilação momentânea de rede marque falso status degradado e reenvie alerta repetido de recuperação
+        if degraded_consecutive >= 3:
+            state["is_degraded"] = True
         
     state["last_checked"] = now_dt.isoformat()
     save_state(state)
