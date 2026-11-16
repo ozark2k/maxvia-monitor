@@ -27,6 +27,41 @@
         }
       ],
       "delivered": false
+    },
+    "TBR467839679": {
+      "name": "Headphone / Fone de Ouvido (Amazon Brasil)",
+      "carrier": "Amazon Logistics Brazil",
+      "waybill": "TBR467839679",
+      "order_id": "702-9017446-7555421",
+      "destination": "Macapá - AP",
+      "estimated_delivery": "2026-11-17 (Previsão: Chega amanhã)",
+      "share_url": "",
+      "last_event_time": "2026-11-16 15:14:00",
+      "last_event_desc": "Pacote chegou a uma instalação da transportadora",
+      "status": "Em trânsito (Chega amanhã - 17/11)",
+      "history": [
+        {
+          "time": "2026-11-13",
+          "desc": "O pacote saiu das instalações da transportadora"
+        },
+        {
+          "time": "2026-11-14 02:42:00",
+          "desc": "Pacote recebido pela transportadora"
+        },
+        {
+          "time": "2026-11-14 21:45:00",
+          "desc": "O pacote saiu das instalações da transportadora"
+        },
+        {
+          "time": "2026-11-15 02:40:00",
+          "desc": "Pacote chegou a uma instalação da transportadora"
+        },
+        {
+          "time": "2026-11-16 15:14:00",
+          "desc": "Pacote chegou a uma instalação da transportadora"
+        }
+      ],
+      "delivered": false
     }
   }
 }

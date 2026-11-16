@@ -171,6 +171,31 @@ def query_jt_official_api(waybill: str, cpf: str) -> list:
         logging.warning(f"[Package Sentinel] Erro ao consultar API oficial J&T: {e}")
     return []
 
+def query_amazon_share_url(share_url: str) -> list:
+    """Consulta o link público de compartilhamento de rastreio da Amazon."""
+    if not share_url or not share_url.startswith("http"):
+        return []
+    try:
+        req = urllib.request.Request(
+            share_url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept-Language": "pt-BR,pt;q=0.9"
+            }
+        )
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            html = resp.read().decode("utf-8", errors="ignore")
+            # Parse updates if available
+            events = []
+            if "Saiu para entrega" in html or "out for delivery" in html.lower():
+                events.append({"time": datetime.now(TZ_BR).strftime("%Y-%m-%d %H:%M:%S"), "desc": "Saiu para entrega ao destinatário"})
+            elif "Entregue" in html or "delivered" in html.lower():
+                events.append({"time": datetime.now(TZ_BR).strftime("%Y-%m-%d %H:%M:%S"), "desc": "Pacote entregue"})
+            return events
+    except Exception as e:
+        logging.warning(f"[Package Sentinel] Erro ao consultar link Amazon: {e}")
+    return []
+
 def check_package_updates():
     """Verifica todos os pacotes ativos e dispara alertas se houver novos eventos."""
     state = load_state()
@@ -184,6 +209,7 @@ def check_package_updates():
         carrier = pkg.get("carrier", "J&T Express")
         pkg_name = pkg.get("name", "")
         cpf = pkg.get("cpf", "")
+        share_url = pkg.get("share_url", "")
         last_event_time = pkg.get("last_event_time", "")
         last_event_desc = pkg.get("last_event_desc", "")
         existing_history = pkg.get("history", [])
@@ -192,6 +218,9 @@ def check_package_updates():
         if "j&t" in carrier.lower() or "jt" in carrier.lower():
             if cpf:
                 events = query_jt_official_api(waybill, cpf)
+        elif "amazon" in carrier.lower():
+            if share_url:
+                events = query_amazon_share_url(share_url)
 
         if not events:
             continue
