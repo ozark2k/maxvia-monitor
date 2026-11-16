@@ -52,9 +52,10 @@ def main():
     print("🚀 Enviando para o GitHub para atualizar o Render na nuvem...")
 
     try:
-        subprocess.run(["git", "add", "render.yaml", "config.json"], cwd=SCRIPT_DIR, check=True)
-        subprocess.run(["git", "commit", "-m", "Auto-sync fresh Chrome session cookie to Render"], cwd=SCRIPT_DIR, check=True)
-        subprocess.run(["git", "push", "origin", "main"], cwd=SCRIPT_DIR, check=True)
+        git_env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
+        subprocess.run(["git", "add", "render.yaml", "config.json", "web/maxvia_state.json"], cwd=SCRIPT_DIR, check=True, timeout=30, env=git_env)
+        subprocess.run(["git", "commit", "-m", "Auto-sync fresh Chrome session cookie to Render"], cwd=SCRIPT_DIR, check=True, timeout=30, env=git_env)
+        subprocess.run(["git", "push", "origin", "main"], cwd=SCRIPT_DIR, check=True, timeout=60, env=git_env)
         print("🎉 Pronto! O Render está reiniciando na nuvem com o novo cookie!")
     except Exception as e:
         print(f"⚠️ Erro ao enviar para o GitHub: {e}")

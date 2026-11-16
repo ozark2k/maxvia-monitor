@@ -31,7 +31,7 @@ CONFIG_FILE = os.path.join(SCRIPT_DIR, "config.json")
 LOG_FILE = os.path.join(SCRIPT_DIR, "monitor.log")
 WEB_DIR = os.path.join(SCRIPT_DIR, "web")
 MAXVIA_STATE_WEB_PATH = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "limpador_contas", "maxvia_state.json"))
-CURRENT_MAXVIA_USER_INFO = {"username": "Itooh - ID: 4271", "balance_str": "$211.08", "balance_usd": 211.08}
+CURRENT_MAXVIA_USER_INFO = {"username": "Itooh - ID: 4271", "balance_str": "$8.97", "balance_usd": 8.97}
 LATEST_WEB_STATE = {}
 IS_CLOUD_SERVER = bool(os.environ.get("RENDER") or os.environ.get("PORT"))
 
@@ -54,9 +54,10 @@ def check_and_sync_cookie_to_git(fresh_cookie: str):
                 f.write(new_content)
             def do_push():
                 try:
-                    subprocess.run(["git", "add", "render.yaml", "config.json"], cwd=SCRIPT_DIR, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    subprocess.run(["git", "commit", "-m", "Auto-sync fresh Chrome session cookie to Render"], cwd=SCRIPT_DIR, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    subprocess.run(["git", "push", "origin", "main"], cwd=SCRIPT_DIR, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    git_env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
+                    subprocess.run(["git", "add", "render.yaml", "config.json", "web/maxvia_state.json"], cwd=SCRIPT_DIR, check=True, timeout=30, env=git_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    subprocess.run(["git", "commit", "-m", "Auto-sync fresh Chrome session cookie to Render"], cwd=SCRIPT_DIR, check=True, timeout=30, env=git_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    subprocess.run(["git", "push", "origin", "main"], cwd=SCRIPT_DIR, check=True, timeout=60, env=git_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                     logging.info("Sessão nova enviada para o GitHub com sucesso! O Render reiniciará com os cookies atualizados.")
                 except Exception as ex:
                     logging.warning(f"Git push cookie sync note: {ex}")
