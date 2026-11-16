@@ -1,56 +1,56 @@
 {
-  "updated_at": "2026-11-16 11:47:13",
+  "updated_at": "2026-11-16 15:54:41",
   "username": "Itooh - ID: 4271",
-  "balance_str": "$8.97",
-  "balance_usd": 8.97,
+  "balance_str": "$7.47",
+  "balance_usd": 7.47,
   "products": [
     {
       "name": "Via Ramdom New (2FA)",
       "price": 1.22,
       "price_str": "$1.22",
-      "stock": 14741,
+      "stock": 14728,
       "url": "https://maxvia88.com/categories/219"
     },
     {
       "name": "V3| Acc Scan 1 Year+ (2FA)",
       "price": 1.76,
       "price_str": "$1.76",
-      "stock": 5719,
+      "stock": 5713,
       "url": "https://maxvia88.com/categories/1"
     },
     {
       "name": "⭐ Acc Trusted Old Selfie Unlocked (2FA)",
       "price": 3.01,
       "price_str": "$3.01",
-      "stock": 4869,
+      "stock": 4847,
       "url": "https://maxvia88.com/categories/1"
     },
     {
       "name": "V4| Acc Farm 12 Month+ (2FA)",
       "price": 2.0,
       "price_str": "$2.00",
-      "stock": 5348,
+      "stock": 5346,
       "url": "https://maxvia88.com/categories/219"
     },
     {
       "name": "Acc Farm 6 Month+ (2FA)",
       "price": 1.09,
       "price_str": "$1.09",
-      "stock": 2196,
+      "stock": 6658,
       "url": "https://maxvia88.com/categories/219"
     },
     {
       "name": "V2| Acc Farm 6 Month+ (2FA)",
       "price": 0.75,
       "price_str": "$0.75",
-      "stock": 1763,
+      "stock": 1744,
       "url": "https://maxvia88.com/categories/219"
     },
     {
       "name": "V3| Acc Scan 1 Year+ (2FA)",
       "price": 1.76,
       "price_str": "$1.76",
-      "stock": 5719,
+      "stock": 5713,
       "url": "https://maxvia88.com/categories/1"
     },
     {
@@ -71,7 +71,7 @@
       "name": "Via Canada Old 0-29 Friend  (2FA)",
       "price": 4.34,
       "price_str": "$4.34",
-      "stock": 366,
+      "stock": 331,
       "url": "https://maxvia88.com/categories/219"
     },
     {
@@ -103,7 +103,7 @@
       "subtitle": "PERFIL ANTIGO COM SELFIE OK",
       "cost_usd": 3.01,
       "cost_str": "$3.01",
-      "stock": 4869,
+      "stock": 4847,
       "default_sell_brl": 20.0,
       "url": "https://maxvia88.com/categories/1",
       "icon": "⭐",
@@ -115,7 +115,7 @@
       "subtitle": "PERFIL COM 7 MESES COM AMIGOS",
       "cost_usd": 1.09,
       "cost_str": "$1.09",
-      "stock": 2196,
+      "stock": 6658,
       "default_sell_brl": 9.0,
       "url": "https://maxvia88.com/categories/219",
       "icon": "👥",
@@ -127,7 +127,7 @@
       "subtitle": "PERFIL COM 7 MESES SEM AMIGOS",
       "cost_usd": 0.75,
       "cost_str": "$0.75",
-      "stock": 1763,
+      "stock": 1744,
       "default_sell_brl": 7.0,
       "url": "https://maxvia88.com/categories/219",
       "icon": "👤",
