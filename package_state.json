@@ -1,21 +1,45 @@
 {
   "packages": {
     "888002851240135": {
-      "name": "Perfume Mind Scent - Inspiração Olfativa: Blockade (55mL) × 1",
-      "carrier": "J&T Express Brasil",
+      "name": "Fosi Audio Amplificadores K5 Pro Chumbo 1000 W Cinza 5v",
+      "store": "Mercado Livre",
+      "order_id": "2000019496276460",
+      "carrier": "J&T Express Brasil (J&T Estándar)",
       "waybill": "888002851240135",
       "cpf": "",
+      "destination": "Macapá, Amapá (Casa Jesus de Nazaré)",
+      "estimated_delivery": "25 a 30 de novembro",
       "last_event_time": "2026-11-13 22:23:18",
       "last_event_desc": "[Barueri] Saída da encomenda expressa [SP BRE] enviada para [PA ANA]",
-      "status": "Em trânsito (SP BRE -> PA ANA)",
+      "status": "Em trânsito (Previsão: 25 a 30 de novembro)",
       "history": [
         {
+          "time": "2026-11-11 22:41:00",
+          "desc": "Compra confirmada no Mercado Livre"
+        },
+        {
+          "time": "2026-11-12 13:53:00",
+          "desc": "O vendedor enviou sua compra"
+        },
+        {
+          "time": "2026-11-13 04:34:00",
+          "desc": "Saiu do centro de distribuição de São Paulo e está em trânsito"
+        },
+        {
+          "time": "2026-11-13 08:53:00",
+          "desc": "Entrou no centro de distribuição de Cajamar"
+        },
+        {
           "time": "2026-11-13 10:29:58",
-          "desc": "[Barueri] [PA MELI-CJM-SP] Seu entregador L****o retirou a encomenda. Se você tiver qualquer problema ou reclamação, ligue para o número da filial: 08000550050"
+          "desc": "[Barueri] [PA MELI-CJM-SP] Seu entregador L****o retirou a encomenda. Filial: 08000550050"
         },
         {
           "time": "2026-11-13 10:30:08",
           "desc": "[Barueri] Saída da encomenda expressa [PA MELI-CJM-SP] enviada para [SP BRE]"
+        },
+        {
+          "time": "2026-11-13 15:06:00",
+          "desc": "Saiu do centro de distribuição de Cajamar e está em trânsito"
         },
         {
           "time": "2026-11-13 18:34:00",
@@ -29,11 +53,12 @@
       "delivered": false
     },
     "TBR467839679": {
-      "name": "Headphone / Fone de Ouvido (Amazon Brasil)",
+      "name": "Headphone / Fone de Ouvido",
+      "store": "Amazon Brasil",
       "carrier": "Amazon Logistics Brazil",
       "waybill": "TBR467839679",
       "order_id": "702-9017446-7555421",
-      "destination": "Macapá - AP",
+      "destination": "Macapá, Amapá (Casa Jesus de Nazaré)",
       "estimated_delivery": "2026-11-17 (Previsão: Chega amanhã)",
       "share_url": "",
       "last_event_time": "2026-11-16 15:14:00",

@@ -208,6 +208,7 @@ def check_package_updates():
 
         carrier = pkg.get("carrier", "J&T Express")
         pkg_name = pkg.get("name", "")
+        store = pkg.get("store", "")
         cpf = pkg.get("cpf", "")
         share_url = pkg.get("share_url", "")
         last_event_time = pkg.get("last_event_time", "")
@@ -245,10 +246,12 @@ def check_package_updates():
             logging.info(f"[Package Sentinel] {len(new_events)} nova(s) movimentação(ões) para {waybill}!")
             # Disparar alertas para cada novo evento (ou o mais recente)
             name_header = f"<b>Produto:</b> {pkg_name}\n" if pkg_name else ""
+            store_header = f"<b>Loja:</b> {store}\n" if store else ""
             for nev in new_events:
                 msg = (
                     f"📦🚚 <b>[RASTREIO {carrier.upper()}] NOVA ATUALIZAÇÃO!</b>\n\n"
                     f"{name_header}"
+                    f"{store_header}"
                     f"<b>Código:</b> <code>{waybill}</code>\n"
                     f"<b>Data e Hora:</b> 📅 <i>{nev['time']}</i>\n"
                     f"<b>Status:</b> 📍 {nev['desc']}\n\n"
