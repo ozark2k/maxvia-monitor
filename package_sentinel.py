@@ -73,6 +73,7 @@ def load_state() -> dict:
     default_state = {
         "packages": {
             "888002851240135": {
+                "name": "Perfume Mind Scent - Inspiração Olfativa: Blockade (55mL) × 1",
                 "carrier": "J&T Express Brasil",
                 "waybill": "888002851240135",
                 "cpf": "",
@@ -181,6 +182,7 @@ def check_package_updates():
             continue  # Já entregue, não precisa consultar
 
         carrier = pkg.get("carrier", "J&T Express")
+        pkg_name = pkg.get("name", "")
         cpf = pkg.get("cpf", "")
         last_event_time = pkg.get("last_event_time", "")
         last_event_desc = pkg.get("last_event_desc", "")
@@ -213,9 +215,11 @@ def check_package_updates():
         if new_events:
             logging.info(f"[Package Sentinel] {len(new_events)} nova(s) movimentação(ões) para {waybill}!")
             # Disparar alertas para cada novo evento (ou o mais recente)
+            name_header = f"<b>Produto:</b> {pkg_name}\n" if pkg_name else ""
             for nev in new_events:
                 msg = (
                     f"📦🚚 <b>[RASTREIO {carrier.upper()}] NOVA ATUALIZAÇÃO!</b>\n\n"
+                    f"{name_header}"
                     f"<b>Código:</b> <code>{waybill}</code>\n"
                     f"<b>Data e Hora:</b> 📅 <i>{nev['time']}</i>\n"
                     f"<b>Status:</b> 📍 {nev['desc']}\n\n"
@@ -239,6 +243,7 @@ def check_package_updates():
                 pkg["status"] = "Entregue"
                 delivered_msg = (
                     f"🎉📦 <b>[RASTREIO {carrier.upper()}] ENCOMENDA ENTREGUE!</b>\n\n"
+                    f"{name_header}"
                     f"<b>Código:</b> <code>{waybill}</code>\n"
                     f"<b>Status Final:</b> {last_event_desc}\n"
                     f"<b>Data de Entrega:</b> {last_event_time}"
