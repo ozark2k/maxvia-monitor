@@ -87,6 +87,26 @@
         }
       ],
       "delivered": false
+    },
+    "AMZC187603504TX": {
+      "name": "Kit de Canetas / Material de Papelaria",
+      "store": "Amazon Brasil",
+      "carrier": "Amazon Logistics Brazil",
+      "waybill": "AMZC187603504TX",
+      "order_id": "702-1051582-8595465",
+      "destination": "Macapá, Amapá (Casa Jesus de Nazaré)",
+      "estimated_delivery": "3 de dezembro",
+      "share_url": "",
+      "last_event_time": "2026-11-12",
+      "last_event_desc": "O pacote saiu das instalações da transportadora",
+      "status": "Em trânsito (Previsão: 3 de dezembro)",
+      "history": [
+        {
+          "time": "2026-11-12",
+          "desc": "O pacote saiu das instalações da transportadora"
+        }
+      ],
+      "delivered": false
     }
   }
 }
