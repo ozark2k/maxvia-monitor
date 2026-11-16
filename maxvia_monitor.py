@@ -2371,6 +2371,14 @@ def main():
         except Exception as e:
             logging.error(f"Erro ao iniciar microsoft_sentinel: {e}")
 
+        try:
+            from package_sentinel import run_package_sentinel_loop
+            t_pkg = threading.Thread(target=run_package_sentinel_loop, daemon=True)
+            t_pkg.start()
+            logging.info("[Render Cloud] Sentinel de Rastreio de Encomendas (J&T Express) iniciado em 24/7 background thread.")
+        except Exception as e:
+            logging.error(f"Erro ao iniciar package_sentinel: {e}")
+
     config = load_config()
     interval_sec = int(config.get("check_interval_seconds") or os.environ.get("CHECK_INTERVAL", "60"))
 
